@@ -1,0 +1,168 @@
+# The janken lab's configuration: every default, one table per domain concept.
+#
+# Read with `janken config show [TABLE]` / `janken config get KEY`, and change with
+# `janken config set KEY VALUE` (this file) or `janken config set --local KEY VALUE`
+# (janken.local.toml, gitignored, for one machine). Every key is required; command-line
+# flags override these values for one command (docs/configuration.md).
+
+[engine]
+# Compile bots and the referee with numba; false runs them as plain Python (the test
+# suite does, via $JANKEN_JIT). $JANKEN_JIT overrides.
+jit = true
+# Commands that keep numba's compiled code on disk (the compute-intensive ones); the
+# rest compile in memory. --cache / --no-cache or $JANKEN_NUMBA_CACHE override.
+cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune"]
+
+[output]
+# Progress bars on long commands: "auto" (only on an interactive terminal), "on" or
+# "off". $JANKEN_PROGRESS overrides.
+progress = "auto"
+# How results print: "text" (markdown tables) or "json" (for scripts and agents).
+format = "text"
+# Print only what a command must: the ids it creates, and errors.
+quiet = false
+
+[workspace]
+# Paths, relative to the project root.
+dir = "experiments"
+notebook = "research"
+bots_dir = "bots"
+spaces_dir = "spaces"
+
+[execution]
+# Threads playing matches; 0 uses every core.
+workers = 0
+
+[match]
+# Rounds per match: 200 is the tournament standard.
+rounds = 200
+
+[pool]
+# Each round robin draws this many random bots from the bots dir (candidates excluded).
+size = 20
+allow_small = false
+# Draw the pure Oracles (research-only stand-ins for an expensive bot, janken/mocks.py)
+# instead of the bots they mock. Set it locally while experimenting:
+# `janken config set --local pool.mocks true`. Oracles never enter a tournament.
+mocks = false
+
+[calibration]
+# Matches a bot plays vs each opponent when it is calibrated for its Oracle.
+seeds = 16
+
+[effort]
+# Named evidence budgets. --effort picks one; explicit flags (--round-robins, --trials,
+# ...) override its values.
+default = "standard"
+
+[effort.quick]
+# Smoke-sized: checks that things run, proves nothing.
+round_robins = 2
+tune_round_robins = 2
+trials = 10
+validate_top = 1
+validate_round_robins = 2
+predict_trials = 10
+
+[effort.standard]
+# 10 round robins give each candidate 200 matches vs the pool: a score CI of ~±6 pts.
+round_robins = 10
+tune_round_robins = 5
+trials = 100
+validate_top = 5
+validate_round_robins = 10
+predict_trials = 100
+
+[effort.thorough]
+# For small effects: 40 round robins give a score CI of ~±3 pts.
+round_robins = 40
+tune_round_robins = 10
+trials = 300
+validate_top = 5
+validate_round_robins = 40
+predict_trials = 300
+
+[evaluation]
+# "full": every pair of pool and candidates plays; "candidates": only the matches
+# with a candidate (faster; ratings then rest on fewer matches).
+mode = "full"
+# -1 draws a fresh seed (recorded with the run); any other value reproduces a run.
+seed = -1
+
+[tuning]
+# "tpe", "grid" (each param's grid list) or "random" (a baseline).
+sampler = "tpe"
+# Stop trials clearly below the median early.
+prune = true
+# The pools and match seeds every trial of a study plays (common random numbers).
+seed = 0
+# The sampler's seed; -1 leaves it unseeded (do so for parallel workers).
+sampler_seed = -1
+# Trials between re-exports of experiments/tuning/<study>/trials.parquet.
+export_every = 10
+# Stop starting trials after this many seconds; 0 sets no limit.
+timeout_s = 0.0
+
+[space]
+# A scaffolded space ranges each default from default / spread to default * spread,
+# with grid_points grid values; weight is its share of a multi-bot study's objective.
+spread = 2.0
+grid_points = 4
+weight = 1.0
+
+[tournament]
+matches = 1
+# A balanced random schedule of about this many games per bot; 0 plays a round robin.
+games = 0
+# List only bots finishing with this title: novice, cm, master, im, gm or all.
+league = "all"
+# Matches per batch (one progress step).
+batch_matches = 1000
+# -1 draws a fresh seed.
+seed = -1
+
+[dataset]
+# The move dataset, in the workspace: append-only, one row per match and per round.
+file = "dataset.duckdb"
+# A match whose stored holdout key is below this is in the test split, forever.
+holdout = 0.2
+# What predictor tuning maximises: accuracy, macro_f1, kappa or edge.
+metric = "accuracy"
+# A predictor-tuning trial is scored in this many steps, so the pruner can stop it.
+chunks = 4
+# `dataset add` commits this many matches per transaction.
+batch_matches = 1000
+# Matches per pair a `dataset add` plays.
+matches = 1
+# A batch's seed; -1 draws a fresh one (stored with every match).
+seed = -1
+# The split predictors are scored on, and the one predictor tuning trains on.
+split = "test"
+tune_split = "train"
+
+[runs]
+# Experiment runs (validation runs included) and validation results, in the workspace.
+# A process that finds the file locked retries for lock_timeout_s seconds.
+file = "runs.duckdb"
+lock_timeout_s = 30.0
+
+[query]
+# `janken lab query`: the database read ("runs" or "dataset"), and the rows printed.
+db = "runs"
+limit = 50
+
+[status]
+# What `janken status` lists.
+recent_runs = 8
+ideas = 8
+leaderboard = 10
+
+[export]
+# `janken bot export`: where the submission scripts go (a folder per exported bot),
+# and the longest match they can play (the tournament plays 200 rounds).
+dir = "exports"
+max_rounds = 1000
+# The tournament's screening of a submission: the only modules it may import, and
+# the builtins it may not name (file access, dynamic code, introspection).
+allowed_modules = ["abc", "array", "bisect", "collections", "copy", "dataclasses", "datetime", "decimal", "enum", "fractions", "functools", "heapq", "itertools", "json", "math", "numbers", "random", "re", "statistics", "string", "time", "typing"]
+banned_names = ["open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars", "getattr", "setattr", "delattr", "exit", "quit", "help"]

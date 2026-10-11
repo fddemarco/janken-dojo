@@ -1,0 +1,14 @@
+description: |
+  Smartbot with faster memories (ARM_DECAY 0.6, TABLE_DECAY 0.6,
+  MAX_MATCH 8).
+defaults:
+  ARM_DECAY: 0.6
+  TABLE_DECAY: 0.6
+  MAX_MATCH: 8
+blueprint:
+  around:
+    metabot:
+      arm_decay: $ARM_DECAY
+      table_decay: $TABLE_DECAY
+      max_match: $MAX_MATCH
+  selector: Thompson

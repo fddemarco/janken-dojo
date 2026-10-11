@@ -1,0 +1,13 @@
+description: |
+  Beats the opponent's most frequent move (decayed counts).
+defaults:
+  DECAY: 1.0
+  NOISE: 0.0
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+    - Opening: {rounds: 1, move: RANDOM_MOVE}
+    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}
+  signals:
+    - Frequency: {of: OPP, decay: $DECAY}
+  rotations: [BEAT]

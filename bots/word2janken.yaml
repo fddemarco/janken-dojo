@@ -1,0 +1,13 @@
+description: |
+  Variable-order n-gram predictor with a 12% noise floor.
+
+  Matches the last 3, 2 or 1 joint rounds against the whole history, predicts the
+  opponent's most common follow-up (lifetime frequency when nothing matches) and
+  plays its beat. The core is presets.staller() in janken/kit/presets.py.
+blueprint:
+  guards:
+    - Opening: {rounds: 1, move: PAPER}
+    - Noise: {p: 0.12}
+  signals:
+    - Backoff: {max_order: 3, ctx: JOINT}
+  rotations: [BEAT]

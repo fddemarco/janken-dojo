@@ -1,0 +1,38 @@
+
+repos:
+  - repo: local
+    hooks:
+      - id: mdformat
+        name: mdformat
+        entry: uv run mdformat
+        language: system
+        types: [markdown]
+        # mdformat rewrites YAML front matter as a heading, which breaks skills.
+        # docs/cli-reference.md is generated (janken/cli/reference.py) and tested as is.
+        exclude: ^(\.claude/skills/|docs/cli-reference\.md$)
+
+      - id: ruff-check
+        name: ruff check --fix
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
+      - id: ty
+        name: ty check
+        entry: uv run ty check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pyrefly
+        name: pyrefly check
+        entry: uv run pyrefly check
+        language: system
+        pass_filenames: false
+        always_run: true

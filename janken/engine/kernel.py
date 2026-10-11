@@ -1,0 +1,163 @@
+"""The referee, compiled: whole matches inside one numba kernel.
+
+`play_batch` spreads a schedule across cores with `prange`. Each match seeds
+numba's generator itself, so its moves depend only on its seed, never on the
+thread that played it.
+
+The kernel reaches the bots through `new_state(code, rounds)` (fresh state for
+every match, sized for its rounds) and
+`step(code, f, i, prm, my, opp, n)`, defined at the end of this module. Here they
+are a stand-in with no bots. build.py compiles a copy of this module whose
+dispatch section is generated for the bots being played (numba can only cache a
+kernel whose callees are fixed globals), and every set of bots gets its own copy.
+"""
+
+import random
+
+import numpy as np
+from numba import prange
+
+from janken.kit.codes import ORACLE_ARM, ORACLE_PURE
+from janken.kit.jit import kernel, parallel_kernel
+from janken.kit.moves import CRASH, INVALID, PAPER
+from janken.match import INVALID_MOVE_LIMIT
+
+# Why a bot forfeited, per side, in a match's status row.
+FF_NONE, FF_CRASHED, FF_INVALID = 0, 1, 2
+
+
+@kernel
+def _crashed(move):
+    return FF_CRASHED if move == CRASH else FF_NONE
+
+
+@kernel
+def _over_limit(invalid):
+    return FF_INVALID if invalid >= INVALID_MOVE_LIMIT else FF_NONE
+
+
+@kernel
+def _reveal(i, at, r, move, opp_level):
+    """Tell an Oracle arm (janken/mocks.py) the opponent's move in round r and its
+    level."""
+    i[at] = r + 1
+    i[at + 1] = move
+    i[at + 2] = opp_level
+
+
+@kernel
+def play_into(code_a, code_b, prm_a, prm_b, rounds, out):
+    """Play one match into out[rounds, 2] (bot a's move, bot b's move).
+    Returns (rounds played, forfeit a, forfeit b), forfeits as FF_* codes.
+
+    Both bots move every round, a first, unless one holds an Oracle
+    (janken/mocks.py): a pure Oracle never runs, it plays an outcome drawn vs the
+    other's move and level (vs another pure Oracle, a random move); an Oracle arm
+    is told the other's move and level before it moves; two arms both play PAPER.
+    A crash forfeits at once, and its round
+    is not played. An invalid move loses its round; the one that reaches
+    INVALID_MOVE_LIMIT forfeits after its round is scored."""
+    fa, ia = new_state(code_a, rounds)
+    fb, ib = new_state(code_b, rounds)
+    ha = np.empty(rounds, np.int64)
+    hb = np.empty(rounds, np.int64)
+    kind_a = oracle_kind(code_a)
+    kind_b = oracle_kind(code_b)
+    level_a = level(code_a)
+    level_b = level(code_b)
+    cell_a = oracle_cell(code_a)
+    cell_b = oracle_cell(code_b)
+    invalid_a = 0
+    invalid_b = 0
+    for r in range(rounds):
+        if kind_a == ORACLE_PURE and kind_b == ORACLE_PURE:
+            mb = random.randrange(3)
+            ma = oracle_move(code_a, fa, prm_a, mb, level_b)
+        elif kind_a == ORACLE_PURE:  # b moves first (an ARM untold), a plays it
+            mb = step(code_b, fb, ib, prm_b, hb, ha, r)
+            ma = oracle_move(code_a, fa, prm_a, mb, level_b)
+        elif kind_b == ORACLE_PURE:
+            ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+            mb = oracle_move(code_b, fb, prm_b, ma, level_a)
+        elif kind_a == ORACLE_ARM and kind_b == ORACLE_ARM:  # neither can be told
+            ma = PAPER
+            mb = PAPER
+        elif kind_a == ORACLE_ARM:
+            mb = step(code_b, fb, ib, prm_b, hb, ha, r)
+            _reveal(ia, cell_a, r, mb, level_b)
+            ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+        elif kind_b == ORACLE_ARM:
+            ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+            _reveal(ib, cell_b, r, ma, level_a)
+            mb = step(code_b, fb, ib, prm_b, hb, ha, r)
+        else:
+            ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+            mb = step(code_b, fb, ib, prm_b, hb, ha, r)
+        if ma == CRASH or mb == CRASH:
+            return r, _crashed(ma), _crashed(mb)
+        ha[r] = ma
+        hb[r] = mb
+        out[r, 0] = ma
+        out[r, 1] = mb
+        if ma == INVALID:
+            invalid_a += 1
+        if mb == INVALID:
+            invalid_b += 1
+        if invalid_a >= INVALID_MOVE_LIMIT or invalid_b >= INVALID_MOVE_LIMIT:
+            return r + 1, _over_limit(invalid_a), _over_limit(invalid_b)
+    return rounds, FF_NONE, FF_NONE
+
+
+@parallel_kernel
+def play_batch(codes_a, codes_b, prm_a, prm_b, rounds, seeds):
+    """Play every (codes_a[k], codes_b[k]) match. Returns the moves as
+    int8[k, rounds, 2] and each match's (rounds played, forfeit a, forfeit b) as
+    int64[k, 3]."""
+    out = np.empty((codes_a.size, rounds, 2), np.int8)
+    status = np.zeros((codes_a.size, 3), np.int64)
+    for k in prange(codes_a.size):
+        random.seed(int(seeds[k]))
+        played, ff_a, ff_b = play_into(
+            codes_a[k], codes_b[k], prm_a[k], prm_b[k], rounds, out[k]
+        )
+        status[k, 0] = played
+        status[k, 1] = ff_a
+        status[k, 2] = ff_b
+    return out, status
+
+
+# --- dispatch (build.py replaces everything below) ---------------------------
+
+
+@kernel
+def new_state(code, rounds):
+    return np.zeros(0, np.float64), np.zeros(0, np.int64)
+
+
+@kernel
+def step(code, f, i, prm, my, opp, n):
+    return CRASH
+
+
+@kernel
+def oracle_kind(code):
+    """ORACLE_NONE (0), ORACLE_PURE or ORACLE_ARM (janken/mocks.py)."""
+    return 0
+
+
+@kernel
+def oracle_cell(code):
+    """The i offset of an Oracle arm's state, or -1."""
+    return -1
+
+
+@kernel
+def level(code):
+    """The bot's level (janken/kit/levels.py)."""
+    return 1
+
+
+@kernel
+def oracle_move(code, f, prm, opp, opp_level):
+    """A pure Oracle's move vs `opp`, an opponent of `opp_level`."""
+    return CRASH

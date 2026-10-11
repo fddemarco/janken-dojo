@@ -1,0 +1,13 @@
+description: |
+  Plays whichever of three strategies leads a counterfactual scoreboard.
+
+  The strategies are word2janken's n-gram predictor, its counter, and the
+  counter's counter. Each is scored every round on what it would have played; the
+  earliest strategy with the best positive score is played, random otherwise. The core
+  is presets.staller() in janken/kit/presets.py.
+blueprint:
+  around: staller
+  selector:
+    Greedy: {ties: TIES_FIRST}
+  guards:
+    - OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}

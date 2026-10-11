@@ -1,0 +1,17 @@
+description: |
+  Research-only pure Oracle of gate_anti_first (L4): its win chance per opponent level, no game logic.
+
+  The referee never runs this bot: each round it draws an outcome vs the opponent's
+  move with gate_anti_first's measured win chance vs the opponent's level (ties and losses
+  split the rest; `janken lab calibrate gate_anti_first`, 16 seeds, 2026-10-11), and draws
+  vs another Oracle. Pools use it in place of gate_anti_first with `pool.mocks`. It cheats:
+  never in a tournament or an export.
+mocks: gate_anti_first
+defaults:
+  WIN_L1: 0.6978
+  WIN_L2: 0.5316
+  WIN_L3: 0.3759
+  WIN_L4: 0.4037
+blueprint:
+  signals:
+    - Oracle: {wins: [$WIN_L1, $WIN_L2, $WIN_L3, $WIN_L4]}

@@ -1,0 +1,14 @@
+description: |
+  Predicts the opponent's rotation (their move minus their last
+  move) given how the last round went, i.e. a learned win-stay/lose-shift model.
+defaults:
+  DECAY: 0.9
+blueprint:
+  guards:
+    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}
+    - Opening:
+        rounds: 1
+        move: RANDOM_MOVE
+  signals:
+    - Relative: {ref: OPP, by_outcome: true, decay: $DECAY}
+  rotations: [BEAT]

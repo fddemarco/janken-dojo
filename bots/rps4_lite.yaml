@@ -1,0 +1,20 @@
+description: |
+  Rpscontest #4 in miniature.
+
+  Markov models of orders 0..3 on the joint history predict both the
+  opponent's next move and ours. Each prediction becomes three arms (rotations
+  of "beat the predicted opponent move" / "beat the move that beats our predicted
+  move"). Arms keep a decayed score `DECAY * score + result`, updated
+  counterfactually every round; we play the best arm greedily. A random arm with
+  its score pinned at 0 is the safety net: when every model is net losing, random
+  wins the argmax.
+defaults:
+  DECAY: 0.85
+  TABLE_DECAY: 1.0
+blueprint:
+  around:
+    rps4: {decay: $DECAY, table_decay: $TABLE_DECAY}
+  selector:
+    Greedy: {ties: TIES_RANDOM}
+  guards:
+    - OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}

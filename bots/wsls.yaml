@@ -1,0 +1,14 @@
+description: |
+  Win-stay, lose-shift. Keeps its move after a win or tie, shifts by SHIFT
+  after a loss.
+defaults:
+  SHIFT: 1
+  NOISE: 0.0
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+    - Opening: {rounds: 1, move: ROCK}
+    - OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}
+  signals:
+    - WinStay: {shift: $SHIFT}
+  rotations: [COPY]

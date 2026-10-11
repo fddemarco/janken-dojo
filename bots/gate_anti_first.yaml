@@ -1,0 +1,29 @@
+description: |
+  gate_edge with the ANTI_FIRST gatekeeper: start on the anti expert, switch once the advanced arms lead.
+
+  smartbot_sims's arms plus anti_smartbot_sims' Replay of smartbot_sims (256 Thompson
+  draws, played BEAT) as the gated last arm, like gate_edge. The Gatekeeper's
+  rule is ANTI_FIRST: it plays the anti expert by default and switches to the
+  advanced arms once their counterfactual record leads the anti expert's by EDGE
+  (from round WARMUP on). With the anti expert mocked this beat gate_edge's EDGE
+  rule by +3.4 pts [+0.8, +6.0] (0019); tuning found nothing better than these
+  defaults (0020).
+defaults:
+  EDGE: 0.05
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  signals:
+    - {metabot_signals: {table_decay: 0.9, max_match: 12}}
+    - {sims: [10]}
+    - Rotated:
+        signal:
+          Replay:
+            ensemble:
+              smartbot_sims: {n: 10, arm_decay: 0.95, table_decay: 0.9, max_match: 12}
+            draws: 256
+        rotations: [BEAT]
+  rotations: ALL_ROTATIONS
+  scorer: {Dirichlet: {decay: 0.95}}
+  random_arm: RA_SCORED
+  selector: {Gatekeeper: {edge: $EDGE, decay: $GATE_DECAY, warmup: $WARMUP, rule: ANTI_FIRST}}

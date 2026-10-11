@@ -1,0 +1,10 @@
+description: |
+  Always rock, with an optional noise floor.
+defaults:
+  NOISE: 0.0
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+  signals:
+    - Constant: {move: ROCK}
+  rotations: [COPY]

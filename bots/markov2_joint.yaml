@@ -1,0 +1,17 @@
+description: |
+  Order-2 Markov model on the joint (my, opp) history; beats the
+  most likely next opponent move.
+defaults:
+  DECAY: 1.0
+  NOISE: 0.05
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}
+    - Opening: {rounds: 2, move: RANDOM_MOVE}
+  signals:
+    - NGram:
+        order: 2
+        ctx: JOINT
+        decay: $DECAY
+  rotations: [BEAT]

@@ -1,0 +1,6 @@
+bot: bots/gate_main_first_stationary.yaml
+weight: 1.0
+params:
+  EDGE: {type: float, low: 0.0, high: 0.3, grid: [0.0, 0.05, 0.1, 0.2, 0.3]}
+  GATE_DECAY: {type: float, low: 0.95, high: 1.0, grid: [0.95, 0.98, 0.99, 1.0]}
+  WARMUP: {type: int, low: 0, high: 40, grid: [0, 5, 10, 20, 40]}

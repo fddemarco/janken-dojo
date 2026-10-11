@@ -1,0 +1,19 @@
+description: |
+  Iocaine Powder's "sicilian reasoning" over three predictors.
+
+  Predictors: the opponent's most frequent move, the opponent move that followed
+  the longest earlier repeat of the joint history, and OUR move that followed it
+  (what a model of us expects). Each gives a base move (beat the predicted
+  opponent move, or beat the move that beats our predicted move), and each base
+  move becomes three strategies by rotating it 0/1/2 steps. Every strategy is
+  scored counterfactually every round with a decayed score; we play the best.
+defaults:
+  DECAY: 0.9
+  MAX_LEN: 12
+blueprint:
+  around:
+    iocaine: {decay: $DECAY, max_len: $MAX_LEN}
+  selector:
+    Greedy: {ties: TIES_RANDOM}
+  guards:
+    - OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}

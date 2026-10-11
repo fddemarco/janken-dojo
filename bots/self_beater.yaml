@@ -1,0 +1,11 @@
+description: |
+  Plays what beats its own last move (beats copycats).
+defaults:
+  NOISE: 0.05
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+    - Opening: {rounds: 1, move: PAPER}
+  signals:
+    - LastMove: {of: MY}
+  rotations: [BEAT]

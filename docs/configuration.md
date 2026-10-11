@@ -1,0 +1,65 @@
+# Configuration
+
+Every default lives in **`janken.toml`** at the project root, one table per domain
+concept. Nothing in the code carries a default of its own: each command-line option
+takes its default from this file, and its `--help` names the setting (for example
+`(config: match.rounds)`). The loader (`janken/settings.py`) requires every key, and
+checks its type, its allowed values and its minimum.
+
+| table | what it sets |
+| --- | --- |
+| `engine` | `jit`, and which commands keep numba's compiled code on disk (`cache_commands`) |
+| `output` | `progress` bars, `format` (text or json), `quiet` |
+| `workspace` | where the workspace (`dir`), the notebook, the bots and the spaces live |
+| `execution` | `workers` |
+| `match` | `rounds` per match |
+| `pool` | pool `size`, `allow_small` |
+| `effort` | the `default` effort, and the budgets `effort.quick` / `.standard` / `.thorough`: round robins, tuning round robins, trials, validation top K and round robins, predictor trials |
+| `evaluation` | `mode` (full or candidates), `seed` (-1: fresh) |
+| `tuning` | `sampler`, `prune`, `seed`, `sampler_seed`, `export_every`, `timeout_s` |
+| `space` | how a space file is scaffolded: `spread`, `grid_points`, `weight` |
+| `tournament` | `matches`, `games`, `league`, `batch_matches`, `seed` |
+| `dataset` | the move dataset: `file`, `holdout`, `metric`, `chunks`, `batch_matches`, `matches`, `seed`, `split`, `tune_split` |
+| `runs` | the runs database: `file`, `lock_timeout_s` |
+| `query` | `lab query`: `db`, `limit` |
+| `status` | how much `status` lists |
+| `export` | `bot export`: `dir`, `max_rounds`, and the screening rules `allowed_modules`, `banned_names` |
+
+## The `config` commands
+
+```bash
+uv run janken config show              # every setting, its value and meaning
+uv run janken config show effort.thorough
+uv run janken config get match.rounds
+uv run janken config set effort.standard.round_robins 20     # janken.toml
+uv run janken config set --local execution.workers 4         # this machine
+uv run janken config unset execution.workers                 # drop the override
+uv run janken config path                                     # where the files are
+uv run janken config check                                    # validate them
+```
+
+- **`set`** changes one line and keeps the file's comments and layout. It refuses a value
+  that makes the configuration invalid, and then changes nothing.
+  - Lists are comma-separated: `config set engine.cache_commands "evaluate, tune"`.
+  - Switches take `on` / `off`.
+- **`--local`** writes `janken.local.toml` (gitignored), whose keys override
+  `janken.toml` on this machine only. `unset` removes a local override.
+- **Committed changes:** changing `janken.toml` changes the defaults for everyone, so
+  commit it with a reason. Experiments record their actual settings in their manifests,
+  so stored runs stay interpretable either way.
+
+## Precedence
+
+1. `janken.toml`;
+1. `janken.local.toml`;
+1. the `--effort` budget, for round robins, trials and validation sizes;
+1. an explicit command-line flag.
+
+Three environment variables still exist, for process-wide switches that numba reads
+before any command runs:
+
+| variable | overrides |
+| --- | --- |
+| `JANKEN_JIT=on\|off` | `engine.jit` (the test suite runs with it off) |
+| `JANKEN_NUMBA_CACHE=1\|0` | caching, which the CLI sets per command from `engine.cache_commands` and `--cache` |
+| `JANKEN_PROGRESS=auto\|on\|off` | `output.progress` (the CLI sets it from `--progress`) |

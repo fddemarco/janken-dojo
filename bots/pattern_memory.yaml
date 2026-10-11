@@ -1,0 +1,13 @@
+description: |
+  Finds the longest earlier repeat of the recent joint history
+  (up to MAX_LEN rounds) and beats the opponent move that followed it.
+defaults:
+  MAX_LEN: 10
+  NOISE: 0.05
+blueprint:
+  guards:
+    - Noise: {p: $NOISE}
+    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}
+  signals:
+    - LongestMatch: {max_len: $MAX_LEN, ctx: JOINT}
+  rotations: [BEAT]

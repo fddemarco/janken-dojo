@@ -1,0 +1,6 @@
+bot: bots/smartbot_sims.yaml
+weight: 1.0
+params:
+  ARM_DECAY: {type: float, low: 0.5, high: 0.99, grid: [0.6, 0.8, 0.9, 0.95]}
+  TABLE_DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.6, 0.8, 0.9, 1.0]}
+  MAX_MATCH: {type: int, low: 2, high: 20, grid: [4, 8, 12, 16]}

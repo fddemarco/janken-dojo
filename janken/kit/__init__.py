@@ -1,6 +1,8 @@
-"""The bot kit: every bot is a blueprint of these stages (see blueprint.py).
+"""The bot kit: every bot is a blueprint of these stages (see blueprint/).
 
-blueprint  the stage catalogue, as data, and its compiler (start here)
+blueprint  the stage catalogue, as data, and its compiler (start here): guards,
+           a core predictor tree (signals combined by Bandit, Gate and
+           NaiveBayes composites) and overlays
 pipeline   runs a compiled blueprint for one round
 guards / signals / bayes / ensemble / selectors / replay / overlays
            the compiled stages, in pipeline order

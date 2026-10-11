@@ -40,8 +40,14 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 
 ## Bot rules (enforced by review, the engine and the tests)
 
-- Every bot has the same anatomy (`janken/kit/blueprint.py`): guards → valid-only view →
+- Every bot has the same anatomy (`janken/kit/blueprint/`): guards → valid-only view →
   track → signals → move choice (rotations) → select (scorer + selector) → overlays.
+- A blueprint is `guards`, a `core` and `overlays`. The core is a predictor tree
+  (composite pattern, `janken/kit/blueprint/predictor.py`): signals are leaves; `Sim`,
+  `Rotated`, `Replay` decorate one predictor; `Bandit`, `Gate`, `NaiveBayes` combine
+  several into a higher-order one. Every way of combining predictors is a composite,
+  and a bot's level is the tree's. `lowering.py` flattens the tree into the one bandit
+  the compiled pipeline plays, and refuses the shapes it can't.
 - One YAML file per bot, `bots/<name>.yaml`: a `description`, its `defaults` (at most 8,
   the bot as submitted) and a `blueprint` of kit stages whose knobs are literals or
   `$NAME` (grammar in `janken/kit/declare.py`; copy any bot in `bots/`). A bot file holds
@@ -52,7 +58,8 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   directly); edit it before tuning. `janken tune BOT --support BOT ...` tunes a fleet
   (champion weight 1, supports 0).
 - A bot holds no logic of its own. A new idea is a new stage kind in `janken/kit`
-  (dataclass in `blueprint.py`, compiled half in its stage module, unit tests in
+  (dataclass in its `janken/kit/blueprint/` module, compiled half in its stage module,
+  unit tests in
   `tests/test_stages.py`), and then any bot can use it (`declare.py` finds stage classes
   by their `kind`; a new preset or constant is added to its registries). Shared cores go
   in `presets.py`.
@@ -102,11 +109,13 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 ## Tests
 
 - Unit tests for the logic only: no stress, load, benchmark, or other compute-intensive
-  tests. Nothing in the suite compiles: `tests/__init__.py` switches the JIT off, so bots,
+  tests. Nothing in the suite compiles: `tests/conftest.py` switches the JIT off, so bots,
   stages and the referee run as plain Python.
-- Run it as `uv run python -m unittest discover -s tests -t .` (the `-t .` makes
-  `tests/__init__.py` run first). It must stay under 60 s; it takes a few seconds. Use
-  small inputs (a few rounds, pools of light bots) and fixed seeds.
+- pytest style: plain `assert`, `pytest.raises`, fixtures (`tmp_path`, `monkeypatch`)
+  for setup, `pytest.mark.parametrize` for cases that are data (the `subtests` fixture
+  where they aren't). No `unittest.TestCase`.
+- Run it as `uv run pytest`. It must stay under 60 s; it takes about 20 s. Use small
+  inputs (a few rounds, pools of light bots) and fixed seeds.
 - Never loosen a test to make it pass.
 
 ## Definition of done
@@ -146,9 +155,10 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
 - `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
   and `rps_kaggle.md`.
 - `janken/engine/` compiles bots and referees matches. `janken/kit/` holds the bot
-  anatomy: `blueprint.py` (the stage catalogue and its compiler), `declare.py` (the YAML
+  anatomy: `blueprint/` (the stage catalogue, the predictor tree and its compiler: one
+  module per stage family), `declare.py` (the YAML
   grammar), `pipeline.py` and the compiled stages, `presets.py` (shared cores), and
   `bot.py` (the whole vocabulary in Python, for tests).
 - `janken.toml` holds every default; `janken/settings.py` is its schema and loader, and
   `janken/config_file.py` edits it line by line.
-- Tests: `uv run python -m unittest discover -s tests -t .` (a few seconds, JIT off).
+- Tests: `uv run pytest` (about 20 s, JIT off).

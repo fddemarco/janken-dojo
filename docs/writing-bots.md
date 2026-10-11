@@ -20,31 +20,74 @@ blueprint:
   guards:
     - Noise: {p: $NOISE}
     - Opening: {rounds: 1, move: ROCK}
-  signals:
-    - LastMove: {of: OPP}   # the opponent's last move ...
-  rotations: [BEAT]         # ... and play what beats it
+  core:
+    Bandit:
+      predictors:
+        - LastMove: {of: OPP}   # the opponent's last move ...
+      rotations: [BEAT]         # ... and play what beats it
 ```
+
+A blueprint is `guards`, a `core` and `overlays`. The core is a tree of predictors: its
+leaves are signals, and composites combine predictors into a higher-order one:
+
+- **`Bandit`**: its `predictors` x its `rotations` are arms (plus an optional
+  `random_arm`); a `scorer` keeps every arm's record and a `selector` picks the arm to
+  play. With no scorer (`First`), it is a plain priority list.
+- **`Gate`**: a gatekeeper between a `main` Bandit (Thompson sampling) and gated
+  `experts` (one arm each), switching by their own records and a `rule` (`EDGE`,
+  `ANTI_FIRST`, `ANTI_FIRST_HOLD`, `BANDIT`, `MAIN_FIRST`, `LEADER`,
+  `LEADER_PRIORITY`).
+- **`NaiveBayes`**: a posterior over the opponent's move from its `inputs`, which are the
+  other predictors of its Bandit.
+
+Decorators wrap one predictor: `Sim` (a signal run from the opponent's side), `Rotated`
+(its own rotations), `Replay` (a whole Bandit run from the opponent's side). A bot's
+level is the tree's: a signal is L1, a decorator its child's level, a composite one above
+its highest child (a Bandit only when it scores two arms or more).
 
 ## The grammar
 
 The grammar lives in `janken/kit/declare.py`.
 
 - A stage is `Name` (no arguments), `{Name: {field: value}}` or `{Name: [values]}`.
-  `Name` is a stage class of `janken/kit/blueprint.py` (the table below) or a preset of
-  `janken/kit/presets.py` (`metabot`, `iocaine`, `rps4`, `staller`, `smartbot_sims`,
-  `metabot_signals`, `sims`). A preset that returns signals is spliced into the list.
+  `Name` is a stage or predictor class of `janken/kit/blueprint/` (the table below) or a
+  preset of `janken/kit/presets.py` (`metabot`, `iocaine`, `rps4`, `staller`,
+  `smartbot_sims`, `metabot_signals`, `sims`). A preset that returns signals is spliced
+  into the list.
 - `$NAME` is a knob read from the bot's `defaults`; an UPPER_CASE word is a constant
   (`OPP`, `MY`, `JOINT`, `BEAT`, `ROCK`, `TIES_FIRST`, `RA_SCORED`, `CHAMPION`,
   `ALL_ROTATIONS`, …).
-- A bot built around a ready-made core uses `around:`:
+- A ready-made core is a preset returning a Bandit (its `selector` defaults to its
+  family's):
 
 ```yaml
 blueprint:
-  around:
+  core:
     smartbot_sims: {n: 10, arm_decay: $ARM_DECAY, table_decay: 0.9, max_match: 12}
-  selector: Thompson
   overlays:
     - Team: {role: CHAMPION}
+```
+
+- A gate (gate_main_first, abridged):
+
+```yaml
+blueprint:
+  core:
+    Gate:
+      main:
+        Bandit:
+          predictors: [{metabot_signals: {table_decay: 0.9, max_match: 12}}]
+          rotations: ALL_ROTATIONS
+          scorer: {Dirichlet: {decay: 0.95}}
+          random_arm: RA_SCORED
+          selector: Thompson
+      experts:
+        - Rotated:
+            signal:
+              Replay: {bandit: {smartbot_sims: {n: 10, arm_decay: 0.95, ...}}, draws: 256}
+            rotations: [BEAT]
+      rule: MAIN_FIRST
+      edge: $EDGE
 ```
 
 ## The stages
@@ -53,10 +96,11 @@ blueprint:
 | --- | --- | --- |
 | guards | answer the round first, in order | `Opening`, `Noise`, `OnInvalid` |
 | view | models see only rounds where both moves are valid | (always) |
-| signals | each proposes a symbol, or none | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `NaiveBayes` (combines the others), `Constant`, `Cycle`, `Biased`, `WinStay`; models of us: `Sim(signal)`, `Replay(ensemble)` |
+| signals | each proposes a symbol, or none | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `Constant`, `Cycle`, `Biased`, `WinStay`; models of us: `Sim(signal)`, `Replay(bandit)` |
+| combiners | predictors made of predictors | `Bandit` (scorer + selector over arms), `Gate` (main bandit vs gated experts), `NaiveBayes` (over its inputs) |
 | rotations | each symbol becomes one arm per rotation | `COPY`, `BEAT`, `BEAT_BEAT` (per signal: `Rotated`) |
 | scorer | every arm's record, counterfactually | `Dirichlet`, `DecayedNet`, `DropSwitch` (+ a random arm: `RA_SCORED` / `RA_PINNED`) |
-| selector | the arm to play | `First`, `Greedy`, `Thompson`, `SampledVote`, `ChooseSelector` |
+| selector | a Bandit's arm to play | `First`, `Greedy`, `Thompson`, `SampledVote`, `ChooseSelector` |
 | overlays | transform the chosen move | `Stall`, `Team` (`fleet`: `ILIAD` / `ILIAD_V2`; `vigilant`: stop throwing at a teammate's first non-throw), `EmitInvalid` |
 
 ## Rules
@@ -66,8 +110,11 @@ blueprint:
   [Parameters and spaces](parameters-and-spaces.md).
 - **Shared cores** live in `janken/kit/presets.py`: smartbot's metabot, the "model of us"
   sims, iocaine, rps4, the staller.
-- **New ideas** become new stage kinds in `janken/kit` (a dataclass in `blueprint.py` and
-  its compiled half), never logic inside a bot file: a bot file holds no code.
+- **New ideas** become new stage kinds in `janken/kit` (a dataclass in its
+  `janken/kit/blueprint/` module and its compiled half), never logic inside a bot file: a
+  bot file holds no code. A new way of combining predictors is a new composite
+  (`janken/kit/blueprint/composites.py`), lowered to what the pipeline plays
+  (`lowering.py`).
 - **Moves** are `0/1/2` = rock/paper/scissors (`janken.kit.moves`). A bot may return
   `INVALID`: that loses the round, and the opponent sees `INVALID` in its history. **Three
   in one match forfeit it.** `CRASH` forfeits at once. `EmitInvalid` spends at most two.

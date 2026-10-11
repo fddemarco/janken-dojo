@@ -15,13 +15,13 @@ defaults:
   STALL_ROUNDS: 15
   LOCK_Z: 4.0
 blueprint:
-  around:
+  core:
     smartbot_sims:
       n: 10
       arm_decay: $ARM_DECAY
       table_decay: $TABLE_DECAY
       max_match: $MAX_MATCH
-  selector: Thompson
+      selector: Thompson
   overlays:
     - Stall:
         dd_window: $DD_WINDOW

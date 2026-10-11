@@ -13,5 +13,7 @@ defaults:
   WIN_L3: 0.3528
   WIN_L4: 0.3209
 blueprint:
-  signals:
-    - Oracle: {wins: [$WIN_L1, $WIN_L2, $WIN_L3, $WIN_L4]}
+  core:
+    Bandit:
+      predictors:
+        - {Oracle: {wins: [$WIN_L1, $WIN_L2, $WIN_L3, $WIN_L4]}}

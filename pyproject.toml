@@ -44,4 +44,14 @@ module-root = ""
 
 [tool.ruff.lint.flake8-bugbear]
 # janken/settings.py declares each setting with `setting(...)`, a dataclasses.field.
-extend-immutable-calls = ["janken.settings.setting"]
+# The blueprint's stages are frozen dataclasses, so their defaults can be instances.
+extend-immutable-calls = [
+    "janken.settings.setting",
+    "janken.kit.blueprint.scorers.NoScore",
+    "janken.kit.blueprint.selectors.First",
+    "janken.kit.blueprint.composites.Bandit",
+]
+
+[tool.pytest.ini_options]
+# `uv run pytest`: tests/conftest.py switches the JIT off before any test module loads.
+testpaths = ["tests"]

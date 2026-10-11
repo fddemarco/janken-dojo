@@ -6,9 +6,10 @@ defaults:
   NOISE: 0.0
 blueprint:
   guards:
-    - Noise: {p: $NOISE}
-    - Opening: {rounds: 1, move: ROCK}
-    - OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}
-  signals:
-    - WinStay: {shift: $SHIFT}
-  rotations: [COPY]
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: ROCK}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}}
+  core:
+    Bandit:
+      predictors: [{WinStay: {shift: $SHIFT}}]
+      rotations: [COPY]

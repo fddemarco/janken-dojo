@@ -1,24 +1,24 @@
 """Blueprints declared as data: what a bot's YAML file says, turned into a Blueprint.
 
-A bot file (bots/<name>.yaml) holds plain data; its `blueprint` section is read here:
+A bot file (bots/<name>.yaml) holds plain data; its `blueprint` section is read here.
+It has guards, a core predictor (a Bandit or a Gate) and overlays:
 
     blueprint:
       guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: ROCK}}]
-      signals: [{LastMove: {of: OPP}}]
-      rotations: [BEAT]
+      core:
+        Bandit: {predictors: [{LastMove: {of: OPP}}], rotations: [BEAT]}
 
-or, around a ready-made core from presets.py:
+or with a ready-made core from presets.py:
 
     blueprint:
-      around: {smartbot_sims: {n: 10, arm_decay: $ARM_DECAY, ...}}
-      selector: Thompson
+      core: {smartbot_sims: {n: 10, arm_decay: $ARM_DECAY, ...}}
       overlays: [{Team: {role: CHAMPION}}]
 
 The grammar:
 
 * a call is `Name` (no arguments), `{Name: {field: value, ...}}` (keywords) or
-  `{Name: [value, ...]}` (positional). `Name` is a stage class of blueprint.py
-  (CamelCase) or a preset function of presets.py (lower_case).
+  `{Name: [value, ...]}` (positional). `Name` is a stage or predictor class of
+  janken/kit/blueprint/ (CamelCase) or a preset function of presets.py (lower_case).
 * `$NAME` is `Knob("NAME")`, a knob read from the bot's defaults.
 * an UPPER_CASE word is a constant of codes.py / moves.py (`OPP`, `BEAT`, `ROCK`, ...).
 * a list is a tuple; a call inside a list that returns a tuple (a preset such as
@@ -40,8 +40,10 @@ KNOB_PREFIX = "$"
 
 
 def _stage_classes(base: type) -> list[type]:
-    """`base` and its subclasses that declare their own kind code."""
-    found = [base] if "kind" in vars(base) else []
+    """`base` and its subclasses that declare their own kind code (but those only
+    the compiler builds, such as the Gatekeeper a Gate lowers to)."""
+    declarable = "kind" in vars(base) and getattr(base, "declarable", True)
+    found = [base] if declarable else []
     for sub in base.__subclasses__():
         found += _stage_classes(sub)
     return found
@@ -53,7 +55,8 @@ CLASSES: Mapping[str, type] = {
         *_stage_classes(bp.Stage),
         bp.Sim,
         bp.Rotated,
-        bp.Ensemble,
+        bp.Bandit,
+        bp.Gate,
         bp.ChooseSelector,
     )
 }
@@ -108,9 +111,8 @@ SYMBOLS: Mapping[str, int | tuple[int, ...]] = {
     "TIES_RANDOM": c.TIES_RANDOM,
 }
 
-# The keys of a blueprint section: a whole Blueprint, or one built `around` a core.
+# The keys of a blueprint section.
 BLUEPRINT_KEYS = tuple(f.name for f in dataclasses.fields(bp.Blueprint))
-AROUND_KEYS = ("around", "selector", "guards", "overlays")
 
 
 def blueprint_from_data(data: object, where: str = "blueprint") -> bp.Blueprint:
@@ -129,18 +131,13 @@ def blueprint_from_data(data: object, where: str = "blueprint") -> bp.Blueprint:
     if data is None:
         return bp.Blueprint()
     section = _mapping(data, where)
-    if "around" in section:
-        _check_keys(section, AROUND_KEYS, where)
-        _check("selector" in section, f"{where}: `around` needs a `selector`")
-        args = {
-            ("core" if k == "around" else k): value(v, f"{where}.{k}")
-            for k, v in section.items()
-        }
-        built = _call(bp.Blueprint.around, "around", (), args, where)
-    else:
-        _check_keys(section, BLUEPRINT_KEYS, where)
-        args = {k: value(v, f"{where}.{k}") for k, v in section.items()}
-        built = _call(bp.Blueprint, "Blueprint", (), args, where)
+    _check_keys(section, BLUEPRINT_KEYS, where)
+    args = {k: value(v, f"{where}.{k}") for k, v in section.items()}
+    _check(
+        isinstance(args.get("core", bp.Bandit()), bp.Predictor),
+        f"{where}.core: a core is a predictor (a Bandit or a Gate)",
+    )
+    built = _call(bp.Blueprint, "Blueprint", (), args, where)
     if not isinstance(built, bp.Blueprint):
         raise bp.BlueprintError(f"{where}: does not declare a blueprint")
     return built

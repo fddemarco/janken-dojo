@@ -30,7 +30,9 @@ uv run janken bot new <name> --from <bot> --idea <N> \
 This copies the starting bot, sets the description, writes `spaces/<name>.yaml` when the
 bot has defaults, and marks the idea in progress. Then edit the blueprint.
 
-- **The catalogue** is `janken/kit/blueprint.py`, with each stage's docstring. The YAML
+- **The catalogue** is `janken/kit/blueprint/` (one module per stage family; the core
+  is a predictor tree: signals combined by `Bandit`, `Gate`, `NaiveBayes`), with each
+  stage's docstring. The YAML
   grammar is `janken/kit/declare.py`; [docs/writing-bots.md](../../../docs/writing-bots.md)
   has the table.
 - **Shared cores** are presets in `janken/kit/presets.py`: `metabot`, `smartbot_sims`,
@@ -40,7 +42,9 @@ bot has defaults, and marks the idea in progress. Then edit the blueprint.
   is a literal.
 - **A new idea the catalogue can't express** becomes a new **stage kind**, never logic in
   the bot:
-  1. a frozen dataclass in `blueprint.py` and a code in `codes.py`;
+  1. a frozen dataclass in its `janken/kit/blueprint/` module and a code in `codes.py`
+     (a new way of combining predictors is a composite in `composites.py`, flattened
+     by `lowering.py`);
   1. its compiled branch in the stage module (`@kernel` functions, numba's `random`
      only);
   1. unit tests in `tests/test_stages.py`, and a grammar test in `tests/test_declare.py`
@@ -56,7 +60,7 @@ bot has defaults, and marks the idea in progress. Then edit the blueprint.
 
 ```bash
 uv run janken bot check <name>            # contract, compiles, smoke round robin
-uv run python -m unittest discover -s tests -t .    # seconds, JIT off
+uv run pytest                             # seconds, JIT off
 uv run pre-commit run --all-files
 ```
 

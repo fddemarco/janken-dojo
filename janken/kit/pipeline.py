@@ -1,4 +1,4 @@
-"""The bot pipeline, compiled: one blueprint (janken/kit/blueprint.py), one round.
+"""The bot pipeline, compiled: one blueprint (janken/kit/blueprint/), one round.
 
     guards -> valid-only view -> track -> signals -> arms -> select -> overlays
 

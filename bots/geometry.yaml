@@ -12,8 +12,8 @@ defaults:
   ALPHA: 0.05
   MAX_LEN: 20
 blueprint:
-  guards:
-    - OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}
-  signals:
-    - Geometry: {alpha: $ALPHA, max_len: $MAX_LEN}
-  rotations: [BEAT]
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    Bandit:
+      predictors: [{Geometry: {alpha: $ALPHA, max_len: $MAX_LEN}}]
+      rotations: [BEAT]

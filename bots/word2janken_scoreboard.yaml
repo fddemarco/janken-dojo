@@ -6,8 +6,6 @@ description: |
   earliest strategy with the best positive score is played, random otherwise. The core
   is presets.staller() in janken/kit/presets.py.
 blueprint:
-  around: staller
-  selector:
-    Greedy: {ties: TIES_FIRST}
-  guards:
-    - OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}
+  guards: [{OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}}]
+  core:
+    staller: {selector: {Greedy: {ties: TIES_FIRST}}}

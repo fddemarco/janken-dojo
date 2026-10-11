@@ -3,11 +3,12 @@
 import difflib
 import importlib.util
 import os
+import pathlib
 import random
-import tempfile
 import types
-import unittest
 from collections.abc import Sequence
+
+import pytest
 
 from janken import botfile, export, sandbox, settings
 from janken.engine import registry
@@ -49,22 +50,31 @@ def bot_file(folder: str, name: str, overlay: str) -> None:
         f.write(
             f"description: {name}, a test fleet bot\n"
             "blueprint:\n"
-            "  signals: [{Constant: [SCISSORS]}]\n"
-            "  rotations: [COPY]\n"
+            "  core:\n"
+            "    Bandit: {predictors: [{Constant: [SCISSORS]}], rotations: [COPY]}\n"
             f"  overlays: [{overlay}]\n"
         )
 
 
-class ExportedBotsTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
+class TestExportedBots:
+    @pytest.fixture(autouse=True)
+    def _folder(self, tmp_path: pathlib.Path) -> None:
+        self.tmp = str(tmp_path)
 
     def exported(self, path: str, bots_dir: str = "bots") -> dict[str, str]:
         return export.scripts(path, bots_dir, MAX_ROUNDS)
 
-    def assertPlaysLikeTheKit(
-        self, stem: str, rounds: int, seed: int, invalid_at: int = -1
+    @pytest.mark.parametrize(
+        "stem, rounds, seed, invalid_at",
+        [
+            ("frequency", 30, 1, -1),
+            ("smartbot_sims", 30, 2, 10),
+            ("anti_smartbot_sims", 6, 3, -1),  # replays, Thompson draws
+            ("gate_edge", 8, 4, 3),  # the Gatekeeper
+        ],
+    )
+    def test_exported_bots_play_exactly_like_the_kit(
+        self, stem: str, rounds: int, seed: int, invalid_at: int
     ) -> None:
         path = f"bots/{stem}.yaml"
         found = botfile.read(path)
@@ -76,34 +86,24 @@ class ExportedBotsTest(unittest.TestCase):
         runner = Runner(declare.blueprint_from_data(found.blueprint), found.defaults)
         random.seed(seed)
         expected = runner.moves(my, opp)
-        module = load(self.exported(path)[stem], self.tmp.name, stem)
+        module = load(self.exported(path)[stem], self.tmp, stem)
         random.seed(seed)
-        self.assertEqual(script_moves(module, my, opp), expected, stem)
-
-    def test_exported_bots_play_exactly_like_the_kit(self) -> None:
-        self.assertPlaysLikeTheKit("frequency", 30, 1)
-        self.assertPlaysLikeTheKit("smartbot_sims", 30, 2, invalid_at=10)
-        self.assertPlaysLikeTheKit(
-            "anti_smartbot_sims", 6, 3
-        )  # replays, Thompson draws
-        self.assertPlaysLikeTheKit("gate_edge", 8, 4, invalid_at=3)  # the Gatekeeper
+        assert script_moves(module, my, opp) == expected, stem
 
     def test_a_crash_guard_forfeits_by_raising(self) -> None:
-        module = load(
-            self.exported("bots/frequency.yaml")["frequency"], self.tmp.name, "f"
-        )
+        module = load(self.exported("bots/frequency.yaml")["frequency"], self.tmp, "f")
         module.play([], [])
-        with self.assertRaises(RuntimeError):  # frequency crashes on an invalid move
+        with pytest.raises(RuntimeError):  # frequency crashes on an invalid move
             module.play(["rock"], ["invalid"])
 
     def test_scripts_pass_the_screening_and_import_no_numpy(self) -> None:
         source = self.exported("bots/frequency.yaml")["frequency"]
-        self.assertEqual(sandbox.scan(source, RULES), [])
-        self.assertNotIn("numpy", source)
-        self.assertNotIn("global ", source)
+        assert sandbox.scan(source, RULES) == []
+        assert "numpy" not in source
+        assert "global " not in source
 
     def test_a_champion_brings_its_fleets_supports_as_replicas(self) -> None:
-        folder = self.tmp.name
+        folder = self.tmp
         bot_file(
             folder, "chief", "{Team: {role: CHAMPION, fleet: ILIAD_V2, vigilant: true}}"
         )
@@ -112,7 +112,7 @@ class ExportedBotsTest(unittest.TestCase):
         bot_file(folder, "other_fleet", "{Team: {role: SUPPORT}}")
         bot_file(folder, "spy", "{Team: {role: IMPOSTOR, fleet: ILIAD_V2}}")
         made = self.exported(os.path.join(folder, "chief.yaml"), folder)
-        self.assertEqual(list(made), ["chief", "first", "second"])
+        assert list(made) == ["chief", "first", "second"]
         diff = [
             line
             for line in difflib.ndiff(
@@ -120,14 +120,11 @@ class ExportedBotsTest(unittest.TestCase):
             )
             if line[:1] in "+-"
         ]
-        self.assertEqual(
-            diff,
-            [
-                f"- TEAM_ROLE = {c.CHAMPION}  # CHAMPION",
-                "+ # first",
-                f"+ TEAM_ROLE = {c.SUPPORT}  # SUPPORT",
-            ],
-        )
+        assert diff == [
+            f"- TEAM_ROLE = {c.CHAMPION}  # CHAMPION",
+            "+ # first",
+            f"+ TEAM_ROLE = {c.SUPPORT}  # SUPPORT",
+        ]
         chief = load(made["chief"], folder, "chief")
         first = load(made["first"], folder, "first")
         mine: list[str] = []
@@ -136,17 +133,17 @@ class ExportedBotsTest(unittest.TestCase):
             a, b = chief.play(mine, theirs), first.play(theirs, mine)
             mine.append(a)
             theirs.append(b)
-        self.assertEqual(mine[-2:], ["paper", "paper"])  # the support throws its match
-        self.assertEqual(theirs[-2:], ["rock", "rock"])
+        assert mine[-2:] == ["paper", "paper"]  # the support throws its match
+        assert theirs[-2:] == ["rock", "rock"]
 
     def test_only_a_champion_is_exported_with_its_fleet(self) -> None:
-        folder = self.tmp.name
+        folder = self.tmp
         bot_file(folder, "first", "{Team: {role: SUPPORT}}")
-        with self.assertRaises(export.ExportError):
+        with pytest.raises(export.ExportError):
             self.exported(os.path.join(folder, "first.yaml"), folder)
 
     def test_a_new_match_starts_from_fresh_state(self) -> None:
-        folder = self.tmp.name
+        folder = self.tmp
         bot_file(folder, "chief", "{Team: {role: CHAMPION}}")
         chief = load(
             self.exported(os.path.join(folder, "chief.yaml"), folder)["chief"],
@@ -155,26 +152,24 @@ class ExportedBotsTest(unittest.TestCase):
         )
         opening = chief.play([], [])
         stranger = chief.play([opening], ["paper"])  # breaks the handshake
-        self.assertEqual(stranger, "scissors")
-        self.assertEqual(
-            chief.play([], []), opening
-        )  # a new match: the handshake again
+        assert stranger == "scissors"
+        assert chief.play([], []) == opening  # a new match: the handshake again
 
     def test_a_match_longer_than_the_export_is_an_error(self) -> None:
-        module = load(self.exported("bots/rock.yaml")["rock"], self.tmp.name, "rock")
-        with self.assertRaises(ValueError):
+        module = load(self.exported("bots/rock.yaml")["rock"], self.tmp, "rock")
+        with pytest.raises(ValueError):
             module.play(["rock"] * MAX_ROUNDS, ["rock"] * MAX_ROUNDS)
 
     def test_the_role_lives_in_the_team_overlays_record(self) -> None:
         compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT),)).compile({})
         spec = [int(v) for v in compiled.spec]
-        self.assertEqual([spec[x] for x in export.team_role_cells(spec)], [c.SUPPORT])
+        assert [spec[x] for x in export.team_role_cells(spec)] == [c.SUPPORT]
         prm = [float(v) for v in registry.param_vector("bots/rock.yaml")]
-        with self.assertRaises(export.ExportError):
+        with pytest.raises(export.ExportError):
             export.script(compiled, prm, [], [], MAX_ROUNDS)  # its role is missing
 
 
-class RewriteTest(unittest.TestCase):
+class TestRewrite:
     def test_numpy_and_kit_names_become_plain_python(self) -> None:
         out = export.rewrite_module(
             "demo",
@@ -189,26 +184,24 @@ class RewriteTest(unittest.TestCase):
             "    out[0] = c.NO_MOVE + x.size + LIMIT\n"
             "    return out\n",
         )
-        self.assertEqual(
-            out.source,
+        assert out.source == (
             "demo_LIMIT = 3\n\n"
             "def demo_make(n, x):\n"
             "    out = [0] * n\n"
             "    out[0] = codes_NO_MOVE + len(x) + demo_LIMIT\n"
-            "    return out",
+            "    return out"
         )
-        self.assertEqual(out.reads, {"codes_NO_MOVE", "demo_LIMIT"})
+        assert out.reads == {"codes_NO_MOVE", "demo_LIMIT"}
 
-    def test_what_cant_be_exported_is_refused(self) -> None:
-        for source in (
+    @pytest.mark.parametrize(
+        "source",
+        [
             "import numpy as np\ndef f(n):\n    return np.ones(n)\n",
             "import os\n",
             "from .blueprint import Team\n",
             "X = 0\ndef f():\n    global X\n    X = 1\n",
-        ):
-            with self.assertRaises(export.ExportError, msg=source):
-                export.rewrite_module("demo", source)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        ],
+    )
+    def test_what_cant_be_exported_is_refused(self, source: str) -> None:
+        with pytest.raises(export.ExportError):
+            export.rewrite_module("demo", source)

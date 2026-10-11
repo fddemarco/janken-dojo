@@ -5,8 +5,9 @@ defaults:
   DECAY: 0.95
 blueprint:
   guards:
-    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}
-    - Opening: {rounds: 2, move: RANDOM_MOVE}
-  signals:
-    - NGram: {order: 1, ctx: OPP, decay: $DECAY, sample: true}
-  rotations: [BEAT]
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
+    - {Opening: {rounds: 2, move: RANDOM_MOVE}}
+  core:
+    Bandit:
+      predictors: [{NGram: {order: 1, ctx: OPP, decay: $DECAY, sample: true}}]
+      rotations: [BEAT]

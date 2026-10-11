@@ -11,9 +11,6 @@ defaults:
   DECAY: 0.9
   MAX_LEN: 12
 blueprint:
-  around:
-    iocaine: {decay: $DECAY, max_len: $MAX_LEN}
-  selector:
-    Greedy: {ties: TIES_RANDOM}
-  guards:
-    - OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    iocaine: {decay: $DECAY, max_len: $MAX_LEN, selector: {Greedy: {ties: TIES_RANDOM}}}

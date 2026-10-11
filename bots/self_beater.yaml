@@ -3,9 +3,8 @@ description: |
 defaults:
   NOISE: 0.05
 blueprint:
-  guards:
-    - Noise: {p: $NOISE}
-    - Opening: {rounds: 1, move: PAPER}
-  signals:
-    - LastMove: {of: MY}
-  rotations: [BEAT]
+  guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: PAPER}}]
+  core:
+    Bandit:
+      predictors: [{LastMove: {of: MY}}]
+      rotations: [BEAT]

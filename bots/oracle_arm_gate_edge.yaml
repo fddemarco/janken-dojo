@@ -11,13 +11,21 @@ defaults:
   GATE_DECAY: 1.0
   WARMUP: 20
 blueprint:
-  signals:
-    - {metabot_signals: {table_decay: 0.9, max_match: 12}}
-    - {sims: [10]}
-    - Rotated:
-        signal: {Oracle: {wins: [0.3367, 0.4059, 0.415, 0.3681]}}
-        rotations: [BEAT]
-  rotations: ALL_ROTATIONS
-  scorer: {Dirichlet: {decay: 0.95}}
-  random_arm: RA_SCORED
-  selector: {Gatekeeper: {edge: $EDGE, decay: $GATE_DECAY, warmup: $WARMUP}}
+  core:
+    Gate:
+      main:
+        Bandit:
+          predictors:
+            - {metabot_signals: {table_decay: 0.9, max_match: 12}}
+            - {sims: [10]}
+          rotations: ALL_ROTATIONS
+          scorer: {Dirichlet: {decay: 0.95}}
+          random_arm: RA_SCORED
+          selector: Thompson
+      experts:
+        - Rotated:
+            signal: {Oracle: {wins: [0.3367, 0.4059, 0.415, 0.3681]}}
+            rotations: [BEAT]
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

@@ -43,7 +43,7 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 
 - **One anatomy.** Every bot is a blueprint of `janken/kit` stages, run by one
   pipeline: guards → valid-only view → track → signals → rotations → scorer + selector →
-  overlays (`janken/kit/blueprint.py`). The bot file is YAML: a `description`, its
+  overlays (`janken/kit/blueprint/`). The bot file is YAML: a `description`, its
   `defaults` and its `blueprint` (grammar in `janken/kit/declare.py`); `janken bot new`
   starts one from an existing bot.
 - **No logic in bots.** A new idea that the catalogue can't express becomes a new stage

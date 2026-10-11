@@ -5,10 +5,9 @@ defaults:
   DECAY: 0.9
 blueprint:
   guards:
-    - OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}
-    - Opening:
-        rounds: 1
-        move: RANDOM_MOVE
-  signals:
-    - Relative: {ref: OPP, by_outcome: true, decay: $DECAY}
-  rotations: [BEAT]
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}}
+    - {Opening: {rounds: 1, move: RANDOM_MOVE}}
+  core:
+    Bandit:
+      predictors: [{Relative: {ref: OPP, by_outcome: true, decay: $DECAY}}]
+      rotations: [BEAT]

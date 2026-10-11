@@ -6,9 +6,9 @@ defaults:
   TABLE_DECAY: 0.6
   MAX_MATCH: 8
 blueprint:
-  around:
+  core:
     metabot:
       arm_decay: $ARM_DECAY
       table_decay: $TABLE_DECAY
       max_match: $MAX_MATCH
-  selector: Thompson
+      selector: Thompson

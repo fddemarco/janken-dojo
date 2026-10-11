@@ -59,7 +59,7 @@ uv run janken config show                    # every default (janken.toml)
 | `bots/legacy/` | retired bots, kept for the research record ([README](bots/legacy/README.md)) |
 | `spaces/` | one tuning space per tunable bot of the field |
 | `janken/engine/` | compiles bots (numba) and referees matches |
-| `janken/kit/` | the bot anatomy: stage catalogue (`blueprint.py`), YAML grammar (`declare.py`), compiled stages, presets, levels |
+| `janken/kit/` | the bot anatomy: stage catalogue (`blueprint/`), YAML grammar (`declare.py`), compiled stages, presets, levels |
 | `janken/lab/` | experiments, runs database, analysis, Optuna tuning, Oracle calibration, move dataset and predictors |
 | `janken/notebook/` | the research notebook as data: ideas, notes, insights, the next step |
 | `janken/cli/` | the `janken` command (typer); `reference.py` generates the CLI reference |

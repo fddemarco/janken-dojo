@@ -3,12 +3,17 @@
 metabot(...)     smartbot's core: 18 cheap opponent models x 3 rotations, a
                  Dirichlet per arm, Thompson sampling, a scored random arm
                  (the Kaggle RPS 1st-place recipe, rps_kaggle §2)
+smartbot_sims(...)  the metabot plus the first n sims
 iocaine(...)     Iocaine Powder's sicilian reasoning over three predictors
 rps4(...)        rpscontest #4: joint-context tables of both players, greedy
 staller()        word2janken's predictor, its counter and counter-counter,
                  on a scoreboard
 sims(n)          the first n "model of us" signals: zoo bots replayed from
                  the opponent's side (experiments 0003-0005)
+
+Each core is a Bandit (janken/kit/blueprint/composites.py) with the selector its
+bot family plays, which a bot file may override (`selector: ...`); a Replay of one
+reads its records, not its selector.
 """
 
 import dataclasses
@@ -17,19 +22,27 @@ from . import codes as c
 from .blueprint import (
     ALL_ROTATIONS,
     Backoff,
+    Bandit,
+    ChooseSelector,
     DecayedNet,
     Dirichlet,
-    Ensemble,
     Frequency,
     Geometry,
+    Greedy,
     LongestMatch,
     NGram,
     Relative,
     Replay,
+    Selector,
     SignalLike,
     Sim,
+    Thompson,
     Value,
 )
+
+AnySelector = Selector | ChooseSelector
+THOMPSON = Thompson()
+GREEDY = Greedy()
 
 
 def metabot_signals(table_decay: Value, max_match: Value) -> tuple[SignalLike, ...]:
@@ -50,20 +63,26 @@ def metabot_signals(table_decay: Value, max_match: Value) -> tuple[SignalLike, .
     )
 
 
-def metabot(arm_decay: Value, table_decay: Value, max_match: Value) -> Ensemble:
-    """smartbot's core; pair it with the Thompson selector."""
-    return Ensemble(
+def metabot(
+    arm_decay: Value,
+    table_decay: Value,
+    max_match: Value,
+    selector: AnySelector = THOMPSON,
+) -> Bandit:
+    """smartbot's core: Thompson sampling over the metabot's arms."""
+    return Bandit(
         metabot_signals(table_decay, max_match),
         ALL_ROTATIONS,
         Dirichlet(arm_decay),
         c.RA_SCORED,
+        selector,
     )
 
 
-def iocaine(decay: Value, max_len: Value) -> Ensemble:
+def iocaine(decay: Value, max_len: Value, selector: AnySelector = GREEDY) -> Bandit:
     """The opponent's most frequent move, and the opponent's and our move after the
     longest joint match, each x 3 rotations, on decayed net scores."""
-    return Ensemble(
+    return Bandit(
         (
             Frequency(c.OPP),
             LongestMatch(max_len, ctx=c.JOINT, of=c.OPP),
@@ -71,10 +90,11 @@ def iocaine(decay: Value, max_len: Value) -> Ensemble:
         ),
         ALL_ROTATIONS,
         DecayedNet(decay),
+        selector=selector,
     )
 
 
-def rps4(decay: Value, table_decay: Value) -> Ensemble:
+def rps4(decay: Value, table_decay: Value, selector: AnySelector = GREEDY) -> Bandit:
     """Order 0..3 joint-context tables of both players' next moves, x 3 rotations,
     on decayed net scores, with the random arm pinned at 0."""
     tables = tuple(
@@ -82,21 +102,22 @@ def rps4(decay: Value, table_decay: Value) -> Ensemble:
         for o in range(4)
         for of in (c.OPP, c.MY)
     )
-    return Ensemble(tables, ALL_ROTATIONS, DecayedNet(decay), c.RA_PINNED)
+    return Bandit(tables, ALL_ROTATIONS, DecayedNet(decay), c.RA_PINNED, selector)
 
 
-def staller() -> Ensemble:
+def staller(selector: AnySelector = GREEDY) -> Bandit:
     """word2janken's predictor played straight, countered and counter-countered, on
     a plain scoreboard, random while nothing is ahead."""
-    return Ensemble(
+    return Bandit(
         (Backoff(3, ctx=c.JOINT),),
         (c.BEAT, c.BEAT_BEAT, c.COPY),
         DecayedNet(1.0),
         c.RA_PINNED,
+        selector,
     )
 
 
-def _replayed(core: Ensemble) -> Replay:
+def _replayed(core: Bandit) -> Replay:
     """A replay of `core`; its random arm can't be its best guess, so it goes."""
     return Replay(dataclasses.replace(core, random_arm=c.RA_NONE))
 
@@ -121,8 +142,12 @@ def sims(n: int) -> tuple[SignalLike, ...]:
 
 
 def smartbot_sims(
-    n: int, arm_decay: Value, table_decay: Value, max_match: Value
-) -> Ensemble:
+    n: int,
+    arm_decay: Value,
+    table_decay: Value,
+    max_match: Value,
+    selector: AnySelector = THOMPSON,
+) -> Bandit:
     """smartbot's core plus the first n sims."""
-    core = metabot(arm_decay, table_decay, max_match)
-    return dataclasses.replace(core, signals=core.signals + sims(n))
+    core = metabot(arm_decay, table_decay, max_match, selector)
+    return dataclasses.replace(core, predictors=core.predictors + sims(n))

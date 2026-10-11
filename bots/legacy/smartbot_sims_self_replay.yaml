@@ -10,13 +10,15 @@ defaults:
   TABLE_DECAY: 0.9
   MAX_MATCH: 12
 blueprint:
-  signals:
-    - metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}
-    - sims: {n: 10}
-    - Replay:
-        ensemble:
-          smartbot_sims: {n: 10, arm_decay: 0.95, table_decay: 0.9, max_match: 12}
-  rotations: ALL_ROTATIONS
-  scorer: {Dirichlet: {decay: $ARM_DECAY}}
-  random_arm: RA_SCORED
-  selector: Thompson
+  core:
+    Bandit:
+      predictors:
+        - {metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}}
+        - {sims: {n: 10}}
+        - Replay:
+            bandit:
+              smartbot_sims: {n: 10, arm_decay: 0.95, table_decay: 0.9, max_match: 12}
+      rotations: ALL_ROTATIONS
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

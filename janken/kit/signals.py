@@ -3,7 +3,7 @@
 A signal reads the valid-only history (`my`, `opp`, `n`). A sim evaluates the
 same signal with the histories swapped (janken/kit/ensemble.py does that), so
 "OPP" is then us. Stateful signals keep their tables in their own block of `f`
-(and `i`), laid out by janken/kit/blueprint.py; `observe` folds round `k` into
+(and `i`), laid out by janken/kit/blueprint/; `observe` folds round `k` into
 them, with `rk` the round's index in the raw history (for pending predictions).
 
 Tables are decayed count rows; an all-zero row means "never seen", so readers

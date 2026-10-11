@@ -6,7 +6,7 @@ code that builds blueprints directly, such as the tests:
     blueprint = bot.Blueprint(guards=(bot.Noise(bot.Knob("NOISE")),), ...)
     STATE, SPEC, KNOBS = blueprint.compile({"NOISE": 0.05})
 
-See blueprint.py for the stages and presets.py for the shared bot cores.
+See janken/kit/blueprint/ for the stages and presets.py for the shared bot cores.
 """
 
 import numpy as np
@@ -15,6 +15,7 @@ from . import presets
 from .blueprint import (
     ALL_ROTATIONS,
     Backoff,
+    Bandit,
     Biased,
     Blueprint,
     ChooseSelector,
@@ -24,10 +25,9 @@ from .blueprint import (
     Dirichlet,
     DropSwitch,
     EmitInvalid,
-    Ensemble,
     First,
     Frequency,
-    Gatekeeper,
+    Gate,
     Geometry,
     Greedy,
     Knob,
@@ -40,6 +40,7 @@ from .blueprint import (
     OnInvalid,
     Opening,
     Oracle,
+    Predictor,
     React,
     Relative,
     Replay,
@@ -130,6 +131,7 @@ __all__ = [
     "TIES_RANDOM",
     "Array",
     "Backoff",
+    "Bandit",
     "Biased",
     "Blueprint",
     "ChooseSelector",
@@ -139,10 +141,9 @@ __all__ = [
     "Dirichlet",
     "DropSwitch",
     "EmitInvalid",
-    "Ensemble",
     "First",
     "Frequency",
-    "Gatekeeper",
+    "Gate",
     "Geometry",
     "Greedy",
     "Knob",
@@ -155,6 +156,7 @@ __all__ = [
     "OnInvalid",
     "Opening",
     "Oracle",
+    "Predictor",
     "React",
     "Relative",
     "Replay",

@@ -4,8 +4,8 @@
     defaults: {NOISE: 0.05}            # the bot as submitted
     blueprint:                          # janken/kit/declare.py reads this section
       guards: [{Noise: {p: $NOISE}}]
-      signals: [{LastMove: {of: OPP}}]
-      rotations: [BEAT]
+      core:
+        Bandit: {predictors: [{LastMove: {of: OPP}}], rotations: [BEAT]}
     mocks: gate_edge                    # a pure Oracle only: the bot it stands in for
 
 The engine passes a bot its parameters at run time, as the `prm` vector in

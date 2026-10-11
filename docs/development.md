@@ -5,13 +5,14 @@ Coding conventions, bot rules and the definition of done are in `.claude/CLAUDE.
 ## Tests
 
 ```bash
-uv run python -m unittest discover -s tests -t .
+uv run pytest
 uv run pre-commit run --all-files   # mdformat, ruff, ty, pyrefly
 uv run python -m janken.cli.reference   # after changing a command: regenerate docs/cli-reference.md
 ```
 
-The suite runs with the JIT off (`tests/__init__.py`, which `-t .` makes run first), so
-it takes seconds and compiles nothing.
+The suite runs with the JIT off (`tests/conftest.py`, which pytest loads before any test
+module), so it takes seconds and compiles nothing. Tests are pytest style: plain `assert`,
+fixtures, `pytest.mark.parametrize`.
 
 | test module | covers |
 | --- | --- |

@@ -13,11 +13,17 @@ defaults:
   MAX_MATCH: 12
   BAYES_DECAY: 0.95
 blueprint:
-  signals:
-    - metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}
-    - sims: {n: 10}
-    - NaiveBayes: {decay: $BAYES_DECAY}
-  rotations: ALL_ROTATIONS
-  scorer: {Dirichlet: {decay: $ARM_DECAY}}
-  random_arm: RA_SCORED
-  selector: Thompson
+  core:
+    Bandit:
+      predictors:
+        - {metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}}
+        - {sims: {n: 10}}
+        - NaiveBayes:
+            inputs:
+              - {metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}}
+              - {sims: {n: 10}}
+            decay: $BAYES_DECAY
+      rotations: ALL_ROTATIONS
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

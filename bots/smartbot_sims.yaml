@@ -15,10 +15,10 @@ defaults:
   TABLE_DECAY: 0.9
   MAX_MATCH: 12
 blueprint:
-  around:
+  core:
     smartbot_sims:
       n: 10
       arm_decay: $ARM_DECAY
       table_decay: $TABLE_DECAY
       max_match: $MAX_MATCH
-  selector: Thompson
+      selector: Thompson

@@ -401,7 +401,7 @@ def _bot_lines(
     f_size, i_size, per_round = compiled.state
     spec = [int(v) for v in compiled.spec]
     return [
-        "# --- the bot: its compiled blueprint (janken/kit/blueprint.py) ---",
+        "# --- the bot: its compiled blueprint (janken/kit/blueprint/) ---",
         *_literal_lines("SPEC", spec),
         *_literal_lines("KNOBS", [float(v) for v in compiled.knobs]),
         *_literal_lines("PRM", [float(v) for v in prm]),

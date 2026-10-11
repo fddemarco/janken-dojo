@@ -1,6 +1,6 @@
 """Oracles: research-only stand-ins for bots of any level, and the rules around them.
 
-An Oracle (janken/kit/blueprint.py) wins with a set chance vs each opponent level
+An Oracle (janken/kit/blueprint/) wins with a set chance vs each opponent level
 (janken/kit/levels.py); the referee reveals the opponent's move and level to it.
 A bot holding one is level ORACLE, and is of one of two kinds:
 
@@ -30,8 +30,12 @@ def kind(blueprint: bp.Blueprint) -> int:
     """ORACLE_NONE, ORACLE_PURE (only an Oracle) or ORACLE_ARM."""
     if not levels.has_oracle(blueprint):
         return c.ORACLE_NONE
+    core = blueprint.core
     alone = (
-        len(blueprint.signals) == 1 and not blueprint.guards and not blueprint.overlays
+        isinstance(core, bp.Bandit)
+        and len(core.predictors) == 1
+        and not blueprint.guards
+        and not blueprint.overlays
     )
     return c.ORACLE_PURE if alone else c.ORACLE_ARM
 

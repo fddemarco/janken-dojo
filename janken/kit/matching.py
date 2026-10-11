@@ -16,9 +16,10 @@ list newest first, best[L] records the first (most recent) end with M >= L.
 Every matcher of a bot shares the index of the stream it reads. A sim or a replay
 sees the history swapped, which turns OPP into MY and back and leaves JOINT's
 repeats where they are (my * 3 + opp and opp * 3 + my name the same rounds), so a
-bot has at most three indexes (blueprint.py assigns them). They live in the bot's
-own state, fresh every match: fixed cells [head per symbol, filled] and four
-per-round slots [mval, stamp, prev, best] (codes.py, the per-match workspace).
+bot has at most three indexes (janken/kit/blueprint/encoder.py assigns them). They
+live in the bot's own state, fresh every match: fixed cells [head per symbol,
+filled] and four per-round slots [mval, stamp, prev, best] (codes.py, the per-match
+workspace).
 """
 
 import numpy as np

@@ -72,7 +72,7 @@ Write what you find into the verdict's `--analysis`.
 ## 2. Commit (after every step that changed the notebook)
 
 1. **Gates.**
-   - `uv run python -m unittest discover -s tests -t .` must pass. Never loosen a test,
+   - `uv run pytest` must pass. Never loosen a test,
      and never change an existing bot's or stage's behaviour.
    - Then `uv run pre-commit run --all-files` must pass. Fix the code rather than
      silencing a check.

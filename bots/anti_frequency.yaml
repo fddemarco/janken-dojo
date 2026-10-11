@@ -4,9 +4,8 @@ defaults:
   DECAY: 1.0
   NOISE: 0.0
 blueprint:
-  guards:
-    - Noise: {p: $NOISE}
-    - Opening: {rounds: 1, move: RANDOM_MOVE}
-  signals:
-    - Frequency: {of: MY, decay: $DECAY}
-  rotations: [BEAT_BEAT]
+  guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: RANDOM_MOVE}}]
+  core:
+    Bandit:
+      predictors: [{Frequency: {of: MY, decay: $DECAY}}]
+      rotations: [BEAT_BEAT]

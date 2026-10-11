@@ -12,9 +12,9 @@ defaults:
   DECAY: 0.85
   TABLE_DECAY: 1.0
 blueprint:
-  around:
-    rps4: {decay: $DECAY, table_decay: $TABLE_DECAY}
-  selector:
-    Greedy: {ties: TIES_RANDOM}
-  guards:
-    - OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    rps4:
+      decay: $DECAY
+      table_decay: $TABLE_DECAY
+      selector: {Greedy: {ties: TIES_RANDOM}}

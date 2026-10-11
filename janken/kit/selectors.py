@@ -8,7 +8,8 @@
     SampledVote  a move sampled from the arms' softmax vote: exploits like the
                  best arms while staying hard to predict (idea #10; a sampled arm
                  inside an argmax bandit is inert, experiment 0001)
-    Gatekeeper   two experts: the last arm (a replay) and Thompson over the rest,
+    Gatekeeper   a Gate, compiled (janken/kit/blueprint/lowering.py): two
+                 experts, the last arm (a replay) and Thompson over the rest,
                  picked by the last arm's own record (EDGE), the main expert's
                  lead over it (ANTI_FIRST) or a bandit over both (BANDIT); idea
                  #30: the replay of smartbot_sims wins the metabot family, its

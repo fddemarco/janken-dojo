@@ -1,4 +1,4 @@
-"""Integer codes shared by janken/kit/blueprint.py (Python) and the compiled stages.
+"""Integer codes shared by janken/kit/blueprint/ (Python) and the compiled stages.
 
 A blueprint compiles into one int64 `spec` array: a header, the knob bindings,
 then fixed-width records (one per guard, signal, selector and overlay) and

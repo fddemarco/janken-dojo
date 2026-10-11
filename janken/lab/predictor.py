@@ -1,7 +1,7 @@
 """A bot as a predictor of the opponent's next move.
 
 A bot's move implies a prediction: the opponent move it beats. Read through its
-core only, the signals, rotations, scorer and selector of its blueprint, that is
+core only, the predictor tree of its blueprint (a Bandit or a Gate), that is
 the bot's best guess at the opponent's next move from the moves so far. Its
 guards and overlays (noise, openings, stalling, team play, invalid moves) are
 about playing the game, not about predicting, so a predictor leaves them out,

@@ -4,8 +4,8 @@ defaults:
   STEP: 1
   NOISE: 0.05
 blueprint:
-  guards:
-    - Noise: {p: $NOISE}
-  signals:
-    - Cycle: {step: $STEP}
-  rotations: [COPY]
+  guards: [{Noise: {p: $NOISE}}]
+  core:
+    Bandit:
+      predictors: [{Cycle: {step: $STEP}}]
+      rotations: [COPY]

@@ -5,8 +5,8 @@ defaults:
   NOISE: 0.05
 blueprint:
   guards:
-    - Noise: {p: $NOISE}
-    - Opening: {rounds: 1, move: ROCK}
-    - OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}
-  signals: [React]
-  rotations: [BEAT]
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: ROCK}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}}
+  core:
+    Bandit: {predictors: [React], rotations: [BEAT]}

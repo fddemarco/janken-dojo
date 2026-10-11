@@ -5,9 +5,8 @@ description: |
   opponent's most common follow-up (lifetime frequency when nothing matches) and
   plays its beat. The core is presets.staller() in janken/kit/presets.py.
 blueprint:
-  guards:
-    - Opening: {rounds: 1, move: PAPER}
-    - Noise: {p: 0.12}
-  signals:
-    - Backoff: {max_order: 3, ctx: JOINT}
-  rotations: [BEAT]
+  guards: [{Opening: {rounds: 1, move: PAPER}}, {Noise: {p: 0.12}}]
+  core:
+    Bandit:
+      predictors: [{Backoff: {max_order: 3, ctx: JOINT}}]
+      rotations: [BEAT]

@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-12: A replay specialist that plays the mode of many Thompson draws is itself near-deterministic, so one more level of replay (the replayed bot from our side, played BEAT_BEAT) beats it in ~68% of rounds; gated by EDGE over the replayed bot's own arms it costs nothing against the rest of the field
+
+- **Evidence:** experiments/0031-counter-anti-sims-vs-smartbot-sims.md (run 20261012-144707_0031-counter-anti-sims-vs-smartbot-sims): `gate_counter_sims - counter_anti_sims = +47.5 pts [+41.2, +53.7]` over 300 shared matches: gate_counter_sims better; `gate_counter_sims - smartbot_sims_v2 = +9.0 pts [+2.3, +15.7]` over 300 shared matches: gate_counter_sims better; `counter_anti_sims - smartbot_sims_v2 = -38.5 pts [-45.7, -31.2]` over 300 shared matches: smartbot_sims_v2 better
+- **Mechanism:** anti_smartbot_sims_v2 plays beat(mode of 256 draws over smartbot_sims in our seat); our own 256-draw replay (own random stream since 1d3b9b7) names the same mode most rounds, and the ~15% of rounds lost are near-ties among smartbot_sims's arms where the two modes differ. The EDGE gate hands play to the counter only while it is winning, so the zoo still meets smartbot_sims's arms
+- **Implication:** every deterministic replay specialist in the field (anti_smartbot_sims, gate_edge's anti expert, anti_iocaine, anti_rps4) invites a BEAT_BEAT counter one level up; a gate with several such counters is the next bot, and our own replays should sample their output (idea #10) rather than play the argmax
+
 ## 2026-10-10: An L4 gatekeeper that starts on the L3 arms and moves to the anti expert only once that expert's record leads (MAIN_FIRST, edge 0) keeps the best L2's strength vs L1 and beats the best L3 vs L2: the L3 regression vs lower levels is a gating problem, not a model problem
 
 - **Evidence:** experiments/0028-l4-vs-l2-gate-main-first-vs-anti-advanced-bots-l.md (run 20261010-223059_0028-l4-vs-l2-gate-main-first-vs-anti-advanced-bots-l): `gate_main_first - anti_advanced_bots = +6.1 pts [+3.0, +9.4]` over 600 shared matches: gate_main_first better

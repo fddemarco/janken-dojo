@@ -67,6 +67,10 @@ Test candidates against random pools, with a note: hypothesis --> results.
 Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
 it, and writes its results in (status run). Close it with `janken verdict`.
 
+Start small and grow: `--round-robins 1`, then `--note NNNN --round-robins 3`
+(5, 7, 10) while the comparison is unclear. A grown run equals one planned at
+its new size, so the steps cost nothing extra.
+
 **Usage**:
 
 ```console
@@ -84,7 +88,7 @@ $ uv run janken evaluate [OPTIONS] [candidates]...
 * `--title <str>`: the note's title (default: built from the bots)
 * `--name <str>`: the note's file name, NNNN-<name>.md (default: from the title)
 * `--idea <int>`: the ideas.md number it tests (it goes in progress); 0: none  [default: 0]
-* `--note <str>`: an existing note (number or NNNN-name) to run or resume, instead of a new one
+* `--note <str>`: an existing note (number or NNNN-name) to run or resume, instead of a new one; with --round-robins, its run grows to that many
 * `--mode <full|candidates>`: full: every pair plays; candidates: only matches with a candidate (config: evaluation.mode)  [default: full]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
@@ -128,7 +132,7 @@ $ uv run janken tune [OPTIONS] [bots]...
 * `--title <str>`: the note's title (default: built from the bots)
 * `--name <str>`: the note's file name, NNNN-<name>.md (default: from the title)
 * `--idea <int>`: the ideas.md number it tests (it goes in progress); 0: none  [default: 0]
-* `--note <str>`: an existing note (number or NNNN-name) to run or resume, instead of a new one
+* `--note <str>`: an existing note (number or NNNN-name) to run or resume, instead of a new one; with --round-robins, its run grows to that many
 * `--trials <int>`: trials this session; default: the --effort budget (config: effort.standard.trials)  [default: 100]
 * `--validate-top <int>`: best trials replayed on fresh pools; default: the --effort budget (config: effort.standard.validate_top)  [default: 5]
 * `--validate-round-robins <int>`: pools each validation plays; default: the --effort budget (config: effort.standard.validate_round_robins)  [default: 10]

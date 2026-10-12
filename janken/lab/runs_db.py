@@ -256,6 +256,23 @@ class RunStore:
             ],
         )
 
+    def retarget(self, run_id: str, manifest: Mapping[str, object]) -> None:
+        """Replace a run's manifest (a grown schedule) and its target size."""
+        config = manifest["config"]
+        if not isinstance(config, dict):
+            raise TypeError("a manifest's config must be a mapping")
+        with self._transaction() as con:
+            con.execute(
+                "UPDATE runs SET round_robins = ?, n_matches = ?, manifest = ?"
+                " WHERE run_id = ?",
+                [
+                    config["round_robins"],
+                    manifest["n_matches"],
+                    json.dumps(manifest, default=str),
+                    run_id,
+                ],
+            )
+
     def append_matches(self, rows: Sequence[Mapping[str, object]]) -> None:
         """Commit a batch of match rows (MATCH_SCHEMA), in one transaction."""
         if not rows:

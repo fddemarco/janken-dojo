@@ -34,7 +34,8 @@ TITLE_HELP = "the note's title (default: built from the bots)"
 NAME_HELP = "the note's file name, NNNN-<name>.md (default: from the title)"
 IDEA_HELP = "the ideas.md number it tests (it goes in progress); 0: none"
 NOTE_HELP = (
-    "an existing note (number or NNNN-name) to run or resume, instead of a new one"
+    "an existing note (number or NNNN-name) to run or resume, instead of a new one;"
+    " with --round-robins, its run grows to that many"
 )
 
 
@@ -188,6 +189,10 @@ def evaluate(
 
     Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
     it, and writes its results in (status run). Close it with `janken verdict`.
+
+    Start small and grow: `--round-robins 1`, then `--note NNNN --round-robins 3`
+    (5, 7, 10) while the comparison is unclear. A grown run equals one planned at
+    its new size, so the steps cost nothing extra.
     """
     from ..lab import workflows
 
@@ -198,7 +203,10 @@ def evaluate(
         created = workflows.plan(lab.notebook, draft, [], datetime.date.today())
         note = f"{created.number:04d}"
         lab.say(f"note {shown(created.path)} (planned)")
-    done, summary = workflows.evaluate(lab.notebook, note, plan_for(lab, str(mode)))
+    grow_to = lab.given("round_robins", 0)  # an existing note's run grows to it
+    done, summary = workflows.evaluate(
+        lab.notebook, note, plan_for(lab, str(mode)), grow_to
+    )
     lab.emit(
         {
             "note": shown(done.path),

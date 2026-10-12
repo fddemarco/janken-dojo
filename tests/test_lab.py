@@ -236,6 +236,26 @@ class TestExperiment(LightBots):
         resumed = self.runs.matches(cut).drop("run_id")
         assert resumed.equals(self.runs.matches(whole).drop("run_id"))
 
+    def test_a_run_grows_into_the_run_planned_at_its_new_size(self) -> None:
+        cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
+        grown = self.run_exp(cands, round_robins=1, rounds=6, name="grown")
+        quietly(resume_experiment, grown, self.root, round_robins=2)
+        whole = self.run_exp(cands, round_robins=2, rounds=6, name="whole")
+        assert self.runs.played_round_robins(grown) == {0, 1}
+        assert self.runs.status(grown) == COMPLETE
+        assert self.runs.manifest(grown)["pools"] == self.runs.manifest(whole)["pools"]
+        assert (
+            self.runs.matches(grown)
+            .drop("run_id")
+            .equals(self.runs.matches(whole).drop("run_id"))
+        )
+
+    def test_a_run_never_shrinks(self) -> None:
+        cands = [make_spec(self.light("cycler_v1"))]
+        run = self.run_exp(cands, round_robins=2, rounds=6, name="two")
+        with pytest.raises(SystemExit):
+            quietly(resume_experiment, run, self.root, round_robins=1)
+
     def test_a_resume_refuses_a_changed_bot(self) -> None:
         path = os.path.join(self.root, "mystery.yaml")
         with open(path, "w") as f:

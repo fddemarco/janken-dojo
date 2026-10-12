@@ -101,9 +101,15 @@ def plan(
     return note
 
 
-def evaluate(notebook: str, ref: str, how: Plan) -> tuple[notes.Note, dict]:
+def evaluate(
+    notebook: str, ref: str, how: Plan, grow_to: int = 0
+) -> tuple[notes.Note, dict]:
     """Run note `ref`'s experiment (or finish its interrupted run), analyze it, and
-    write the results into the note; returns the note and the run's summary."""
+    write the results into the note; returns the note and the run's summary.
+
+    `grow_to` above the note's run's round robins grows that run to as many (the
+    1 --> 3 --> 5 --> 7 --> 10 ladder: stop as soon as the comparison is clear);
+    0 leaves it as planned."""
     from .experiment import resume_experiment, run_experiment
 
     note = notes.find(notebook, ref)
@@ -114,8 +120,10 @@ def evaluate(notebook: str, ref: str, how: Plan) -> tuple[notes.Note, dict]:
     runs = RunStore.at(how.workspace)
     stem = f"{note.number:04d}-{note.slug}"
     known = [r for r in note.run_ids if r in runs.run_ids()]
-    if known and runs.status(known[-1]) != COMPLETE:
-        run_id = resume_experiment(known[-1], how.workspace, how.workers or None)
+    if known and (runs.status(known[-1]) != COMPLETE or grow_to):
+        run_id = resume_experiment(
+            known[-1], how.workspace, how.workers or None, round_robins=grow_to
+        )
     elif known:
         run_id = known[-1]
     else:

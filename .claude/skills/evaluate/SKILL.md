@@ -17,17 +17,32 @@ in the note. You bring the hypothesis and the judgement. Run every command as
 - **Hypothesis**, written before the run: what you expect, and the effect size that would
   matter. For example: "bayes_combiner beats smartbot_sims by >= 2 pts, mostly against the
   metabots".
-- **Effort:**
-  - `standard`: 10 round robins, a score CI of about +/-6 pts;
-  - `thorough`: 40 round robins, about +/-3 pts, for effects of 1-3 pts;
-  - `quick`: a smoke check, proves nothing.
+- **Size: the ladder.** Start with 1 round robin and grow the same run only while
+  the result is inconclusive: 1 --> 3 --> 5 --> 7 --> 10, never past 10 (section 2).
+  For reference, 10 round robins give a score CI of about +/-6 pts, so an effect
+  under ~3 pts won't resolve: say so in the verdict rather than playing on. `--effort
+  quick` is a smoke check and proves nothing.
 
 ## 2. Run it
 
 ```bash
 uv run janken evaluate bots/<level>/<new>.yaml --baseline bots/<level>/<old>.yaml \
-  --hypothesis "..." --idea <N> --effort standard
+  --hypothesis "..." --idea <N> --mode candidates --round-robins 1
+uv run janken evaluate --note NNNN --round-robins 3   # only if inconclusive
+uv run janken evaluate --note NNNN --round-robins 5   # ... then 7, then 10 (the cap)
 ```
+
+- **The ladder.** `--note NNNN --round-robins K` grows the note's run to K round
+  robins and plays only the missing ones. Round robin k's pool and seeds don't depend
+  on K, so a grown run equals one planned at K: stepping costs nothing extra and the
+  comparison stays paired. After each step, read the paired comparisons and stop as
+  soon as each one is **conclusive**: its CI excludes 0, or it is clearly beyond the
+  hypothesis's threshold either way. Grow only for the inconclusive ones. At 10,
+  decide with what you have (an unresolved effect is `drop` or `iterate`, never more
+  round robins).
+- **`--mode candidates`** plays only the candidates' matches (~20x fewer than `full`,
+  the config default, which also plays pool vs pool for the ratings). Paired
+  comparisons need only the candidates' matches.
 
 - **What it prints:** the note path, the results (candidates vs pool, paired comparisons,
   weakest matchups) and the run id.
@@ -57,7 +72,8 @@ uv run janken verdict NNNN keep|drop|iterate \
   the next version of one, or a variant that retires).
 - **drop:** no better, or worse. The idea becomes `dropped`.
 - **iterate:** promising but unresolved (say why). The idea stays in progress. Plan the
-  follow-up as a new note, with `--effort thorough` or a variant.
+  follow-up as a new note: a sharper test (a pool where the effect lives) or a
+  variant, not more round robins of the same.
 
 Next: a `keep` whose CI excludes 0 goes to `/learn`. A kept bot with tunable defaults may
 go to `/tune`.

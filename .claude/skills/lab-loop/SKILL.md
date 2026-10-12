@@ -62,8 +62,10 @@ Write what you find into the verdict's `--analysis`.
 
 ### Running
 
-- **Sizing.** Use the effort budgets: `--effort standard` by default, `--effort thorough`
-  for small effects, and `--effort quick` only for smoke checks.
+- **Sizing: the ladder.** Evaluate with `--mode candidates --round-robins 1`, and grow
+  the same run (`janken evaluate --note NNNN --round-robins K`) only while a paired
+  comparison is inconclusive: 1 --> 3 --> 5 --> 7 --> 10, never past 10 (`/evaluate`
+  section 2). `--effort quick` is only for smoke checks.
 - **Time.** Use a Bash timeout of 600000 ms. Run longer jobs with `run_in_background` and
   wait for the notification. Never poll in a sleep loop.
 - **Slow steps.** When a step's command is flagged `slow` by `janken lab profile spans`,

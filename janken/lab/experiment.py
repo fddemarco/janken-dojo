@@ -19,7 +19,10 @@ which is what makes paired comparisons and tuning sharp.
 
 A run is stored in the runs database (runs_db.py) before it plays, and each round
 robin is committed as soon as it's played. An interrupted run keeps them, and
-`resume_experiment` plays the rest of the same schedule.
+`resume_experiment` plays the rest of the same schedule. Round robin k's pool and
+seeds depend only on k, never on how many the run plays, so `resume_experiment`
+can also grow a run (1 --> 3 --> 5 ... round robins): the grown run equals one
+planned at its new size.
 """
 
 import itertools
@@ -251,15 +254,18 @@ def resume_experiment(
     root: str = "",
     workers: int | None = None,
     on_batch: Callable[[int], None] = _no_hook,
+    round_robins: int = 0,
 ) -> str:
     """Play the round robins a stored run is missing; returns its run id.
 
     The schedule is rebuilt from the run's manifest (pools and seeds depend only
     on its seed), so the resumed run equals one that was never interrupted.
+    `round_robins` above the run's own grows it to that many (0: its own).
 
     Raises:
         SystemExit: a bot or the library changed since the run started, so the
-            rest of it would not be the same experiment.
+            rest of it would not be the same experiment; or `round_robins` would
+            shrink it.
     """
     runs = RunStore.at(root)
     run_id = runs.resolve(ref)
@@ -270,22 +276,31 @@ def resume_experiment(
         raise SystemExit(
             f"run {run_id} was played on another kit/engine version; start a new run"
         )
+    if round_robins and round_robins < config["round_robins"]:
+        raise SystemExit(
+            f"run {run_id} plans {config['round_robins']} round robin(s): a run"
+            f" only grows, not to {round_robins}"
+        )
+    target = max(round_robins, config["round_robins"])
     schedule = build_schedule(
         candidates,
         config["bots_dir"],
         config["pool_size"],
-        config["round_robins"],
+        target,
         config["seed"],
         config["mode"],
         config.get("allow_small", False),
         config.get("mocks", False),
     )
-    if [[p.label for p in rr["pool"]] for rr in schedule] != manifest["pools"]:
+    pools = [[p.label for p in rr["pool"]] for rr in schedule]
+    if pools[: len(manifest["pools"])] != manifest["pools"]:
         raise SystemExit(f"run {run_id}: its pools can't be rebuilt; start a new run")
-    if used_bots(schedule) != manifest["bots"]:
+    if used_bots(schedule[: len(manifest["pools"])]) != manifest["bots"]:
         raise SystemExit(
             f"run {run_id}: a bot file changed since the run started; start a new run"
         )
+    if target > config["round_robins"]:
+        _grow(runs, run_id, manifest, schedule, pools)
     played = runs.played_round_robins(run_id)
     todo = [rr for rr in schedule if rr["rr"] not in played]
     if not todo:
@@ -299,6 +314,29 @@ def resume_experiment(
     runs.finish(run_id, RUNNING, 0.0)
     play_into(runs, run_id, todo, config["rounds"], workers, candidates, on_batch)
     return run_id
+
+
+def _grow(
+    runs: RunStore,
+    run_id: str,
+    manifest: dict,
+    schedule: Sequence[dict],
+    pools: list[list[str]],
+) -> None:
+    """Store the run's grown schedule: its target, pools and match count."""
+    grown = {
+        **manifest,
+        "config": {**manifest["config"], "round_robins": len(schedule)},
+        "pools": pools,
+        "bots": used_bots(schedule),
+        "n_matches": sum(len(rr["pairs"]) for rr in schedule),
+    }
+    runs.retarget(run_id, grown)
+    print(
+        f"growing {run_id} from {manifest['config']['round_robins']} to"
+        f" {len(schedule)} round robin(s)",
+        file=sys.stderr,
+    )
 
 
 def used_bots(schedule: Sequence[dict]) -> dict[str, str]:

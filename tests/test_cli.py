@@ -312,6 +312,11 @@ class TestLifecycle:
         assert note.run_ids
         assert "lab experiment" in note.section("Command")
 
+        self.run_ok("evaluate", "--note", "1", "--round-robins", "3")  # grows its run
+        grown = notes.find(self.notebook, "1")
+        assert grown.run_ids == note.run_ids
+        assert "3 of 3 round robin(s)" in grown.section("Results")
+
         refused = self.runner.invoke(
             app,
             [

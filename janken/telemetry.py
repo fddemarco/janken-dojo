@@ -83,7 +83,9 @@ class Spans:
         self._sinks.clear()
         self._context = {}
 
-    def write(self, op: str, seconds: float, ok: bool, fields: dict[str, object]) -> None:
+    def write(
+        self, op: str, seconds: float, ok: bool, fields: dict[str, object]
+    ) -> None:
         """Log one span, if any sink is configured."""
         if not self._sinks:
             return

@@ -32,7 +32,6 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `iocaine_lite` | L2 | `iocaine_lite_v1` | v1 ← `iocaine_lite` (2026-10-11 rename) | |
 | `rps4_lite` | L2 | `rps4_lite_v1` | v1 ← `rps4_lite` (2026-10-11 rename) | |
 | `smartbot_fast` | L2 | `smartbot_fast_v1` | v1 ← `smartbot_fast` (2026-10-11 rename) | |
-| `smartbot_staller` | L2 | `smartbot_staller_v1` | v1 ← `smartbot_staller` (2026-10-11 rename) | |
 | `smartbot` | L2 | `smartbot_v1` | v1 ← `smartbot` (2026-10-11 rename) | |
 | `word2janken_scoreboard` | L2 | `word2janken_scoreboard_v1` | v1 ← `word2janken_scoreboard` (2026-10-11 rename) | |
 | `anti_smartbot_sims` | L3 | `anti_smartbot_sims_v1` | v1 ← `anti_smartbot_sims` (2026-10-11 rename) | |

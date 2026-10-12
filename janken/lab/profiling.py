@@ -27,7 +27,6 @@ import glob
 import hashlib
 import json
 import os
-import statistics
 import subprocess
 import sys
 import time
@@ -44,7 +43,12 @@ from .. import settings, telemetry
 from . import duck, store
 
 PROFILE, BENCH = "profile", "bench"
-META, SESSION, HTML, OUTPUT = "meta.json", "session.pyisession", "profile.html", "output.txt"
+META, SESSION, HTML, OUTPUT = (
+    "meta.json",
+    "session.pyisession",
+    "profile.html",
+    "output.txt",
+)
 JANKEN_DIR = os.path.join(settings.ROOT, "janken") + os.sep
 OUTSIDE = "(outside janken)"
 COMMAND_OP = "command"
@@ -132,7 +136,8 @@ class Worth:
     worth: bool
     reason: str
     share: float  # the top hotspot's share of wall time
-    typical_s: float  # a real run of the command (median of its spans, else the profile)
+    # a real run of the command (median of its spans, else the profile)
+    typical_s: float
     uses: float  # projected runs over the horizon
     saving_s: float  # what cutting expected_cut of the hotspot saves over the horizon
     cost_s: float  # the session's cost
@@ -383,9 +388,7 @@ def samples(root: Frame) -> Iterator[Sample]:
         )
         if own > 0:
             yield Sample(own, path)
-        stack += [
-            (c, (*path, c)) for c in frame.children if not c.is_synthetic_leaf
-        ]
+        stack += [(c, (*path, c)) for c in frame.children if not c.is_synthetic_leaf]
 
 
 def _path(frame: Frame) -> str:
@@ -520,9 +523,7 @@ def command_name(argv: Sequence[str], known: Sequence[str]) -> str:
 # --- the budget -----------------------------------------------------------------------
 
 
-def worth(
-    record: Record, stats: pl.DataFrame, cfg: settings.ProfileConfig
-) -> Worth:
+def worth(record: Record, stats: pl.DataFrame, cfg: settings.ProfileConfig) -> Worth:
     """Whether optimizing the profile's top hotspot is worth a session.
 
     It must hold `min_share` of the wall time (less gains under ~11% even if removed
@@ -546,20 +547,26 @@ def worth(
     if share < cfg.min_share:
         verdict, reason = (
             False,
-            f"the top hotspot holds {share:.0%} of the time, under min_share"
-            f" {cfg.min_share:.0%}",
+            (
+                f"the top hotspot holds {share:.0%} of the time, under min_share"
+                f" {cfg.min_share:.0%}"
+            ),
         )
     elif saving < cost:
         verdict, reason = (
             False,
-            f"it would save {saving / 60:.0f} min over {cfg.horizon_days} days"
-            f" ({basis}), under the session's {cfg.session_minutes} min",
+            (
+                f"it would save {saving / 60:.0f} min over {cfg.horizon_days} days"
+                f" ({basis}), under the session's {cfg.session_minutes} min"
+            ),
         )
     else:
         verdict, reason = (
             True,
-            f"it would save {saving / 60:.0f} min over {cfg.horizon_days} days"
-            f" ({basis}), over the session's {cfg.session_minutes} min",
+            (
+                f"it would save {saving / 60:.0f} min over {cfg.horizon_days} days"
+                f" ({basis}), over the session's {cfg.session_minutes} min"
+            ),
         )
     return Worth(verdict, reason, share, typical, uses, saving, cost)
 
@@ -583,8 +590,10 @@ def render(record: Record, folder: str) -> str:
     lines = [
         f"## {record.kind} {record.id}",
         "",
-        f"`{record.target}` (jit {'on' if record.jit else 'off'},"
-        f" code {record.fingerprint}): {times}",
+        (
+            f"`{record.target}` (jit {'on' if record.jit else 'off'},"
+            f" code {record.fingerprint}): {times}"
+        ),
     ]
     if record.buckets:
         lines += [

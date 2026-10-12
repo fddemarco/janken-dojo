@@ -11,7 +11,7 @@
 jit = true
 # Commands that keep numba's compiled code on disk (the compute-intensive ones); the
 # rest compile in memory. --cache / --no-cache or $JANKEN_NUMBA_CACHE override.
-cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune"]
+cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
 
 [output]
 # Progress bars on long commands: "auto" (only on an interactive terminal), "on" or
@@ -192,6 +192,10 @@ speed_matches = 8
 speed_repeats = 3
 # Retired versions and variants go here, relative to the bots dir (never in a pool).
 legacy_dir = "inactive/legacy"
+# Computed cores are kept here, in the workspace, named after a hash of the bot (and
+# the bots it names), the replay code and the histories: a census, compare or
+# classify replays only the bots that changed (janken/lab/cores.py).
+cores_dir = "cores"
 
 [telemetry]
 # Timing spans: one JSON line per coarse operation (a command, compiling, playing, a

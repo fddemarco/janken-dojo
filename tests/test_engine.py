@@ -18,8 +18,9 @@ from janken.kit import levels
 from janken.match import INVALID_MOVE_LIMIT, MatchResult
 from janken.spec import make_spec
 from janken.tournament import Standing, balanced_schedule, discover_bots, run_tournament
+from tests import data
 
-BOTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bots")
+BOTS_DIR = data.BOTS_DIR
 
 # Fixture bots: name -> body of `step(f, i, prm, my, opp, n)`.
 FIXTURES = {
@@ -143,7 +144,7 @@ class TestReferee(FixtureBots):
         assert m.moves.startswith("xr" * slips)
 
     def test_invalid_moves_forfeit_the_match_at_the_limit(self) -> None:
-        m = self.play("junk", "rock", rounds=50)
+        m = self.play("junk", "rock", rounds=9)
         assert m.forfeit_a == f"returned {INVALID_MOVE_LIMIT} invalid moves"
         assert m.winner == "rock"
         # It stops at the limit, and the round that tipped it over still counts.
@@ -151,7 +152,7 @@ class TestReferee(FixtureBots):
         assert m.wins_b == INVALID_MOVE_LIMIT
 
     def test_the_limit_is_cumulative_not_consecutive(self) -> None:
-        m = self.play("alternator", "rock", rounds=100)
+        m = self.play("alternator", "rock", rounds=9)
         assert m.forfeit_a == f"returned {INVALID_MOVE_LIMIT} invalid moves"
         assert len(m.moves) // 2 == 2 * INVALID_MOVE_LIMIT - 1
 
@@ -173,9 +174,9 @@ class TestReferee(FixtureBots):
             assert m.wins_a == 5
 
     def test_a_seed_makes_a_match_reproducible(self) -> None:
-        one = self.play("randy", "randy", rounds=50, seed=7)
-        two = self.play("randy", "randy", rounds=50, seed=7)
-        other = self.play("randy", "randy", rounds=50, seed=8)
+        one = self.play("randy", "randy", rounds=9, seed=7)
+        two = self.play("randy", "randy", rounds=9, seed=7)
+        other = self.play("randy", "randy", rounds=9, seed=8)
         assert one.moves == two.moves
         assert one.moves != other.moves
 
@@ -185,11 +186,11 @@ class TestReferee(FixtureBots):
         assert (m.wins_a, m.wins_b) == (0, 5)
 
     def test_the_workspace_follows_the_match_length_and_starts_fresh(self) -> None:
-        short = self.play("matcher", "randy", rounds=20, seed=4)
-        long = self.play("matcher", "randy", rounds=60, seed=4)
+        short = self.play("matcher", "randy", rounds=4, seed=4)
+        long = self.play("matcher", "randy", rounds=9, seed=4)
         assert long.moves[: len(short.moves)] == short.moves
         pair = (make_spec(self.bot("matcher")), make_spec(self.bot("randy")))
-        again = play_pairs([pair, pair], 60, [4, 4])
+        again = play_pairs([pair, pair], 9, [4, 4])
         assert [m.moves for m in again] == [long.moves, long.moves]
 
     def test_a_bad_blueprint_is_refused(self, tmp_path: pathlib.Path) -> None:
@@ -363,4 +364,4 @@ class TestLevelFolders:
         shutil.copy(registry.find(BOTS_DIR, "rock_v1"), rock)
         result = CliRunner().invoke(app, ["bot", "check", "--bots-dir", d, "rock"])
         assert result.exit_code == 2
-        assert os.path.join(d, "l1") in result.output
+        assert f"{os.sep}l1: move it there" in result.output

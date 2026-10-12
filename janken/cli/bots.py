@@ -280,6 +280,19 @@ def list_bots(lab: Lab) -> None:
 
 
 @app.command()
+@lab_command("bot audit")
+def audit(lab: Lab) -> None:
+    """Check the whole field agrees with itself: every bot's contract and folder,
+    the blocks, unique stems, the space files and research/species.md."""
+    from .. import integrity
+
+    problems = integrity.field_problems(lab.bots_dir, lab.spaces_dir, lab.notebook)
+    if problems:
+        raise fail("\n".join(problems))
+    lab.emit({"problems": []}, "ok: the field, its spaces and species.md agree")
+
+
+@app.command()
 @lab_command("bot show")
 def show(
     lab: Lab, name: Annotated[str, typer.Argument(help="a bot (stem or path)")]

@@ -57,11 +57,13 @@ uv run janken config check                                    # validate them
 1. the `--effort` budget, for round robins, trials and validation sizes;
 1. an explicit command-line flag.
 
-Three environment variables still exist, for process-wide switches that numba reads
-before any command runs:
+A few environment variables still exist, for process-wide switches read before any
+command runs:
 
 | variable | overrides |
 | --- | --- |
 | `JANKEN_JIT=on\|off` | `engine.jit` (the test suite runs with it off) |
 | `JANKEN_NUMBA_CACHE=1\|0` | caching, which the CLI sets per command from `engine.cache_commands` and `--cache` |
 | `JANKEN_PROGRESS=auto\|on\|off` | `output.progress` (the CLI sets it from `--progress`) |
+| `JANKEN_CONFIG=PATH` | the configuration file, `janken.toml` (the test suite uses `tests/data/janken.toml`) |
+| `JANKEN_LOCAL_CONFIG=PATH` | the local overrides, `janken.local.toml`; empty: none (the test suite's) |

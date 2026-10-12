@@ -20,6 +20,7 @@ import datetime
 import math
 import os
 import re
+import typing
 from collections.abc import Sequence
 
 import numpy as np
@@ -32,6 +33,9 @@ from ..spec import BotSpec, format_spec, make_spec, parse_spec
 from . import analyze, classify, space
 from .dataset import Sequences
 from .runs_db import COMPLETE, RunStore
+
+if typing.TYPE_CHECKING:
+    from . import cores
 
 
 class WorkflowError(ValueError):
@@ -407,22 +411,33 @@ def core(path: str, seqs: Sequences) -> np.ndarray:
     return predictions(make_predictor(make_spec(path)), seqs)
 
 
-def read_field(paths: dict[str, str], seqs: Sequences) -> Field:
+def core_cache(workspace: str, config: settings.SpeciesConfig) -> "cores.CoreCache":
+    """The workspace's kept cores, computing a missing one with `core`."""
+    from . import cores
+
+    return cores.CoreCache(os.path.join(workspace, config.cores_dir), core)
+
+
+def read_field(
+    paths: dict[str, str], seqs: Sequences, cache: "cores.CoreCache"
+) -> Field:
     """Species (`{stem: path}` of their current versions) read as cores on `seqs`."""
     return Field(
         paths=paths,
         levels={s: bot_level(p) for s, p in paths.items()},
-        cores={s: core(p, seqs) for s, p in paths.items()},
+        cores={s: cache.core(p, seqs) for s, p in paths.items()},
     )
 
 
-def compare(path: str, field: Field, seqs: Sequences) -> list[classify.Kin]:
+def compare(
+    path: str, field: Field, seqs: Sequences, cache: "cores.CoreCache"
+) -> list[classify.Kin]:
     """The field's species by how close their cores are to the bot's, closest first
     (the bot itself left out)."""
     from ..match import bot_name
 
     others = {s: c for s, c in field.cores.items() if s != bot_name(path)}
-    return classify.ranked(core(path, seqs), others, field.levels)
+    return classify.ranked(cache.core(path, seqs), others, field.levels)
 
 
 def _species_run(
@@ -533,8 +548,9 @@ def classify_note(
     paths = {  # versions never cross levels: only its level's species are read
         s: p for s, p in species_paths(how.bots_dir).items() if bot_level(p) == level
     }
-    field = read_field(paths, seqs)
-    same = kin = compare(spec.path, field, seqs)
+    cache = core_cache(how.workspace, config)
+    field = read_field(paths, seqs, cache)
+    same = kin = compare(spec.path, field, seqs, cache)
     correlation, compared, run_id, speedup = math.nan, (), "", 1.0
     if same and classify.needs_run(same[0], level, config):
         nearest = same[0]

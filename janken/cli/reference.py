@@ -1,13 +1,15 @@
 """docs/cli-reference.md, generated from the CLI itself (typer's docs generator).
 
-    uv run python -m janken.cli.reference     # rewrite docs/cli-reference.md
+    uv run python -m janken.cli.reference           # rewrite docs/cli-reference.md
+    uv run python -m janken.cli.reference --check   # fail if it is out of date
 
-tests/test_cli.py fails when the file is out of date, so every command and parameter
-the CLI has is published, with the help text and default it has.
+pre-commit runs the check, so every command and parameter the CLI has is published,
+with the help text and the default (from janken.toml) it has.
 """
 
 import html
 import os
+import sys
 
 import typer
 import typer.cli
@@ -38,7 +40,28 @@ def render() -> str:
     return f"{head}\n\n{note}\n{body}\n"
 
 
-if __name__ == "__main__":
+def is_current() -> bool:
+    """Whether docs/cli-reference.md is what `render` gives now."""
+    if not os.path.isfile(PATH):
+        return False
+    with open(PATH, encoding="utf-8") as f:
+        return f.read() == render()
+
+
+def main(argv: list[str]) -> int:
+    """Rewrite the reference, or with `--check` only report whether it is current."""
+    if "--check" in argv:
+        if is_current():
+            return 0
+        print(
+            f"{os.path.relpath(PATH)} is out of date: uv run python -m janken.cli.reference"
+        )
+        return 1
     with open(PATH, "w", encoding="utf-8") as f:
         f.write(render())
     print(f"wrote {os.path.relpath(PATH)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -30,10 +30,9 @@ from janken.lab.runs_db import RunStore
 from janken.lab.tune import Search
 from janken.match import MatchResult
 from janken.spec import make_spec
+from tests import data
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-BOTS_DIR = os.path.join(ROOT, "bots")
-SPACES_DIR = os.path.join(ROOT, "spaces")
+BOTS_DIR, SPACES_DIR = data.BOTS_DIR, data.SPACES_DIR
 LIGHT_BOTS = ("rock_v1", "cycler_v1", "copycat_v1", "frequency_v1")
 ROUNDS = 6
 HOLDOUT = 0.3
@@ -364,6 +363,7 @@ class TestPredictTune(StoredDataset):
         assert predict_tune.spec_of(first, self.spaces).label == "frequency_v1"
         assert all(t.value is not None for t in study.trials)
 
+    @pytest.mark.heavy
     def test_a_study_resumes_only_under_its_setup(self) -> None:
         self.tune("resume", self.setup)
         self.grow(seed=4)  # newer matches stay out of the study's snapshot

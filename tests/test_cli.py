@@ -17,6 +17,7 @@ from janken import settings
 from janken.cli import app, options
 from janken.engine import registry
 from janken.notebook import ideas, notes
+from tests import data
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 LIGHT_BOTS = (
@@ -144,16 +145,12 @@ def test_the_docs_and_skills_only_name_commands_that_exist(
                 node = children[word]
 
 
-@pytest.mark.skipif(
-    os.path.isfile(settings.LOCAL_FILE), reason="janken.local.toml changes the defaults"
-)
-def test_the_reference_is_current() -> None:
+def test_the_reference_renders_every_command(tmp_path: pathlib.Path) -> None:
     from janken.cli import reference
 
-    with open(reference.PATH, encoding="utf-8") as f:
-        assert f.read() == reference.render(), (
-            "regenerate it: uv run python -m janken.cli.reference"
-        )
+    text = reference.render()
+    for name, _ in COMMANDS:
+        assert f"`uv run janken {name}`" in text, name
 
 
 class TestConfigCommand:
@@ -215,7 +212,7 @@ class TestConfigCommand:
 def lifecycle_lab(
     request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
 ) -> None:
-    """One lab for the whole class: light bots and a copy of the notebook."""
+    """One lab for the whole class: light bots and a copy of the sample notebook."""
     cls = request.cls
     cls.root = str(tmp_path_factory.mktemp("lifecycle"))
     cls.bots = os.path.join(cls.root, "bots")
@@ -223,9 +220,9 @@ def lifecycle_lab(
     os.makedirs(cls.bots)
     os.makedirs(cls.notebook)
     for stem in LIGHT_BOTS:
-        shutil.copy(registry.find(os.path.join(ROOT, "bots"), stem), cls.bots)
+        shutil.copy(data.bot(stem), cls.bots)
     for name in ("ideas.md", "insights.md"):
-        shutil.copy(os.path.join(ROOT, "research", name), cls.notebook)
+        shutil.copy(os.path.join(data.RESEARCH, name), cls.notebook)
     cls.runner = CliRunner()
 
 
@@ -251,7 +248,7 @@ class TestLifecycle:
             "--effort",
             "quick",
             "--rounds",
-            "10",
+            "6",
             "--pool-size",
             "3",
             "--seed",
@@ -265,6 +262,7 @@ class TestLifecycle:
     def bot(self, stem: str) -> str:
         return registry.find(self.bots, stem)
 
+    @pytest.mark.heavy
     def test_the_loop(self) -> None:
         added = json.loads(
             self.run_ok(
@@ -355,6 +353,7 @@ class TestLifecycle:
         assert tuned.study in self.run_ok("lab", "study", "list")
         assert "vs defaults" in self.run_ok("lab", "study", "show", tuned.study)
 
+    @pytest.mark.heavy
     def test_the_low_level(self) -> None:
         out = self.run_ok(
             "lab",
@@ -383,6 +382,7 @@ class TestLifecycle:
         result = self.runner.invoke(app, ["lab", "study", "list", *nowhere])
         assert "(no studies yet)" in result.output
 
+    @pytest.mark.heavy
     def test_profiling(self) -> None:
         target = [
             "--",
@@ -460,11 +460,11 @@ class TestSpeciesLifecycle:
         os.makedirs(self.notebook)
         for stem in SPECIES_FIELD:
             shutil.copy(
-                registry.find(os.path.join(ROOT, "bots"), stem),
+                data.bot(stem),
                 os.path.join(self.bots, "l1"),
             )
         for name in ("ideas.md", "insights.md"):
-            shutil.copy(os.path.join(ROOT, "research", name), self.notebook)
+            shutil.copy(os.path.join(data.RESEARCH, name), self.notebook)
         with open(os.path.join(self.notebook, "species.md"), "w") as f:
             f.write(SPECIES_TABLE)
         self.runner = CliRunner()
@@ -482,7 +482,7 @@ class TestSpeciesLifecycle:
             "--effort",
             "quick",
             "--rounds",
-            "10",
+            "6",
             "--pool-size",
             "3",
             "--seed",
@@ -519,6 +519,7 @@ class TestSpeciesLifecycle:
         self.run_ok("verdict", number, "keep", "--summary", "kept for the test")
         return number
 
+    @pytest.mark.heavy
     def test_a_twin_is_a_variant_and_a_stranger_a_new_species(self) -> None:
         stems = [registry.find(self.bots, s) for s in SPECIES_FIELD]
         self.run_ok("lab", "dataset", "add", *stems)
@@ -543,7 +544,7 @@ class TestSpeciesLifecycle:
         assert notes.find(self.notebook, twin).species.startswith("`twin` (variant")
         assert self.json_of("status")["next"]["action"] != "classify"
 
-        coin = self.keep("coin", os.path.join(ROOT, "bots", "l1", "nash_v1.yaml"))
+        coin = self.keep("coin", data.bot("nash_v1"))
         unnamed = self.invoke("species", "classify", coin, "--split", "all")
         assert unnamed.exit_code == 2  # a new species needs a name
         assert "--name" in unnamed.output

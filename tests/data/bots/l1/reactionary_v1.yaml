@@ -1,0 +1,11 @@
+description: |
+  Plays what beats the opponent's last move.
+defaults:
+  NOISE: 0.05
+blueprint:
+  guards:
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: ROCK}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}}
+  core:
+    Heuristic: {signal: {LastMove: {of: OPP}}, rotation: BEAT}

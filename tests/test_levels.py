@@ -3,6 +3,7 @@ per aggregator (Bandit, Gate, NaiveBayes) above its highest arm."""
 
 from janken import library
 from janken.kit import bot, levels
+from tests import data
 
 ROCKY = bot.Constant(bot.ROCK)
 LAST = bot.LastMove(bot.OPP)
@@ -46,14 +47,15 @@ class TestLevel:
         l3 = bandit(LAST, bot.Replay(bandit(LAST, ROCKY)))
         assert level(bot.Heuristic(bot.Replay(l3), bot.BEAT)) == 3
 
-    def test_the_fields_cores(self) -> None:
-        for path, expected in [
-            ("bots/l1/frequency_v1.yaml", 1),
-            ("bots/l2/smartbot_v1.yaml", 2),
-            ("bots/l3/smartbot_sims_v1.yaml", 3),
-            ("bots/l3/anti_smartbot_sims_v1.yaml", 3),
-            ("bots/l4/gate_edge_v1.yaml", 4),
+    def test_declared_bots_get_their_cores_level(self) -> None:
+        for stem, expected in [
+            ("frequency_v1", 1),
+            ("smartbot_v1", 2),
+            ("smartbot_sims_v1", 3),
+            ("anti_smartbot_sims_v1", 3),
+            ("gate_edge_v1", 4),
         ]:
+            path = data.bot(stem)
             assert levels.level(library.read_blueprint(path)) == expected, path
 
     def test_a_naive_bayes_combiner_is_one_above_its_inputs(self) -> None:

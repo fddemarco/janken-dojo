@@ -1,0 +1,8 @@
+description: |
+  Always rock, with an optional noise floor.
+defaults:
+  NOISE: 0.0
+blueprint:
+  guards: [{Noise: {p: $NOISE}}]
+  core:
+    Heuristic: {signal: {Constant: {move: ROCK}}, rotation: COPY}

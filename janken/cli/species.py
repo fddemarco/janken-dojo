@@ -101,8 +101,9 @@ def compare(
 
     path = bot_path(lab, bot)
     seqs = _histories(lab, str(split))
-    field = workflows.read_field(workflows.species_paths(lab.bots_dir), seqs)
-    kin = workflows.compare(path, field, seqs)
+    cache = workflows.core_cache(lab.workspace, CFG.species)
+    field = workflows.read_field(workflows.species_paths(lab.bots_dir), seqs, cache)
+    kin = workflows.compare(path, field, seqs, cache)
     level = workflows.bot_level(path)
     lab.emit(
         {
@@ -127,7 +128,11 @@ def census(
     from ..lab import workflows
 
     seqs = _histories(lab, str(split))
-    field = workflows.read_field(workflows.species_paths(lab.bots_dir), seqs)
+    field = workflows.read_field(
+        workflows.species_paths(lab.bots_dir),
+        seqs,
+        workflows.core_cache(lab.workspace, CFG.species),
+    )
     per_level = Counter(field.levels.values())
     found = kinship.pairs(field.cores)
     alike = [p for p in found if p[2] >= CFG.species.agreement]

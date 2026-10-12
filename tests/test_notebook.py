@@ -9,9 +9,9 @@ import shutil
 import pytest
 
 from janken.notebook import ideas, insights, notes, state
+from tests import data
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-RESEARCH = os.path.join(ROOT, "research")
+RESEARCH = data.RESEARCH
 TODAY = datetime.date(2026, 10, 10)
 FIELD = frozenset({"a_v1", "b_v1"})  # the drafts' bots are not in it
 
@@ -22,7 +22,7 @@ def read(path: str) -> str:
 
 
 class Notebook:
-    """A copy of the real ideas.md and insights.md, and no notes."""
+    """A copy of the sample ideas.md and insights.md, and no notes."""
 
     @pytest.fixture(autouse=True)
     def _notebook(self, tmp_path: pathlib.Path) -> None:
@@ -44,7 +44,7 @@ class Notebook:
 
 
 class TestIdeas(Notebook):
-    def test_the_real_backlog_round_trips_byte_for_byte(self) -> None:
+    def test_the_sample_backlog_round_trips_byte_for_byte(self) -> None:
         text = read(os.path.join(RESEARCH, ideas.FILE))
         backlog = ideas.parse(text)
         assert backlog.render() == text
@@ -52,7 +52,7 @@ class TestIdeas(Notebook):
         assert backlog.get(2).priority == "P1"
 
     def test_add_start_and_close(self) -> None:
-        # The real backlog may hold ideas in progress; start from one without any.
+        # The sample backlog holds ideas in progress; start from one without any.
         backlog = ideas.load(self.dir)
         for i in backlog.ideas:
             if i.state == ideas.IN_PROGRESS:
@@ -109,7 +109,7 @@ class TestNotes(Notebook):
         added = notes.with_field(twice, "Supports", "`bots/c.yaml`")
         assert "- **Supports:** `bots/c.yaml`" in added
 
-    def test_the_real_notes_read_back(self) -> None:
+    def test_the_sample_notes_read_back(self) -> None:
         found = notes.all_notes(RESEARCH)
         assert len(found) >= 6
         assert all(n.status == notes.ANALYZED for n in found[:6])

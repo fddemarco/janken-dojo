@@ -88,8 +88,9 @@ its bot changed.
 The bots were renamed for clarity (for example `advanced_bot` → `smartbot_sims`,
 `anti_advanced_bots` → `anti_smartbot_sims`, `replay_gate` → `gate_edge`), the legacy
 bots moved to `bots/inactive/legacy/` and the fleet to `bots/inactive/fleets/`, duplicates were
-removed, and the field was split into one folder per level (`bots/l1/` … `bots/oracle/`). The logic of every remaining bot is unchanged. The notes, ideas and insights
-keep the names that were current when they were written, and so does the runs database
+removed, and the field was split into one folder per level (`bots/l1/` … `bots/oracle/`). The logic of every remaining bot is unchanged. The notes, insights and closed
+ideas keep the names that were current when they were written (open ideas name
+today's bots, with "(then `old_name`)" where a motivation cites a note), and so does the runs database
 (`lab history` and `lab leaderboard` list the old and the new names separately). The
 map from old names to new: [bots/README.md](../bots/README.md#renames) and
 [bots/inactive/legacy/README.md](../bots/inactive/legacy/README.md).

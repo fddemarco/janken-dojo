@@ -28,8 +28,12 @@ import typing
 from collections.abc import Iterator, Mapping, MutableMapping
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_FILE = os.path.join(ROOT, "janken.toml")
-LOCAL_FILE = os.path.join(ROOT, "janken.local.toml")
+# $JANKEN_CONFIG / $JANKEN_LOCAL_CONFIG choose other files (the test suite's own,
+# with no local overrides; subprocesses inherit them). An empty path means none.
+CONFIG_ENV = "JANKEN_CONFIG"
+LOCAL_CONFIG_ENV = "JANKEN_LOCAL_CONFIG"
+CONFIG_FILE = os.environ.get(CONFIG_ENV, os.path.join(ROOT, "janken.toml"))
+LOCAL_FILE = os.environ.get(LOCAL_CONFIG_ENV, os.path.join(ROOT, "janken.local.toml"))
 JIT_ENV = "JANKEN_JIT"
 CACHE_ENV = "JANKEN_NUMBA_CACHE"
 PROGRESS_ENV = "JANKEN_PROGRESS"
@@ -336,6 +340,10 @@ class SpeciesConfig:
     )
     legacy_dir: str = setting(
         "where retired versions and variants go, relative to the bots dir"
+    )
+    cores_dir: str = setting(
+        "where computed cores are kept (one file per bot, code and histories),"
+        " in the workspace"
     )
 
 

@@ -57,7 +57,8 @@ bot has defaults, and marks the idea in progress. Then edit the blueprint.
   1. its compiled branch in the stage module (`@kernel` functions, numba's `random`
      only);
   1. unit tests in `tests/test_stages.py`, and a grammar test in `tests/test_declare.py`
-     if the YAML form is new;
+     if the YAML form is new, on hand-made histories, never on the lab's bots
+     (`/write-tests`);
   1. its export in `bot.py` (and `declare.SYMBOLS` for a constant);
   1. for a new signal, a block in `bots/blocks/` exposing its fields as parameters, so
      aggregators can name it.
@@ -70,6 +71,7 @@ bot has defaults, and marks the idea in progress. Then edit the blueprint.
 
 ```bash
 uv run janken bot check <name>            # contract, compiles, smoke round robin
+uv run janken bot audit                   # the field, its spaces and species.md agree
 uv run pytest                             # seconds, JIT off
 uv run pre-commit run --all-files
 ```

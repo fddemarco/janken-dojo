@@ -19,6 +19,7 @@ from janken.kit.blueprint import (
     encoder,
     lowering,
 )
+from tests import data
 
 SIMPLE = bot.Blueprint(
     guards=(bot.Noise(bot.Knob("NOISE")),),
@@ -26,11 +27,12 @@ SIMPLE = bot.Blueprint(
 )
 
 NO_DEFAULTS: Mapping[str, float] = types.MappingProxyType({})
-SMARTBOT_SIMS = "bots/l3/smartbot_sims_v1.yaml"
+SMARTBOT_SIMS = data.bot("smartbot_sims_v1")
 
 
 def smartbot_sims() -> Compiled:
-    """smartbot_sims_v1, compiled: the field's richest bandit (replays nested)."""
+    """smartbot_sims_v1, compiled: the test library's richest bandit (replays
+    nested)."""
     return library.read_blueprint(SMARTBOT_SIMS).compile(
         botfile.defaults(SMARTBOT_SIMS)
     )

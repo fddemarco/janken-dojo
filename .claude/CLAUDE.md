@@ -4,6 +4,16 @@ A rock-paper-scissors bot tournament (see `README.md`, an index of `docs/`) plus
 self-improving research loop: ideas → bots → evaluation and tuning against random pools →
 verdicts → insights → ideas.
 
+## These instructions: progressive disclosure
+
+- Keep this file lean: only what nearly every task needs. A rule that matters for one
+  kind of task (writing tests, building a bot, profiling) goes in the skill that owns
+  that task, and this file points to it in one line.
+- Keep skills lean too. `SKILL.md` holds the workflow and the rules; when a skill grows
+  past ~500 lines, move detail out to load on demand: `references/` (long docs,
+  catalogues, examples), `scripts/` (code the skill runs), `assets/` (templates, data).
+  `SKILL.md` names each file and when to read it.
+
 ## The CLI and the skills
 
 `uv run janken ...` (typer, `janken/cli/`; docs/cli.md). It has two levels:
@@ -35,6 +45,8 @@ The skills drive the self-improvement loop through the high-level commands:
 - `/profile`: a bottleneck slowing the loop is profiled, judged against the optimization
   budget, and fixed only if a benchmark proves it (`janken lab profile`). Sparingly: only
   when something is slow, and never twice on unchanged code.
+- `/write-tests`: isolated unit tests of the package on synthetic data, never the lab's
+  bots, notebook, config or runs.
 
 **The lifecycle skills run experiments and tuning themselves** (into `experiments/`, with
 the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on the
@@ -42,7 +54,7 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 
 - Smoke checks go to a throwaway `--workspace <tmp>/ws --notebook <tmp>/research`, with
   the notebook copied there first.
-- Read-only commands are always safe to run: `status`, `idea list | show`, `bot list | show`,
+- Read-only commands are always safe to run: `status`, `idea list | show`, `bot list | show | audit`,
   `insight list`, `species compare | census | list`, `config show | get | path | check`, `lab report | runs | history | leaderboard | query | study show | study list | dataset info | predict | profile list | profile show | profile spans`.
 
 ## Bot rules (enforced by review, the engine and the tests)
@@ -110,7 +122,8 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   bot's `defaults` is the exception: it's part of the bot's behaviour and stays in the
   bot's YAML file.
 - Every CLI command and parameter is documented (`help=`), and `docs/cli-reference.md`
-  is regenerated after a CLI change: `uv run python -m janken.cli.reference`.
+  is regenerated after a CLI change: `uv run python -m janken.cli.reference` (pre-commit
+  checks it is current).
 - Layout: src layout (`src/<package>/`) is the target. New packages go there; migrate
   existing ones only as a dedicated change, never as a side effect of another task.
 - Design: follow Martin Fowler (refactoring, small steps, remove smells), Dave Farley
@@ -130,22 +143,19 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 
 ## Tests
 
-- Unit tests for the logic only: no stress, load, benchmark, or other compute-intensive
-  tests. Nothing in the suite compiles: `tests/conftest.py` switches the JIT off, so bots,
-  stages and the referee run as plain Python.
-- pytest style: plain `assert`, `pytest.raises`, fixtures (`tmp_path`, `monkeypatch`)
-  for setup, `pytest.mark.parametrize` for cases that are data (the `subtests` fixture
-  where they aren't). No `unittest.TestCase`.
-- Run it as `uv run pytest`. It must stay under 60 s; it takes about 20 s. Use small
-  inputs (a few rounds, pools of light bots) and fixed seeds.
-- Never loosen a test to make it pass.
+`uv run pytest`: seconds (about 12 s), JIT off; `uv run pytest -m heavy` adds the heavy
+ones, run only to validate a change they cover. Tests are fast, isolated unit tests of
+`janken/` on synthetic data: they never read the lab's bots, spaces, notebook, config
+or runs, and never get loosened to pass. Writing them: `/write-tests`.
 
 ## Definition of done
 
 Every task that touches code finishes with:
 
-1. the relevant tests passing (full suite if anything under `janken/` changed);
-1. `uv run pre-commit run --all-files` passing (mdformat, ruff check/format, ty, pyrefly).
+1. the relevant tests passing (full suite if anything under `janken/` changed, plus
+   `-m heavy` when the change touches what the heavy tests cover);
+1. `uv run pre-commit run --all-files` passing (mdformat, ruff check/format, ty, pyrefly,
+   `janken bot audit`, `janken config check`, the CLI reference check).
 
 Fix the code rather than silencing a check. If a rule genuinely can't be met, configure it
 in `pyproject.toml` (per-file ignores, tool settings) with a short reason, and only as a
@@ -172,7 +182,7 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   It's gitignored, local data.
 - `bots/` holds the field (YAML, indexed in `bots/README.md`, with the map of old names),
   one folder per level: `bots/l1/`, `bots/l2/`, …, `bots/oracle/`. A bot sits in the
-  folder of its computed level (`janken bot check` and `tests/test_bots.py` enforce it).
+  folder of its computed level (`janken bot check`, and `janken bot audit` in pre-commit, enforce it).
   `bots/blocks/` holds L1 heuristics that exist to be named as arms, and
   `bots/inactive/` the bots out of the field: `fleets/` and `legacy/` (discovery reads
   only the level folders, so neither ever enters a pool). `spaces/` holds one space file per tunable
@@ -191,4 +201,4 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   `profiles/`, and holds the optimization budget rule.
 - `janken.toml` holds every default; `janken/settings.py` is its schema and loader, and
   `janken/config_file.py` edits it line by line.
-- Tests: `uv run pytest` (about 20 s, JIT off).
+- Tests: `tests/`, with their own bots, notebook and config in `tests/data/`.

@@ -36,3 +36,27 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # The field agrees with itself (janken/integrity.py): bots, spaces, species.md.
+      - id: bot-audit
+        name: janken bot audit
+        entry: uv run janken bot audit --quiet
+        language: system
+        pass_filenames: false
+        files: ^(bots/|spaces/|research/species\.md$|janken/)
+
+      # The checked-in config is complete and valid (the tests use their own copy).
+      - id: config-check
+        name: janken config check
+        entry: uv run janken config check
+        language: system
+        pass_filenames: false
+        files: ^(janken\.toml|janken/)
+
+      # docs/cli-reference.md matches the CLI and the defaults in janken.toml.
+      - id: cli-reference
+        name: cli reference is current
+        entry: uv run python -m janken.cli.reference --check
+        language: system
+        pass_filenames: false
+        files: ^(janken\.toml|janken/|docs/cli-reference\.md$)

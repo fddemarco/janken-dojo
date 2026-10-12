@@ -77,7 +77,9 @@ The field holds **one bot per species**, its current **version**:
    (`species.matches` matches spread over the dataset's `species.split`, with the same
    random numbers). Their **core agreement** is the share of rounds where both predict
    the same move. Only species of the bot's **own level** count: versions never cross
-   levels.
+   levels. Each core is computed once and kept in the workspace's `species.cores_dir`,
+   named after a hash of the bot (and the bots it names), the replay code and the
+   histories, so later runs replay only the bots that changed.
 1. Below `species.agreement` for every species of its level: a **new species**. It is
    named (`--name`) and renamed `<name>_v1`.
 1. Otherwise a **paired run** against the closest species' current version

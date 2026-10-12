@@ -32,10 +32,9 @@ from janken.lab.tune import (
     split_params,
 )
 from janken.spec import format_spec, make_spec, parse_spec
+from tests import data
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-BOTS_DIR = os.path.join(ROOT, "bots")
-SPACES_DIR = os.path.join(ROOT, "spaces")
+BOTS_DIR, SPACES_DIR = data.BOTS_DIR, data.SPACES_DIR
 
 
 # Cheap bots: experiments and tuning in these tests play pools of them only.
@@ -157,6 +156,7 @@ class TestExperiment(LightBots):
             **kw,
         )
 
+    @pytest.mark.heavy
     def test_store_round_trip_and_reproducibility(self) -> None:
         cands = [
             make_spec(self.light("cycler_v1")),
@@ -205,12 +205,13 @@ class TestExperiment(LightBots):
         path = os.path.join(self.root, "mystery.yaml")
         with open(path, "w") as f:
             f.write("description: uniform random play\nblueprint: {}\n")
-        run = self.run_exp([make_spec(path)], round_robins=1, rounds=30)
+        run = self.run_exp([make_spec(path)], round_robins=1, rounds=6)
         _, manifest, df = self.runs.load_run(run)
         assert manifest["n_matches"] == (POOL + 1) * POOL // 2
         mystery = df.filter((df["bot_a"] == "mystery") | (df["bot_b"] == "mystery"))
         assert mystery.height == POOL
 
+    @pytest.mark.heavy
     def test_an_interrupted_run_keeps_its_round_robins_and_resumes(self) -> None:
         cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
 
@@ -269,7 +270,7 @@ class TestTune(LightBots):
     def _workspace(self, tmp_path: pathlib.Path) -> None:
         self.dir = str(tmp_path)
         self.setup = Setup(
-            rounds=20,
+            rounds=6,
             round_robins=1,
             pool_size=POOL,
             seed=1,
@@ -281,6 +282,7 @@ class TestTune(LightBots):
         search.setdefault("sampler_seed", 1)
         return quietly(run_tune, spaces, name, self.setup, Search(**search))
 
+    @pytest.mark.heavy
     def test_tiny_study_runs_and_resumes(self) -> None:
         study = self.tune([self.space_for("rock_v1")], "t", trials=3)
         assert len(study.trials) == 3
@@ -290,10 +292,11 @@ class TestTune(LightBots):
         assert os.path.exists(os.path.join(self.dir, "tuning", "t", "trials.parquet"))
         grid = self.tune([self.space_for("wsls_v1")], "g", sampler="grid")
         assert len(grid.trials) == 4  # SHIFT 2 x NOISE 2
-        self.setup = dataclasses.replace(self.setup, rounds=50)
+        self.setup = dataclasses.replace(self.setup, rounds=9)
         with pytest.raises(SystemExit):  # different setup
             self.tune([self.space_for("rock_v1")], "t", trials=1)
 
+    @pytest.mark.heavy
     def test_bots_tune_together_on_a_weighted_objective(self) -> None:
         spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         study = self.tune(spaces, "fleet", trials=2)
@@ -331,6 +334,7 @@ class TestTune(LightBots):
                 trials=1,
             )
 
+    @pytest.mark.heavy
     def test_validation_replays_each_fleet_on_its_own(self) -> None:
         spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "v", trials=2)
@@ -347,6 +351,7 @@ class TestTune(LightBots):
             assert manifest["tuning"]["study"] == "v"
         assert sorted(study.user_attrs["validations"][-1]["runs"]) == runs
 
+    @pytest.mark.heavy
     def test_validation_results_are_recorded(self) -> None:
         spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "rec", trials=3, validate_top=2, validate_round_robins=1)

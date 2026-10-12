@@ -1,7 +1,6 @@
 """Species and versions: stems, research/species.md, and how a kept bot is classified."""
 
 import dataclasses
-import os
 import pathlib
 
 import numpy as np
@@ -12,8 +11,8 @@ from janken import settings
 from janken.lab import classify, workflows
 from janken.lab.dataset import Sequences
 from janken.notebook import species
+from tests import data
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 CONFIG: settings.SpeciesConfig = dataclasses.replace(
     settings.config().species,
     agreement=0.8,
@@ -64,8 +63,8 @@ Trailing prose.
 
 
 class TestRegistry:
-    def test_the_real_file_round_trips_byte_for_byte(self) -> None:
-        with open(species.path(os.path.join(ROOT, "research")), encoding="utf-8") as f:
+    def test_the_sample_file_round_trips_byte_for_byte(self) -> None:
+        with open(species.path(data.RESEARCH), encoding="utf-8") as f:
             text = f.read()
         assert species.parse(text).render() == text
 

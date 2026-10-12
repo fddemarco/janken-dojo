@@ -58,4 +58,14 @@ extend-immutable-calls = [
 
 [tool.pytest.ini_options]
 # `uv run pytest`: tests/conftest.py switches the JIT off before any test module loads.
+# Heavy tests (end-to-end loops, studies, replays of L3+ bots) are off by default: run
+# them only to validate a change they cover, with `uv run pytest -m heavy`.
 testpaths = ["tests"]
+addopts = ["-m", "not heavy"]
+markers = [
+    "heavy: compute-heavy (over ~1 s, or plays L3+ bots); deselected by default, run with -m heavy",
+]
+filterwarnings = [
+    # TPESampler(group=True) (janken/lab/tune.py) is optuna-experimental, used knowingly.
+    "ignore::optuna.exceptions.ExperimentalWarning",
+]

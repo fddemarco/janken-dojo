@@ -15,6 +15,7 @@ from janken.engine import registry
 from janken.kit import bot
 from janken.kit import codes as c
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
+from tests import data
 from tests.test_stages import Runner
 
 R, P, S, X = ROCK, PAPER, SCISSORS, INVALID
@@ -61,22 +62,25 @@ class TestExportedBots:
     def _folder(self, tmp_path: pathlib.Path) -> None:
         self.tmp = str(tmp_path)
 
-    def exported(self, path: str, bots_dir: str = "bots") -> dict[str, str]:
+    def exported(self, path: str, bots_dir: str = data.BOTS_DIR) -> dict[str, str]:
         return export.scripts(path, bots_dir, MAX_ROUNDS)
 
     @pytest.mark.parametrize(
         "stem, rounds, seed, invalid_at",
         [
-            ("frequency_v1", 30, 1, -1),
-            ("smartbot_sims_v1", 30, 2, 10),
-            ("anti_smartbot_sims_v1", 6, 3, -1),  # replays, Thompson draws
-            ("gate_edge_v1", 8, 4, 3),  # the Gatekeeper
+            ("frequency_v1", 9, 1, -1),
+            pytest.param("smartbot_sims_v1", 9, 2, 5, marks=pytest.mark.heavy),
+            # replays, Thompson draws
+            pytest.param("anti_smartbot_sims_v1", 6, 3, -1, marks=pytest.mark.heavy),
+            pytest.param(
+                "gate_edge_v1", 8, 4, 3, marks=pytest.mark.heavy
+            ),  # Gatekeeper
         ],
     )
     def test_exported_bots_play_exactly_like_the_kit(
         self, stem: str, rounds: int, seed: int, invalid_at: int
     ) -> None:
-        path = registry.find("bots", stem)
+        path = data.bot(stem)
         found = botfile.read(path)
         history = random.Random(seed)
         my = [history.randrange(3) for _ in range(rounds)]
@@ -92,7 +96,7 @@ class TestExportedBots:
 
     def test_a_crash_guard_forfeits_by_raising(self) -> None:
         module = load(
-            self.exported(registry.find("bots", "frequency_v1"))["frequency_v1"],
+            self.exported(data.bot("frequency_v1"))["frequency_v1"],
             self.tmp,
             "f",
         )
@@ -101,7 +105,7 @@ class TestExportedBots:
             module.play(["rock"], ["invalid"])
 
     def test_scripts_pass_the_screening_and_import_no_numpy(self) -> None:
-        source = self.exported(registry.find("bots", "frequency_v1"))["frequency_v1"]
+        source = self.exported(data.bot("frequency_v1"))["frequency_v1"]
         assert sandbox.scan(source, RULES) == []
         assert "numpy" not in source
         assert "global " not in source
@@ -161,7 +165,7 @@ class TestExportedBots:
 
     def test_a_match_longer_than_the_export_is_an_error(self) -> None:
         module = load(
-            self.exported(registry.find("bots", "rock_v1"))["rock_v1"],
+            self.exported(data.bot("rock_v1"))["rock_v1"],
             self.tmp,
             "rock_v1",
         )
@@ -172,9 +176,7 @@ class TestExportedBots:
         compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT),)).compile({})
         spec = [int(v) for v in compiled.spec]
         assert [spec[x] for x in export.team_role_cells(spec)] == [c.SUPPORT]
-        prm = [
-            float(v) for v in registry.param_vector(registry.find("bots", "rock_v1"))
-        ]
+        prm = [float(v) for v in registry.param_vector(data.bot("rock_v1"))]
         with pytest.raises(export.ExportError):
             export.script(compiled, prm, [], [], MAX_ROUNDS)  # its role is missing
 

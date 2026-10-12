@@ -139,7 +139,9 @@ def list_profiles(lab: Lab) -> None:
 @lab_command("lab profile show")
 def show(
     lab: Lab,
-    ref: Annotated[str, typer.Argument(help="a profile's id, a unique part, or latest")],
+    ref: Annotated[
+        str, typer.Argument(help="a profile's id, a unique part, or latest")
+    ],
 ) -> None:
     """A stored profile or benchmark, and where its flame graph is."""
     from ..lab import profiling

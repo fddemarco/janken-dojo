@@ -39,7 +39,15 @@ SPACES_DIR = os.path.join(ROOT, "spaces")
 
 
 # Cheap bots: experiments and tuning in these tests play pools of them only.
-LIGHT_BOTS = ("rock", "nash", "cycler", "wsls", "copycat", "reactionary", "biased")
+LIGHT_BOTS = (
+    "rock_v1",
+    "nash_v1",
+    "cycler_v1",
+    "wsls_v1",
+    "copycat_v1",
+    "reactionary_v1",
+    "biased_v1",
+)
 POOL = 4
 
 
@@ -77,38 +85,39 @@ def quietly(fn, *args, **kwargs):
 
 class TestSpec:
     def test_default_and_variant_labels(self) -> None:
-        assert parse_spec(bot("geometry")).label == "geometry"
-        v = parse_spec(bot("geometry") + ":ALPHA=0.1,MAX_LEN=12")
+        assert parse_spec(bot("geometry_v1")).label == "geometry_v1"
+        v = parse_spec(bot("geometry_v1") + ":ALPHA=0.1,MAX_LEN=12")
         assert v.params == {"ALPHA": 0.1, "MAX_LEN": 12}
-        assert re.search(r"^geometry@[0-9a-f]{6}$", v.label)
+        assert re.search(r"^geometry_v1@[0-9a-f]{6}$", v.label)
         assert parse_spec(format_spec(v)) == v
         assert (
-            v.label == make_spec(bot("geometry"), {"MAX_LEN": 12, "ALPHA": 0.1}).label
+            v.label
+            == make_spec(bot("geometry_v1"), {"MAX_LEN": 12, "ALPHA": 0.1}).label
         )
 
     def test_unknown_parameter_is_an_error(self) -> None:
         with pytest.raises(ValueError):
-            parse_spec(bot("geometry") + ":ALHPA=0.1")
+            parse_spec(bot("geometry_v1") + ":ALHPA=0.1")
         with pytest.raises(ValueError):
-            parse_spec(bot("nash") + ":X=1")
+            parse_spec(bot("nash_v1") + ":X=1")
 
     def test_params_reach_the_bot(self) -> None:
-        cycler = make_spec(bot("cycler"), {"STEP": 2, "NOISE": 0.0})
-        (m,) = play_pairs([(cycler, make_spec(bot("rock")))], 4, [1])
+        cycler = make_spec(bot("cycler_v1"), {"STEP": 2, "NOISE": 0.0})
+        (m,) = play_pairs([(cycler, make_spec(bot("rock_v1")))], 4, [1])
         assert m.moves[0::2] == "rspr"
 
 
 class TestPool:
     def test_pools_exclude_candidates_and_are_reproducible(self) -> None:
-        cand = make_spec(bot("geometry"))
+        cand = make_spec(bot("geometry_v1"))
         a = build_schedule([cand], BOTS_DIR, 20, 3, seed=5)
         b = build_schedule(
-            [make_spec(bot("geometry"), {"ALPHA": 0.2})], BOTS_DIR, 20, 3, seed=5
+            [make_spec(bot("geometry_v1"), {"ALPHA": 0.2})], BOTS_DIR, 20, 3, seed=5
         )
         for rr_a, rr_b in zip(a, b):
             labels = [p.label for p in rr_a["pool"]]
             assert len(labels) == 20
-            assert "geometry" not in labels
+            assert "geometry_v1" not in labels
             # same pools and seeds for every variant: common random numbers
             assert labels == [p.label for p in rr_b["pool"]]
             assert rr_a["seeds"] == rr_b["seeds"]
@@ -116,7 +125,7 @@ class TestPool:
         assert [p.label for p in a[0]["pool"]] != [p.label for p in a[1]["pool"]]
 
     def test_candidates_mode(self) -> None:
-        cands = [make_spec(bot("geometry")), make_spec(bot("rps4_lite"))]
+        cands = [make_spec(bot("geometry_v1")), make_spec(bot("rps4_lite_v1"))]
         rr = build_schedule(cands, BOTS_DIR, 20, 1, seed=1, mode="candidates")[0]
         assert len(rr["pairs"]) == 1 + 2 * 20
 
@@ -150,8 +159,8 @@ class TestExperiment(LightBots):
 
     def test_store_round_trip_and_reproducibility(self) -> None:
         cands = [
-            make_spec(self.light("cycler")),
-            make_spec(self.light("wsls"), {"NOISE": 0.1}),
+            make_spec(self.light("cycler_v1")),
+            make_spec(self.light("wsls_v1"), {"NOISE": 0.1}),
         ]
         p1 = self.run_exp(cands, name="one")
         p2 = self.run_exp(cands, name="two")
@@ -179,14 +188,14 @@ class TestExperiment(LightBots):
 
         board = analyze.leaderboard(self.root)
         assert set(board["bot"]) == {c.label for c in cands}
-        history = analyze.history("cycler", self.root)
+        history = analyze.history("cycler_v1", self.root)
         assert history.height == 2
         assert history["library"].n_unique() == 1
 
     def test_identical_behaviour_has_zero_paired_difference(self) -> None:
         same = [
-            make_spec(self.light("cycler")),
-            make_spec(self.light("cycler"), {"NOISE": 0.05}),
+            make_spec(self.light("cycler_v1")),
+            make_spec(self.light("cycler_v1"), {"NOISE": 0.05}),
         ]
         summary = analyze.analyze_run(self.run_exp(same), self.root)
         cmp = summary["comparisons"][0]
@@ -203,7 +212,7 @@ class TestExperiment(LightBots):
         assert mystery.height == POOL
 
     def test_an_interrupted_run_keeps_its_round_robins_and_resumes(self) -> None:
-        cands = [make_spec(self.light("cycler")), make_spec(self.light("wsls"))]
+        cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
 
         def stop_after_the_first(rr: int) -> None:
             if rr == 0:
@@ -273,55 +282,57 @@ class TestTune(LightBots):
         return quietly(run_tune, spaces, name, self.setup, Search(**search))
 
     def test_tiny_study_runs_and_resumes(self) -> None:
-        study = self.tune([self.space_for("rock")], "t", trials=3)
+        study = self.tune([self.space_for("rock_v1")], "t", trials=3)
         assert len(study.trials) == 3
-        assert study.trials[0].params == {"rock.NOISE": 0.0}  # baseline
-        study = self.tune([self.space_for("rock")], "t", trials=1)
+        assert study.trials[0].params == {"rock_v1.NOISE": 0.0}  # baseline
+        study = self.tune([self.space_for("rock_v1")], "t", trials=1)
         assert len(study.trials) == 4
         assert os.path.exists(os.path.join(self.dir, "tuning", "t", "trials.parquet"))
-        grid = self.tune([self.space_for("wsls")], "g", sampler="grid")
+        grid = self.tune([self.space_for("wsls_v1")], "g", sampler="grid")
         assert len(grid.trials) == 4  # SHIFT 2 x NOISE 2
         self.setup = dataclasses.replace(self.setup, rounds=50)
         with pytest.raises(SystemExit):  # different setup
-            self.tune([self.space_for("rock")], "t", trials=1)
+            self.tune([self.space_for("rock_v1")], "t", trials=1)
 
     def test_bots_tune_together_on_a_weighted_objective(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         study = self.tune(spaces, "fleet", trials=2)
         first = study.trials[0]
         assert first.params == {
-            "cycler.STEP": 1,
-            "cycler.NOISE": 0.05,
-            "wsls.SHIFT": 1,
-            "wsls.NOISE": 0.0,
+            "cycler_v1.STEP": 1,
+            "cycler_v1.NOISE": 0.05,
+            "wsls_v1.SHIFT": 1,
+            "wsls_v1.NOISE": 0.0,
         }
         bots = first.user_attrs["bots"]
-        assert set(bots) == {"cycler", "wsls"}
-        assert bots["cycler"]["n"] == POOL + 1  # the pool and wsls
-        assert first.value == bots["cycler"]["score"]  # wsls weighs 0
+        assert set(bots) == {"cycler_v1", "wsls_v1"}
+        assert bots["cycler_v1"]["n"] == POOL + 1  # the pool and wsls
+        assert first.value == bots["cycler_v1"]["score"]  # wsls weighs 0
         grid = self.tune(spaces, "fleet-grid", sampler="grid")
         sizes = [len(v) for v in grid_space(spaces).values()]
         assert len(sizes) == 4
         assert len(grid.trials) == math.prod(sizes)  # every combination
 
     def test_split_params_and_baseline(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls")]
-        assert split_params({"cycler.STEP": 2, "wsls.NOISE": 0.1}, spaces) == {
-            "cycler": {"STEP": 2},
-            "wsls": {"NOISE": 0.1},
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1")]
+        assert split_params({"cycler_v1.STEP": 2, "wsls_v1.NOISE": 0.1}, spaces) == {
+            "cycler_v1": {"STEP": 2},
+            "wsls_v1": {"NOISE": 0.1},
         }
-        assert baseline(spaces)["wsls.SHIFT"] == 1
+        assert baseline(spaces)["wsls_v1.SHIFT"] == 1
 
     def test_a_study_needs_weight_and_distinct_bots(self) -> None:
         with pytest.raises(SystemExit):
-            self.tune([self.space_for("rock", weight=0.0)], "zero", trials=1)
+            self.tune([self.space_for("rock_v1", weight=0.0)], "zero", trials=1)
         with pytest.raises(ValueError):
             self.tune(
-                [self.space_for("rock"), self.space_for("rock")], "twice", trials=1
+                [self.space_for("rock_v1"), self.space_for("rock_v1")],
+                "twice",
+                trials=1,
             )
 
     def test_validation_replays_each_fleet_on_its_own(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "v", trials=2)
         study = self.tune(
             spaces, "v", trials=0, validate_top=1, validate_round_robins=1
@@ -337,13 +348,13 @@ class TestTune(LightBots):
         assert sorted(study.user_attrs["validations"][-1]["runs"]) == runs
 
     def test_validation_results_are_recorded(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "rec", trials=3, validate_top=2, validate_round_robins=1)
         rows = RunStore.at(self.dir).validations("tune_validations", "rec")
         assert rows.height >= 2
         first = rows.row(0, named=True)
         assert first["trial"] == -1  # the defaults come first
-        assert first["champion"].startswith("cycler")
+        assert first["champion"].startswith("cycler_v1")
         assert first["vs_defaults"] == 0.0
         assert first["n"] == POOL
         assert len(set(rows["run_id"])) == rows.height  # one run each

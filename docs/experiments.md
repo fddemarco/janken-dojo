@@ -65,6 +65,43 @@ A comparison whose CI excludes 0 is a real difference. One that straddles 0 is n
 evidence. A run that isn't complete is analyzed on what it holds, and its report says
 so.
 
+## Species
+
+The field holds **one bot per species**, its current **version**:
+`bots/<level>/<species>_vN.yaml`. A kept bot is classified with
+`janken species classify NNNN` (`/classify`), and the lineage is kept in
+[research/species.md](../research/species.md). Settings: `species` in `janken.toml`.
+
+1. **Alike moves.** The bot's core (its predictor tree, without guards and overlays) and
+   every species' current version are replayed on the same stored histories
+   (`species.matches` matches spread over the dataset's `species.split`, with the same
+   random numbers). Their **core agreement** is the share of rounds where both predict
+   the same move. Only species of the bot's **own level** count: versions never cross
+   levels.
+1. Below `species.agreement` for every species of its level: a **new species**. It is
+   named (`--name`) and renamed `<name>_v1`.
+1. Otherwise a **paired run** against the closest species' current version
+   (`species.round_robins` round robins, stored as `species-NNNN`):
+   - **Alike results.** The per-opponent scores of the two must correlate at least
+     `species.profile_correlation`. Below it: a new species after all.
+   - **Next version** when it **dominates**: no matchup's 95% CI below 0, and at least
+     one matchup's CI above 0 at the Bonferroni level `species.alpha` / matchups. A
+     matchup is a pool opponent met in at least `species.min_matchup_matches` paired
+     matches, or the head-to-head. Without the correction, a copy of the incumbent would
+     "win" one of ~28 matchups by chance about half the time.
+   - **Next version** too when it is **as good** (worse on none, better on none) and
+     **more than `species.speed_factor` times faster**: each bot plays
+     `species.speed_matches` self-play matches on one thread, best of
+     `species.speed_repeats`.
+   - Otherwise a **variant**.
+1. **Acting on it.** A next version is renamed `<species>_v{N+1}` and the old version
+   moves to `bots/<species.legacy_dir>` (out of every pool); a variant moves there itself.
+   Space files follow the bot. The note gets a `Species` field and section.
+
+Why: near-copies crowd the 20-bot pools and tilt every experiment toward one family. A
+field of distinct species keeps the pools diverse, so results stay comparable across
+bots and levels, and `janken species census` shows where the field is thin.
+
 ## Where runs are stored
 
 Every run lives in one DuckDB file in the workspace, `experiments/runs.duckdb` (settings

@@ -38,7 +38,7 @@ NOTE_HELP = (
 )
 
 
-def _plan(lab: Lab, mode: str):
+def plan_for(lab: Lab, mode: str):
     from ..lab.workflows import Plan
 
     return Plan(
@@ -93,8 +93,10 @@ def _draft(
 @lab_command("status")
 def status(lab: Lab) -> None:
     """The research state and the next step: notes, runs, ideas, leaderboard."""
+    from ..engine.registry import discover
     from ..lab import analyze
     from ..lab.runs_db import RunStore
+    from ..match import bot_name
     from ..notebook import ideas, insights, notes, state
 
     all_notes = notes.all_notes(lab.notebook)
@@ -106,7 +108,8 @@ def status(lab: Lab) -> None:
     )
     with open(insights.path(lab.notebook), encoding="utf-8") as f:
         insight_text = f.read()
-    step = state.next_step(all_notes, backlog, run_status, insight_text)
+    field = {bot_name(p) for p in discover(lab.bots_dir)}
+    step = state.next_step(all_notes, backlog, run_status, insight_text, field)
     open_notes = [n for n in all_notes if n.status != notes.ANALYZED]
     top = ideas.ranked(backlog)[: CFG.status.ideas]
     board = (
@@ -195,7 +198,7 @@ def evaluate(
         created = workflows.plan(lab.notebook, draft, [], datetime.date.today())
         note = f"{created.number:04d}"
         lab.say(f"note {shown(created.path)} (planned)")
-    done, summary = workflows.evaluate(lab.notebook, note, _plan(lab, str(mode)))
+    done, summary = workflows.evaluate(lab.notebook, note, plan_for(lab, str(mode)))
     lab.emit(
         {
             "note": shown(done.path),
@@ -288,7 +291,7 @@ def tune(
     done = workflows.tune(
         lab.notebook,
         note,
-        _plan(lab, CFG.evaluation.mode),
+        plan_for(lab, CFG.evaluation.mode),
         budget,
         lab.spaces_dir,
         CFG.space,

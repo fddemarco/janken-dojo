@@ -284,6 +284,60 @@ class ExportConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class SpeciesConfig:
+    """Species and versions: how a kept bot is classified (`janken species`).
+
+    Two bots behave alike when their cores agree on at least `agreement` of the moves
+    they predict on the dataset's `split`, and their per-opponent scores in a paired
+    run correlate at least `profile_correlation`. A challenger replaces its species'
+    current version when no matchup's 95% CI is below 0 and at least one is above 0 at
+    the Bonferroni level `alpha` / matchups. Matchups with fewer than
+    `min_matchup_matches` paired matches are left out. A challenger worse on no
+    matchup and better on none still replaces the incumbent when it plays at least
+    `speed_factor` times faster (self-play, timed `speed_repeats` times).
+    """
+
+    agreement: float = setting(
+        "the share of predicted moves two bots' cores must agree on to be alike",
+        minimum=0,
+    )
+    profile_correlation: float = setting(
+        "the correlation two bots' per-opponent scores must reach to be alike",
+        minimum=-1,
+    )
+    round_robins: int = setting(
+        "round robins of the paired run against the species' current version",
+        minimum=1,
+    )
+    min_matchup_matches: int = setting(
+        "paired matches a matchup needs to count in the dominance test", minimum=2
+    )
+    alpha: float = setting(
+        "the family-wise error of 'better on at least one matchup' (Bonferroni)",
+        minimum=0,
+    )
+    split: str = setting("the dataset split the cores are compared on", SPLITS)
+    matches: int = setting(
+        "dataset matches the cores are compared on, evenly spread over the split",
+        minimum=1,
+    )
+    speed_factor: float = setting(
+        "a challenger as good as the incumbent replaces it when more than this many"
+        " times faster",
+        minimum=1,
+    )
+    speed_matches: int = setting(
+        "self-play matches each bot plays when the two are timed", minimum=1
+    )
+    speed_repeats: int = setting(
+        "times the timing is repeated (the fastest repeat counts)", minimum=1
+    )
+    legacy_dir: str = setting(
+        "where retired versions and variants go, relative to the bots dir"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -304,6 +358,7 @@ class Config:
     query: QueryConfig = setting("ad hoc queries")
     status: StatusConfig = setting("the status report")
     export: ExportConfig = setting("submission scripts")
+    species: SpeciesConfig = setting("species and versions")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""

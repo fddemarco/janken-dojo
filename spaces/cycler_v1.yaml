@@ -1,4 +1,5 @@
-bot: bots/l1/counter_reactionary.yaml
+bot: bots/l1/cycler_v1.yaml
 weight: 1.0
 params:
+  STEP: {type: int, low: 1, high: 2, grid: [1, 2]}
   NOISE: {type: float, low: 0.0, high: 0.5, grid: [0.0, 0.05, 0.2]}

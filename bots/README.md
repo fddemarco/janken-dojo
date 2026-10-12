@@ -7,6 +7,25 @@ each bot sits in the folder of its level, computed from the blueprint
 are unique across them. Pools, tournaments and `janken bot list` read the level folders
 only, never `inactive/`.
 
+## Species and versions
+
+The field holds one bot per **species**, its current **version**: `<species>_vN.yaml`
+(`smartbot_v1`, `smartbot_v2`, …). A new bot starts with a plain stem (`janken bot new`
+refuses a `_vN` one). Once it is kept, `janken species classify` decides what it is
+(`/classify`; how: [docs/experiments.md](../docs/experiments.md#species)):
+
+- a **new species**: it behaves like no species of the field, and is renamed
+  `<name>_v1`;
+- the **next version** of a species: it behaves like it, is no worse on any matchup and
+  better on at least one, and is renamed `<species>_v{N+1}`; the old version moves to
+  `inactive/legacy/`;
+- a **variant**: it behaves like a species without beating it, and moves to
+  `inactive/legacy/`.
+
+Oracles and `inactive/` are not species. The lineage of every species (its versions,
+their old stems and the notes that decided them) is
+[research/species.md](../research/species.md).
+
 ```
 bots/
   l1/                the zoo's heuristics
@@ -23,35 +42,35 @@ bots/
 
 | level | bot | what it does |
 |---|---|---|
-| L1 | `rock` | always rock (optional noise) |
-| L1 | `nash` | uniform random, the Nash equilibrium |
-| L1 | `biased` | a weighted coin over the three moves |
-| L1 | `cycler` | rock → paper → scissors (or the reverse) |
-| L1 | `copycat` | plays the opponent's last move |
-| L1 | `reactionary` | beats the opponent's last move |
-| L1 | `counter_reactionary` | after a win, beats the beat of its own last move |
-| L1 | `self_beater` | beats its own last move |
-| L1 | `wsls` | win-stay, lose-shift |
-| L1 | `frequency` | beats the opponent's most frequent move |
-| L1 | `anti_frequency` | beats the move that beats our most frequent move |
-| L1 | `transition_matrix` | order-1 opponent transitions, sampled |
-| L1 | `markov2_joint` | order-2 Markov model on the joint history |
-| L1 | `pattern_memory` | longest earlier repeat of the joint history |
-| L1 | `rotation_outcome` | learned win-stay/lose-shift (rotation by outcome) |
-| L1 | `geometry` | Superant's RPS Geometry |
-| L1 | `word2janken` | variable-order n-gram with a 12% noise floor |
-| L2 | `word2janken_scoreboard` | scoreboard of word2janken's predictor, its counter and counter-counter |
-| L2 | `iocaine_lite` | Iocaine Powder's sicilian reasoning over three predictors |
-| L2 | `rps4_lite` | Rpscontest #4 in miniature: Markov orders 0-3, greedy arms |
-| L2 | `smartbot` | 18 predictors × 3 arms, Thompson sampling (Kaggle 1st place) |
-| L2 | `smartbot_fast` | smartbot with faster memories (0.6, 0.6, 8) |
-| L2 | `smartbot_staller` | smartbot plus stalling (random play on drawdown or a safe lead) |
-| L3 | `smartbot_sims` | smartbot plus 10 "model of us" sims (replays of the metabots included) |
-| L3 | `anti_smartbot_sims` | replays smartbot_sims exactly and beats its likeliest move |
-| L4 | `gate_edge` | smartbot_sims's arms + anti expert, gated by EDGE |
-| L4 | `gate_anti_first` | same experts, the anti expert first (ANTI_FIRST) |
-| L4 | `gate_main_first` | same experts, the main arms first (MAIN_FIRST) — the fleet's core |
-| L4 | `gate_main_first_stationary` | gate_main_first plus a stationary (frequency) expert |
+| L1 | `rock_v1` | always rock (optional noise) |
+| L1 | `nash_v1` | uniform random, the Nash equilibrium |
+| L1 | `biased_v1` | a weighted coin over the three moves |
+| L1 | `cycler_v1` | rock → paper → scissors (or the reverse) |
+| L1 | `copycat_v1` | plays the opponent's last move |
+| L1 | `reactionary_v1` | beats the opponent's last move |
+| L1 | `counter_reactionary_v1` | after a win, beats the beat of its own last move |
+| L1 | `self_beater_v1` | beats its own last move |
+| L1 | `wsls_v1` | win-stay, lose-shift |
+| L1 | `frequency_v1` | beats the opponent's most frequent move |
+| L1 | `anti_frequency_v1` | beats the move that beats our most frequent move |
+| L1 | `transition_matrix_v1` | order-1 opponent transitions, sampled |
+| L1 | `markov2_joint_v1` | order-2 Markov model on the joint history |
+| L1 | `pattern_memory_v1` | longest earlier repeat of the joint history |
+| L1 | `rotation_outcome_v1` | learned win-stay/lose-shift (rotation by outcome) |
+| L1 | `geometry_v1` | Superant's RPS Geometry |
+| L1 | `word2janken_v1` | variable-order n-gram with a 12% noise floor |
+| L2 | `word2janken_scoreboard_v1` | scoreboard of word2janken's predictor, its counter and counter-counter |
+| L2 | `iocaine_lite_v1` | Iocaine Powder's sicilian reasoning over three predictors |
+| L2 | `rps4_lite_v1` | Rpscontest #4 in miniature: Markov orders 0-3, greedy arms |
+| L2 | `smartbot_v1` | 18 predictors × 3 arms, Thompson sampling (Kaggle 1st place) |
+| L2 | `smartbot_fast_v1` | smartbot with faster memories (0.6, 0.6, 8) |
+| L2 | `smartbot_staller_v1` | smartbot plus stalling (random play on drawdown or a safe lead) |
+| L3 | `smartbot_sims_v1` | smartbot plus 10 "model of us" sims (replays of the metabots included) |
+| L3 | `anti_smartbot_sims_v1` | replays smartbot_sims exactly and beats its likeliest move |
+| L4 | `gate_edge_v1` | smartbot_sims's arms + anti expert, gated by EDGE |
+| L4 | `gate_anti_first_v1` | same experts, the anti expert first (ANTI_FIRST) |
+| L4 | `gate_main_first_v1` | same experts, the main arms first (MAIN_FIRST) — the fleet's core |
+| L4 | `gate_main_first_stationary_v1` | gate_main_first plus a stationary (frequency) expert |
 | Oracle | `oracle_smartbot_sims`, `oracle_anti_smartbot_sims`, `oracle_gate_edge`, `oracle_gate_anti_first` | pure Oracles: calibrated win chances per level, drawn with `pool.mocks` |
 | Oracle | `oracle_arm_gate_edge`, `oracle_arm_gate_anti_first` | gatekeepers whose anti expert is an Oracle arm |
 
@@ -60,7 +79,10 @@ Oracles cheat: they never enter a pool (unless `pool.mocks`), a tournament or an
 ## Renames
 
 The research notes (`research/`) and the runs database keep the names a bot had when it
-was run. Current names, and the old ones they replace:
+was run. On 2026-10-11 every bot of the field became version 1 of its species
+(`smartbot` → `smartbot_v1`; the species lineage is in
+[research/species.md](../research/species.md)). Earlier renames, by their names before
+the versions:
 
 | bot | was |
 |---|---|

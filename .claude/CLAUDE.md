@@ -11,7 +11,8 @@ verdicts → insights → ideas.
 - **High level:** one command per lifecycle step, each keeping the notebook's books.
   - `status` (the next step), `idea`, `bot new | check | list | show | export`;
   - `evaluate` (note → run → results), `tune` (note → study → validation);
-  - `verdict`, `insight`, `tournament`, `config`.
+  - `verdict`, `species classify | compare | census | list`, `insight`, `tournament`,
+    `config`.
 - **Low level:** `janken lab ...`, ad hoc and without the notebook.
   - `experiment`, `resume`, `report`, `runs`, `history`, `leaderboard`, `match`;
   - `query` (read-only SQL), `space`, `study run | show | list`;
@@ -27,6 +28,8 @@ The skills drive the self-improvement loop through the high-level commands:
 - `/build`: an idea becomes a bot, or a new kit stage (`janken bot new | check`).
 - `/evaluate`: hypothesis, run, reading, verdict (`janken evaluate`, `janken verdict`).
 - `/tune`: a bot's or fleet's study and its validated verdict (`janken tune`).
+- `/classify`: a kept bot becomes a new species, the next version of one, or a variant
+  (`janken species classify`).
 - `/learn`: insights that meet the bar, and follow-up ideas (`janken insight add`).
 
 **The lifecycle skills run experiments and tuning themselves** (into `experiments/`, with
@@ -36,7 +39,7 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 - Smoke checks go to a throwaway `--workspace <tmp>/ws --notebook <tmp>/research`, with
   the notebook copied there first.
 - Read-only commands are always safe to run: `status`, `idea list | show`, `bot list | show`,
-  `insight list`, `config show | get | path | check`, `lab report | runs | history | leaderboard | query | study show | study list | dataset info | predict`.
+  `insight list`, `species compare | census | list`, `config show | get | path | check`, `lab report | runs | history | leaderboard | query | study show | study list | dataset info | predict`.
 
 ## Bot rules (enforced by review, the engine and the tests)
 
@@ -53,6 +56,10 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   `$NAME` (grammar in `janken/kit/declare.py`; copy any bot in `bots/`). Stems are
   unique across levels. A bot file holds
   no Python.
+- The field holds one bot per **species**, its current version `<species>_vN`
+  (lineage: `research/species.md`; rules: docs/experiments.md, Species). A new bot gets
+  a plain stem; only `janken species classify` gives versions, after a keep. Versions
+  never cross levels; retired versions and variants go to `bots/inactive/legacy/`.
 - What a bot is tuned over lives outside it, in one space file per bot,
   `spaces/<name>.yaml` (`janken/lab/space.py`): `bot`, `weight` and `params`.
   `janken bot new` and `janken tune` scaffold a missing one (`janken lab space` writes one
@@ -155,7 +162,7 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   `bots/inactive/` holds the bots out of the field: `fleets/` and `legacy/` (discovery
   reads only the level folders, so they never enter a pool). `spaces/` holds one space file per tunable
   bot of the field.
-- `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
+- `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `species.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
   and `rps_kaggle.md`.
 - `janken/engine/` compiles bots and referees matches. `janken/kit/` holds the bot
   anatomy: `blueprint/` (the stage catalogue, the predictor tree and its compiler: one

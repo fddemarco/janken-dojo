@@ -10,6 +10,7 @@ from janken.engine.build import BlueprintBot, load_bot
 from janken.engine.registry import P_MAX, discover
 from janken.lab import space
 from janken.match import bot_name
+from janken.notebook import species
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 BOTS_DIR = os.path.join(ROOT, "bots")
@@ -55,3 +56,24 @@ class TestLayout:
         assert os.path.normpath(os.path.join(ROOT, found.bot)) == registry.find(
             BOTS_DIR, found.stem
         )
+
+
+class TestSpecies:
+    """research/species.md and the field agree: one current version per species."""
+
+    def test_every_versioned_bot_is_its_species_current_version(self) -> None:
+        book = species.load(os.path.join(ROOT, "research"))
+        current = {s.current: s for s in book.species}
+        versioned = [p for p in BOT_PATHS if species.is_versioned(bot_name(p))]
+        assert versioned
+        for path in versioned:
+            stem = bot_name(path)
+            assert stem in current, f"{stem} is not a current version in species.md"
+            folder = os.path.basename(os.path.dirname(path))
+            assert current[stem].level.lower() == folder, stem
+
+    def test_every_species_has_its_current_version_in_the_field(self) -> None:
+        stems = {bot_name(p) for p in BOT_PATHS}
+        for found in species.load(os.path.join(ROOT, "research")).species:
+            assert found.current in stems, found.name
+            assert species.parse_stem(found.current).species == found.name

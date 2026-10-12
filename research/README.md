@@ -6,9 +6,9 @@ This folder is the lab notebook. Results live in `experiments/` (gitignored, loc
 ## The loop
 
 ```
-ideas.md ──► new bot (bots/l1/x.yaml) ──► evaluate / tune ──► verdict
-   ▲                                                          │
-   └──── insights.md ◄── experiments/NNNN-*.md (keep / drop / iterate)
+ideas.md ──► new bot (bots/l1/x.yaml) ──► evaluate / tune ──► verdict ──► species (keep)
+   ▲                                                                         │
+   └──── insights.md ◄── experiments/NNNN-*.md (keep / drop / iterate) ◄─────┘
 ```
 
 Each step is one command (docs/cli.md), and each command keeps this notebook's books:
@@ -23,6 +23,9 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
    if it has knobs: `janken tune` (`/tune`).
 1. **Decide:** `janken verdict NNNN keep|drop|iterate --summary …`. This closes the note
    and sets its idea's status.
+1. **Classify a kept bot:** `janken species classify NNNN` (`/classify`). It becomes a
+   new species (`<name>_v1`), the next version of its level's closest species (the old
+   version retires), or a variant (it retires): one bot per species in the field.
 1. **Record insights** that hold up: `janken insight add --note NNNN …` (`/learn`). It
    refuses evidence below the bar.
 
@@ -36,6 +39,7 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 | `sources/<slug>.md` | one card per external resource: summary, claims vs evidence, relevance, ideas spawned |
 | `ideas.md` | the backlog: ideas with status, priority, and the evidence that motivated them |
 | `insights.md` | findings that held up, each linked to the experiment(s) behind it |
+| `species.md` | the field's species: each one's level, current version and lineage, and the variants that didn't beat it |
 | `experiments/NNNN-<slug>.md` | one note per experiment: hypothesis, command, run id, results, verdict |
 | `experiments/TEMPLATE.md` | the note template |
 
@@ -78,6 +82,15 @@ keep the names that were current when they were written, and so does the runs da
 (`lab history` and `lab leaderboard` list the old and the new names separately). The
 map from old names to new: [bots/README.md](../bots/README.md#renames) and
 [bots/inactive/legacy/README.md](../bots/inactive/legacy/README.md).
+
+### 2026-10-11: species and versions
+
+Every bot of the field became version 1 of its own species, `<stem>_v1` (logic
+unchanged; the Oracles and `bots/inactive/` keep their names). From now on a kept bot is
+classified (`janken species classify`, `/classify`): a new species, the next version of
+one (the old version retires), or a variant (it retires). The lineage is
+[species.md](species.md). Notes and runs keep the names that were current when they
+were written.
 
 ## Experiment protocol
 

@@ -54,7 +54,7 @@ class TestInterrupted:
 
 class TestBatches:
     def test_batches_cover_every_match_and_change_nothing(self) -> None:
-        pairs = [(make_spec(bot("cycler")), make_spec(bot("wsls")))] * 5
+        pairs = [(make_spec(bot("cycler_v1")), make_spec(bot("wsls_v1")))] * 5
         seeds = [1, 2, 3, 4, 5]
         whole = play_pairs(pairs, 8, seeds)
         spans = []

@@ -67,10 +67,10 @@ class TestExportedBots:
     @pytest.mark.parametrize(
         "stem, rounds, seed, invalid_at",
         [
-            ("frequency", 30, 1, -1),
-            ("smartbot_sims", 30, 2, 10),
-            ("anti_smartbot_sims", 6, 3, -1),  # replays, Thompson draws
-            ("gate_edge", 8, 4, 3),  # the Gatekeeper
+            ("frequency_v1", 30, 1, -1),
+            ("smartbot_sims_v1", 30, 2, 10),
+            ("anti_smartbot_sims_v1", 6, 3, -1),  # replays, Thompson draws
+            ("gate_edge_v1", 8, 4, 3),  # the Gatekeeper
         ],
     )
     def test_exported_bots_play_exactly_like_the_kit(
@@ -92,7 +92,7 @@ class TestExportedBots:
 
     def test_a_crash_guard_forfeits_by_raising(self) -> None:
         module = load(
-            self.exported(registry.find("bots", "frequency"))["frequency"],
+            self.exported(registry.find("bots", "frequency_v1"))["frequency_v1"],
             self.tmp,
             "f",
         )
@@ -101,7 +101,7 @@ class TestExportedBots:
             module.play(["rock"], ["invalid"])
 
     def test_scripts_pass_the_screening_and_import_no_numpy(self) -> None:
-        source = self.exported(registry.find("bots", "frequency"))["frequency"]
+        source = self.exported(registry.find("bots", "frequency_v1"))["frequency_v1"]
         assert sandbox.scan(source, RULES) == []
         assert "numpy" not in source
         assert "global " not in source
@@ -161,7 +161,9 @@ class TestExportedBots:
 
     def test_a_match_longer_than_the_export_is_an_error(self) -> None:
         module = load(
-            self.exported(registry.find("bots", "rock"))["rock"], self.tmp, "rock"
+            self.exported(registry.find("bots", "rock_v1"))["rock_v1"],
+            self.tmp,
+            "rock_v1",
         )
         with pytest.raises(ValueError):
             module.play(["rock"] * MAX_ROUNDS, ["rock"] * MAX_ROUNDS)
@@ -170,7 +172,9 @@ class TestExportedBots:
         compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT),)).compile({})
         spec = [int(v) for v in compiled.spec]
         assert [spec[x] for x in export.team_role_cells(spec)] == [c.SUPPORT]
-        prm = [float(v) for v in registry.param_vector(registry.find("bots", "rock"))]
+        prm = [
+            float(v) for v in registry.param_vector(registry.find("bots", "rock_v1"))
+        ]
         with pytest.raises(export.ExportError):
             export.script(compiled, prm, [], [], MAX_ROUNDS)  # its role is missing
 

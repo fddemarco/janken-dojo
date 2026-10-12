@@ -114,9 +114,16 @@ def ratings_per_rr(df: pl.DataFrame) -> dict[str, list[float]]:
     return out
 
 
-def paired_diff(lf: pl.DataFrame, a: str, b: str, reps: int = 4000, seed: int = 0):
+def paired_diff(
+    lf: pl.DataFrame,
+    a: str,
+    b: str,
+    reps: int = 4000,
+    seed: int = 0,
+    level: float = 0.95,
+):
     """Mean of score(a) - score(b) over shared (rr, pool opponent) units, with a
-    bootstrap 95% CI; None if they share no opponents."""
+    bootstrap CI at `level` (95% by default); None if they share no opponents."""
     pool = lf.filter(~pl.col("opp_cand"))
     sa = pool.filter(pl.col("bot") == a).select(
         "rr", "opp", pl.col("result").alias("ra")
@@ -130,7 +137,8 @@ def paired_diff(lf: pl.DataFrame, a: str, b: str, reps: int = 4000, seed: int = 
     d = (joined["ra"] - joined["rb"]).to_numpy()
     rng = np.random.default_rng(seed)
     boots = d[rng.integers(0, d.size, (reps, d.size))].mean(axis=1)
-    lo, hi = np.quantile(boots, [0.025, 0.975])
+    tail = (1 - level) / 2
+    lo, hi = np.quantile(boots, [tail, 1 - tail])
     return {
         "a": a,
         "b": b,

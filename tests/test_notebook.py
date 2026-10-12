@@ -13,6 +13,7 @@ from janken.notebook import ideas, insights, notes, state
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 RESEARCH = os.path.join(ROOT, "research")
 TODAY = datetime.date(2026, 10, 10)
+FIELD = frozenset({"a_v1", "b_v1"})  # the drafts' bots are not in it
 
 
 def read(path: str) -> str:
@@ -152,23 +153,44 @@ class TestNextStep(Notebook):
         backlog = ideas.load(self.dir)
         text = read(insights.path(self.dir))
         planned = notes.create(self.dir, self.draft(), TODAY)
-        assert state.next_step([planned], backlog, {}, text).action == "run"
+        assert state.next_step([planned], backlog, {}, text, FIELD).action == "run"
         ran = notes.record_results(planned, "Run", "r1", "x")
         assert (
-            state.next_step([ran], backlog, {"r1": "complete"}, text).action
+            state.next_step([ran], backlog, {"r1": "complete"}, text, FIELD).action
             == "verdict"
         )
         assert (
-            state.next_step([ran], backlog, {"r1": "interrupted"}, text).action
+            state.next_step([ran], backlog, {"r1": "interrupted"}, text, FIELD).action
             == "resume"
         )
         kept = notes.record_verdict(ran, "keep", "won", "")
-        assert state.next_step([kept], backlog, {}, text).action == "learn"
+        assert state.next_step([kept], backlog, {}, text, FIELD).action == "learn"
         dropped = notes.record_verdict(ran, "drop", "lost", "")
-        step = state.next_step([dropped], backlog, {}, text)
+        step = state.next_step([dropped], backlog, {}, text, FIELD)
         assert step.action == "build"
         assert f"--idea {ideas.ranked(backlog)[0].number}" in step.command
         empty = ideas.parse(
             "| # | idea | priority | status | motivation |\n|---|---|---|---|---|\n"
         )
-        assert state.next_step([], empty, {}, text).action == "ideate"
+        assert state.next_step([], empty, {}, text, FIELD).action == "ideate"
+
+    def test_a_kept_bot_without_a_version_is_classified_before_learning(
+        self,
+    ) -> None:
+        backlog = ideas.load(self.dir)
+        text = read(insights.path(self.dir))
+        ran = notes.record_results(
+            notes.create(self.dir, self.draft(), TODAY), "Run", "r1", "x"
+        )
+        kept = notes.record_verdict(ran, "keep", "won", "")
+        field = {"a", "b_v1"}
+        step = state.next_step([kept], backlog, {}, text, field)
+        assert (step.action, step.command) == (
+            "classify",
+            "janken species classify 0001",
+        )
+        done = notes.record_species(kept, "`a_v1` (new species)", "**new**.")
+        assert done.species == "`a_v1` (new species)"
+        assert state.next_step([done], backlog, {}, text, field).action == "learn"
+        dropped = notes.record_verdict(ran, "drop", "lost", "")
+        assert state.next_step([dropped], backlog, {}, text, field).action == "build"

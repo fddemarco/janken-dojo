@@ -16,8 +16,9 @@ and whole sections, and leaves everything else as written:
     - **Run:** `<run id>`            (an evaluation)
     - **Study:** `<study>`           (a tuning study)
     - **Verdict:** keep | drop | iterate
+    - **Species:** `<stem>` (new | promoted | variant)   (after `species classify`)
 
-    ## Hypothesis / ## Command / ## Results / ## Analysis / ## Verdict
+    ## Hypothesis / ## Command / ## Results / ## Analysis / ## Verdict [/ ## Species]
 
 Notes written before the CLI kept their run id on a `Run id: `...`` line; they are
 read the same way.
@@ -70,6 +71,11 @@ class Note:
     @property
     def status(self) -> str:
         return self.field("Status").split()[0] if self.field("Status") else PLANNED
+
+    @property
+    def species(self) -> str:
+        """What `janken species classify` made of the candidate ("" before it)."""
+        return self.field("Species")
 
     @property
     def kind(self) -> str:
@@ -298,3 +304,9 @@ def record_verdict(note: Note, verdict: str, summary: str, analysis: str) -> Not
     return save(
         note, with_section(text, "Verdict", f"**{verdict}**. {summary.strip()}")
     )
+
+
+def record_species(note: Note, species: str, body: str) -> Note:
+    """Write a kept candidate's classification in: the Species field and section."""
+    text = with_field(note.text, "Species", species)
+    return save(note, with_section(text, "Species", body))

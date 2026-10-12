@@ -19,7 +19,15 @@ from janken.engine import registry
 from janken.notebook import ideas, notes
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-LIGHT_BOTS = ("rock", "nash", "cycler", "wsls", "copycat", "reactionary", "biased")
+LIGHT_BOTS = (
+    "rock_v1",
+    "nash_v1",
+    "cycler_v1",
+    "wsls_v1",
+    "copycat_v1",
+    "reactionary_v1",
+    "biased_v1",
+)
 CONFIG_KEY = re.compile(r"\(config: ([a-z_.]+)\)")
 # Defaults that mean "none" or "off" rather than a value someone chose.
 NEUTRAL: tuple[object, ...] = ("", 0, False, None, "auto")
@@ -282,7 +290,7 @@ class TestLifecycle:
             "new",
             "twin",
             "--from",
-            "cycler",
+            "cycler_v1",
             "--description",
             "A cycler twin.",
             "--idea",
@@ -299,7 +307,7 @@ class TestLifecycle:
             "evaluate",
             self.bot("twin"),
             "--baseline",
-            self.bot("cycler"),
+            self.bot("cycler_v1"),
             "--hypothesis",
             "the twin plays exactly like cycler",
             "--idea",
@@ -354,15 +362,20 @@ class TestLifecycle:
 
     def test_the_low_level(self) -> None:
         out = self.run_ok(
-            "lab", "experiment", self.bot("cycler"), self.bot("wsls"), "--name", "adhoc"
+            "lab",
+            "experiment",
+            self.bot("cycler_v1"),
+            self.bot("wsls_v1"),
+            "--name",
+            "adhoc",
         )
         run_id = out.strip().splitlines()[-1].split()[-1]
         assert run_id in self.run_ok("lab", "runs")
         assert "Candidates vs pool" in self.run_ok("lab", "report", run_id)
-        assert "cycler" in self.run_ok("lab", "history", "cycler")
+        assert "cycler_v1" in self.run_ok("lab", "history", "cycler_v1")
         assert "wsls" in self.run_ok("lab", "leaderboard")
         assert "seed" in self.run_ok(
-            "lab", "match", self.bot("rock"), self.bot("cycler")
+            "lab", "match", self.bot("rock_v1"), self.bot("cycler_v1")
         )
         counted = self.run_ok(
             "lab",
@@ -386,12 +399,131 @@ class TestLifecycle:
             [
                 "bot",
                 "new",
-                "rock",
+                "rock_v1",
                 "--from",
-                "nash",
+                "nash_v1",
                 "--description",
                 "x",
                 *self.common(),
             ],
         )
         assert result.exit_code == 2  # a stem is never reused
+
+
+SPECIES_FIELD = ("rock_v1", "cycler_v1", "wsls_v1", "copycat_v1", "reactionary_v1")
+SPECIES_TABLE = """# Species
+
+| species | level | current | versions | variants |
+|---|---|---|---|---|
+""" + "".join(
+    f"| `{s[:-3]}` | L1 | `{s}` | v1 ← `{s[:-3]}` | |\n" for s in SPECIES_FIELD
+)
+
+
+class TestSpeciesLifecycle:
+    """A kept bot classified end to end: a variant, then a new species (JIT off)."""
+
+    @pytest.fixture(autouse=True)
+    def _lab(self, tmp_path: pathlib.Path) -> None:
+        self.root = str(tmp_path)
+        self.bots = os.path.join(self.root, "bots")
+        self.notebook = os.path.join(self.root, "research")
+        self.spaces = os.path.join(self.root, "spaces")
+        os.makedirs(os.path.join(self.bots, "l1"))
+        os.makedirs(self.notebook)
+        for stem in SPECIES_FIELD:
+            shutil.copy(
+                registry.find(os.path.join(ROOT, "bots"), stem),
+                os.path.join(self.bots, "l1"),
+            )
+        for name in ("ideas.md", "insights.md"):
+            shutil.copy(os.path.join(ROOT, "research", name), self.notebook)
+        with open(os.path.join(self.notebook, "species.md"), "w") as f:
+            f.write(SPECIES_TABLE)
+        self.runner = CliRunner()
+
+    def common(self) -> list[str]:
+        return [
+            "--workspace",
+            os.path.join(self.root, "experiments"),
+            "--notebook",
+            self.notebook,
+            "--bots-dir",
+            self.bots,
+            "--spaces-dir",
+            self.spaces,
+            "--effort",
+            "quick",
+            "--rounds",
+            "10",
+            "--pool-size",
+            "3",
+            "--seed",
+            "1",
+            "--cache",
+            "off",
+            "--progress",
+            "off",
+        ]
+
+    def invoke(self, *args: str) -> Result:
+        return self.runner.invoke(app, [*args, *self.common()])
+
+    def run_ok(self, *args: str) -> str:
+        result = self.invoke(*args)
+        assert result.exit_code == 0, f"{args}: {result.output}{result.exception!r}"
+        return result.output
+
+    def json_of(self, *args: str) -> Any:
+        result = self.invoke(*args, "--format", "json")
+        assert result.exit_code == 0, f"{args}: {result.output}{result.exception!r}"
+        return json.loads(result.stdout)
+
+    def keep(self, stem: str, template: str) -> str:
+        """A new bot from `template`, evaluated and kept; its note's number."""
+        self.run_ok("bot", "new", stem, "--from", template, "--description", "A test.")
+        self.run_ok(
+            "evaluate",
+            registry.find(self.bots, stem),
+            "--hypothesis",
+            "it holds its own",
+        )
+        number = f"{notes.all_notes(self.notebook)[-1].number:04d}"
+        self.run_ok("verdict", number, "keep", "--summary", "kept for the test")
+        return number
+
+    def test_a_twin_is_a_variant_and_a_stranger_a_new_species(self) -> None:
+        stems = [registry.find(self.bots, s) for s in SPECIES_FIELD]
+        self.run_ok("lab", "dataset", "add", *stems)
+        ranked = self.run_ok("species", "compare", "cycler_v1", "--split", "all")
+        assert "| `rock_v1` | L1 |" in ranked
+        assert "`cycler_v1` |" not in ranked  # the bot itself is left out
+        assert "## Alike pairs" in self.run_ok("species", "census", "--split", "all")
+        refused = self.invoke("bot", "new", "cycler_v2", "--from", "cycler_v1")
+        assert refused.exit_code == 2  # versions come from classify only
+
+        twin = self.keep("twin", "cycler_v1")
+        status = self.json_of("status")
+        assert status["next"]["action"] == "classify"
+        out = self.json_of("species", "classify", twin, "--split", "all")
+        assert out["outcome"] == "variant"  # alike cycler_v1, and no better
+        assert out["incumbent"] == "cycler_v1"
+        assert os.path.isfile(
+            os.path.join(self.bots, "inactive", "legacy", "twin.yaml")
+        )
+        assert not os.path.exists(os.path.join(self.spaces, "twin.yaml"))
+        assert "`twin`" in self.run_ok("species", "list")
+        assert notes.find(self.notebook, twin).species.startswith("`twin` (variant")
+        assert self.json_of("status")["next"]["action"] != "classify"
+
+        coin = self.keep("coin", os.path.join(ROOT, "bots", "l1", "nash_v1.yaml"))
+        unnamed = self.invoke("species", "classify", coin, "--split", "all")
+        assert unnamed.exit_code == 2  # a new species needs a name
+        assert "--name" in unnamed.output
+        self.run_ok("species", "classify", coin, "--split", "all", "--name", "coin")
+        assert registry.find(self.bots, "coin_v1").endswith(
+            os.path.join("l1", "coin_v1.yaml")
+        )
+        found = {s["name"]: s for s in self.json_of("species", "list")}
+        assert found["coin"]["current"] == "coin_v1"
+        assert "v1 ← `coin` ([" in found["coin"]["versions"]

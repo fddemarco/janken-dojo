@@ -339,7 +339,7 @@ class TestLevelFolders:
         d = str(tmp_path)
         rock = os.path.join(d, "l2", "rock.yaml")
         os.makedirs(os.path.dirname(rock))
-        shutil.copy(registry.find(BOTS_DIR, "rock"), rock)
+        shutil.copy(registry.find(BOTS_DIR, "rock_v1"), rock)
         result = CliRunner().invoke(app, ["bot", "check", "--bots-dir", d, "rock"])
         assert result.exit_code == 2
         assert os.path.join(d, "l1") in result.output

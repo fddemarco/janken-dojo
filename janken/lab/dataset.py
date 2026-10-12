@@ -156,6 +156,27 @@ class Sequences:
             p2_index=self.p2_index[first:stop],
         )
 
+    def spread(self, n: int) -> "Sequences":
+        """`n` matches evenly spread over the whole set (all of them if fewer), so
+        every part of the dataset is represented, in id order."""
+        if n >= self.n_matches:
+            return self
+        keep = np.unique(np.linspace(0, self.n_matches - 1, n).round().astype(np.int64))
+        lengths = np.diff(self.starts)[keep]
+        rounds = np.concatenate(
+            [np.arange(self.starts[k], self.starts[k + 1]) for k in keep]
+        )
+        return dataclasses.replace(
+            self,
+            match_ids=self.match_ids[keep],
+            seeds=self.seeds[keep],
+            starts=np.concatenate([[0], np.cumsum(lengths)]).astype(np.int64),
+            p1=self.p1[rounds],
+            p2=self.p2[rounds],
+            p1_index=self.p1_index[keep],
+            p2_index=self.p2_index[keep],
+        )
+
 
 def default_path() -> str:
     """The dataset file: `[tool.janken.dataset] file` in the experiments directory."""

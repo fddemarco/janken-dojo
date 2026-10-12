@@ -22,11 +22,12 @@ uv run janken --help          # the command line (or `janken --help` in the acti
 ```bash
 uv run janken status                         # the research state and the next step
 uv run janken idea add "**Idea**: ..." --priority P1 --motivation "..."
-uv run janken bot new my_bot --from smartbot_sims --idea 22 --description "..."
+uv run janken bot new my_bot --from smartbot_sims_v1 --idea 22 --description "..."
 uv run janken bot check my_bot
-uv run janken evaluate bots/l2/my_bot.yaml --baseline bots/l3/smartbot_sims.yaml \
+uv run janken evaluate bots/l2/my_bot.yaml --baseline bots/l3/smartbot_sims_v1.yaml \
   --hypothesis "beats sims3 by >= 2 pts" --idea 22     # note + run + results
 uv run janken verdict 0007 keep --summary "..."
+uv run janken species classify 0007          # new species, next version, or variant
 uv run janken insight add --note 0007 --finding "..." --mechanism "..." --implication "..."
 uv run janken tune bots/l2/my_bot.yaml --hypothesis "..."   # study + validation, with a note
 uv run janken tournament                     # the whole field: standings, titles

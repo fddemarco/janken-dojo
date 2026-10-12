@@ -79,10 +79,15 @@ def new(
     from ..kit import levels
     from ..lab import space
     from ..match import bot_name
-    from ..notebook import ideas
+    from ..notebook import ideas, species
 
     if not name.isidentifier():
         raise fail(f"a bot's stem is an identifier, got {name!r}")
+    if species.is_versioned(name):
+        raise fail(
+            f"{name} names a version: versions are given by `janken species classify`"
+            " after a keep; pick a plain stem"
+        )
     taken = [p for p in registry.discover(lab.bots_dir) if bot_name(p) == name]
     if taken:
         raise fail(f"{taken[0]} exists: a stem's logic never changes; pick a new name")

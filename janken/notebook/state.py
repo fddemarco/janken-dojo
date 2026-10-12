@@ -6,22 +6,25 @@ workspace hold: finish what's started before starting something new.
 1. A note whose run was interrupted → finish it (`janken evaluate --note`).
 1. A note with results but no verdict → decide (`janken verdict`).
 1. A planned note → run it (`janken evaluate --note` / `janken tune --note`).
+1. A `keep` note whose candidate is still in the field without a version → classify
+   it (`janken species classify`): a new species, the next version, or a variant.
 1. A `keep` note no insight cites yet → consider an insight (`janken insight add`).
 1. Otherwise → build the top open idea (in-progress first, then by priority).
 1. No open idea → ideate.
 """
 
 import dataclasses
-from collections.abc import Mapping, Sequence
+import os
+from collections.abc import Collection, Mapping, Sequence
 
-from . import ideas, insights, notes
+from . import ideas, insights, notes, species
 
 
 @dataclasses.dataclass(frozen=True)
 class Step:
     """What to do next, why, and the command (or skill) that does it."""
 
-    action: str  # resume | verdict | run | learn | build | ideate
+    action: str  # resume | verdict | run | classify | learn | build | ideate
     reason: str
     command: str
 
@@ -31,6 +34,7 @@ def next_step(
     backlog: ideas.Backlog,
     run_status: Mapping[str, str],
     insights_text: str,
+    field_stems: Collection[str],
 ) -> Step:
     """The loop's next step (see the module docstring).
 
@@ -39,6 +43,7 @@ def next_step(
         backlog: the ideas backlog.
         run_status: {run id: status} of the stored runs.
         insights_text: insights.md's text.
+        field_stems: the stems of the bots in the field.
     """
     for note in all_notes:
         if any(run_status.get(r) in ("running", "interrupted") for r in note.run_ids):
@@ -63,6 +68,13 @@ def next_step(
                 f"janken {verb} --note {note.number:04d}",
             )
     for note in reversed(all_notes):
+        if _unclassified(note, field_stems):
+            return Step(
+                "classify",
+                f"note {note.number:04d} was kept and its candidate has no species",
+                f"janken species classify {note.number:04d}",
+            )
+    for note in reversed(all_notes):
         stem = f"{note.number:04d}-{note.slug}"
         if note.verdict == "keep" and not insights.cites(insights_text, stem):
             return Step(
@@ -79,3 +91,13 @@ def next_step(
             f"janken bot new <name> --from <bot> --idea {idea.number}",
         )
     return Step("ideate", "the backlog has no open idea", "janken idea add ...")
+
+
+def _unclassified(note: notes.Note, field_stems: Collection[str]) -> bool:
+    """A kept evaluation whose candidate is in the field without a version."""
+    if note.kind != notes.EVALUATION or note.verdict != "keep" or note.species:
+        return False
+    stems = [
+        os.path.splitext(os.path.basename(c.split(":")[0]))[0] for c in note.candidates
+    ]
+    return any(s in field_stems and not species.is_versioned(s) for s in stems)

@@ -18,7 +18,7 @@ bot, in `spaces/<bot>.yaml`. [`janken tune`](tuning.md) and
 [`lab predict-tune`](dataset.md#lab-predict-tune) read them.
 
 ```yaml
-bot: bots/l2/iocaine_lite.yaml
+bot: bots/l2/iocaine_lite_v1.yaml
 weight: 1.0          # its share of a multi-bot study's objective
 params:              # a subset of the defaults; the rest stay fixed
   DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.7, 0.8, 0.9, 0.95]}

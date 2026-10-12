@@ -35,13 +35,14 @@ lives in [`janken.toml`](configuration.md).
 | **idea** | a backlog item (`research/ideas.md`) |
 | **insight** | a confirmed, general finding (`research/insights.md`) |
 | **dataset**, **predictor** | the stored moves of many matches, and a bot read as a next-move predictor |
+| **species**, **version** | a family of alike bots of one level, and its current bot in the field: `<species>_vN` ([Species](experiments.md#species)) |
 
 ## The lifecycle (high level)
 
 ```
-status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► insight
-   ▲                                    └─► tune ─┘             │
-   └────────────────────────────────────────────────────────────┘
+status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► species classify ─► insight
+   ▲                                    └─► tune ─┘                                  │
+   └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | command | does |
@@ -53,6 +54,8 @@ status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► 
 | `janken bot export NAME` | a bot (a champion: with its fleet's supports) as tournament submission scripts: stdlib-only `play(my_moves, opp_moves)` files in `exports/NAME/` |
 | `janken evaluate CANDIDATE… --baseline BOT --hypothesis …` | a new note, the experiment, its results written into the note |
 | `janken tune BOT… [--support BOT…] --hypothesis …` | a new note, the study, its validation written into the note |
+| `janken species classify NOTE [--name NAME]` | a kept bot: a new species (`<name>_v1`), the next version of its level's closest species (the old one retires), or a variant (it retires) |
+| `janken species compare BOT / census / list` | how alike a bot's core is to each species; the field's alike pairs and species per level; the lineage (`research/species.md`) |
 | `janken verdict NOTE keep\|drop\|iterate --summary …` | close the note; its idea becomes done, dropped or stays open |
 | `janken insight add --note NOTE …` | record an insight, **only** if the note's evidence meets the bar |
 | `janken insight list / supersede` | read, or strike a contradicted insight |
@@ -65,13 +68,14 @@ status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► 
 uv run janken status
 uv run janken idea add "**TPI-lite**: one naive-Bayes arm over every predictor" \
   --priority P1 --motivation "rps_kaggle §4.2"
-uv run janken bot new bayes_combiner --from smartbot_sims --idea 22 \
+uv run janken bot new bayes_combiner --from smartbot_sims_v1 --idea 22 \
   --description "TPI-lite: a naive-Bayes combiner arm.\nMultiplies every predictor's evidence."
 # ... edit bots/l2/bayes_combiner.yaml ...
 uv run janken bot check bayes_combiner
-uv run janken evaluate bots/l2/bayes_combiner.yaml --baseline bots/l3/smartbot_sims.yaml \
+uv run janken evaluate bots/l2/bayes_combiner.yaml --baseline bots/l3/smartbot_sims_v1.yaml \
   --hypothesis "beats smartbot_sims by >= 2 pts, mostly vs the metabots" --idea 22
 uv run janken verdict 0007 keep --summary "+3.1 pts [+0.8, +5.4] vs sims3 ..."
+uv run janken species classify 0007 --name bayes_combiner   # a new species: bayes_combiner_v1
 uv run janken insight add --note 0007 --finding "..." --mechanism "..." \
   --implication "..."
 ```
@@ -131,7 +135,7 @@ Where flags apply differently:
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches
   WHERE run_id LIKE '%0007%' AND (stem_a = 'geometry' OR stem_b = 'geometry')"
-uv run janken lab match bots/l2/bayes_combiner.yaml bots/l1/geometry.yaml --rounds 200 --seed 3
+uv run janken lab match bots/l2/bayes_combiner.yaml bots/l1/geometry_v1.yaml --rounds 200 --seed 3
 ```
 
 ## Errors and exit status

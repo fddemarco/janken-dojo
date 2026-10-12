@@ -1,14 +1,14 @@
 ---
 name: lab-loop
-description: The janken bot lab's autonomous self-improvement loop - ask `janken status` for the next step, carry it out with the matching lifecycle skill (ideate, build, evaluate, tune, learn), commit, and repeat. Use when the user asks "what next?", wants to continue or automate the research, or invokes the lab generally.
+description: The janken bot lab's autonomous self-improvement loop - ask `janken status` for the next step, carry it out with the matching lifecycle skill (ideate, build, evaluate, tune, classify, learn), commit, and repeat. Use when the user asks "what next?", wants to continue or automate the research, or invokes the lab generally.
 ---
 
 # The lab loop (/lab-loop)
 
 ```
-janken status ─► next step ─► /ideate | /build | /evaluate | /tune | /learn ─► commit ─┐
-      ▲                                                                                 │
-      └─────────────────────────────────────────────────────────────────────────────────┘
+janken status ─► next step ─► /ideate | /build | /evaluate | /tune | /classify | /learn ─► commit ─┐
+      ▲                                                                                             │
+      └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 `janken status` holds the loop's decision list, in code (`janken/notebook/state.py`). It
@@ -43,6 +43,7 @@ uv run janken status            # add --format json to parse it
 | `resume` | `janken evaluate --note NNNN` (or `janken tune --note NNNN`): it finishes the cut run, then `/evaluate` §3 |
 | `verdict` | `/evaluate` §3 (or `/tune` §3): read the results, decide, `janken verdict` |
 | `run` | the note is planned: `janken evaluate --note NNNN` / `janken tune --note NNNN`, then decide |
+| `classify` | `/classify` that note's bot: a new species, the next version, or a variant |
 | `learn` | `/learn` on that note |
 | `build` | `/build` the idea, then `/evaluate` it |
 | `ideate` | `/ideate`, then ask again |
@@ -93,7 +94,8 @@ Write what you find into the verdict's `--analysis`.
    ```
 
    For example: `0007 tpi-lite: keep (+3.1 pts [+0.8, +5.4] vs smartbot)`. For an insight
-   or ideas-only commit, use `insight: <finding>` or `ideas: <what changed>`.
+   or ideas-only commit, use `insight: <finding>` or `ideas: <what changed>`; for a
+   classification, `species: <old stem> → <new stem> (new|promoted|variant)`.
 
 ## 3. Loop or stop
 

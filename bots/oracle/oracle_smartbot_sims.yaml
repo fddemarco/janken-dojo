@@ -6,7 +6,7 @@ description: |
   split the rest; `janken lab calibrate smartbot_sims`, 16 seeds, 2026-10-11), and draws
   vs another Oracle. Pools use it in place of smartbot_sims with `pool.mocks`. It cheats:
   never in a tournament or an export.
-mocks: smartbot_sims
+mocks: smartbot_sims_v1
 defaults:
   WIN_L1: 0.702
   WIN_L2: 0.5108

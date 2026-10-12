@@ -1,4 +1,4 @@
-bot: bots/l1/biased.yaml
+bot: bots/l1/biased_v1.yaml
 weight: 1.0
 params:
   P_ROCK: {type: float, low: 0.34, high: 0.8, grid: [0.4, 0.5, 0.6]}

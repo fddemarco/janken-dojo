@@ -11,6 +11,7 @@ Two levels, in the lab's ubiquitous language (docs/cli.md):
       evaluate  candidates vs random pools, with a note (hypothesis → results)
       tune      a bot or fleet's space → study → validation, with a note
       verdict   close a note: keep, drop or iterate
+      species   a kept bot: new species, next version or variant; compare, census
       insight   add (only with evidence that meets the bar), list, supersede
       tournament  the whole field: standings, ratings, titles
       config    every default: show, get, set, unset, path, check
@@ -24,7 +25,7 @@ comes from janken.toml (janken/settings.py).
 
 import typer
 
-from . import bots, config, lab, lifecycle, notebook
+from . import bots, config, lab, lifecycle, notebook, species
 
 app = typer.Typer(
     name="janken",
@@ -39,6 +40,7 @@ app.add_typer(bots.app, name="bot", rich_help_panel="Lifecycle")
 app.command(rich_help_panel="Lifecycle")(lifecycle.evaluate)
 app.command(rich_help_panel="Lifecycle")(lifecycle.tune)
 app.command(rich_help_panel="Lifecycle")(lifecycle.verdict)
+app.add_typer(species.app, name="species", rich_help_panel="Lifecycle")
 app.add_typer(notebook.insight_app, name="insight", rich_help_panel="Lifecycle")
 app.command(rich_help_panel="Lifecycle")(lifecycle.tournament)
 app.add_typer(config.app, name="config", rich_help_panel="Configuration")

@@ -1,7 +1,7 @@
 """BotSpec: a bot file plus parameter overrides, under one result label.
 
-    bots/l1/geometry.yaml                        -> label "geometry" (its defaults)
-    bots/l1/geometry.yaml:ALPHA=0.1,MAX_LEN=12   -> label "geometry@1f3a9c"
+    bots/l1/geometry_v1.yaml                        -> label "geometry_v1" (its defaults)
+    bots/l1/geometry_v1.yaml:ALPHA=0.1,MAX_LEN=12   -> label "geometry_v1@1f3a9c"
 
 The label is the name the bot carries in match results. A variant's label is
 the stem plus a short hash of its overrides, so variants of one file can share

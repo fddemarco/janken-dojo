@@ -34,7 +34,7 @@ from janken.spec import make_spec
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 BOTS_DIR = os.path.join(ROOT, "bots")
 SPACES_DIR = os.path.join(ROOT, "spaces")
-LIGHT_BOTS = ("rock", "cycler", "copycat", "frequency")
+LIGHT_BOTS = ("rock_v1", "cycler_v1", "copycat_v1", "frequency_v1")
 ROUNDS = 6
 HOLDOUT = 0.3
 T = TypeVar("T")
@@ -136,15 +136,15 @@ class TestPredictor:
         assert knob_names(core_of(blueprint)) == {"DECAY"}
 
     def test_guards_and_overlays_are_left_out(self) -> None:
-        assert predictor_params(bot_path("frequency")) == ("DECAY",)
-        assert predictor_params(bot_path("rock")) == ()
-        predictor = make_predictor(make_spec(bot_path("frequency"), {"DECAY": 0.5}))
+        assert predictor_params(bot_path("frequency_v1")) == ("DECAY",)
+        assert predictor_params(bot_path("rock_v1")) == ()
+        predictor = make_predictor(make_spec(bot_path("frequency_v1"), {"DECAY": 0.5}))
         assert predictor.params == ("DECAY",)
         assert predictor.prm[0] == 0.5
 
     def test_a_parameter_only_guards_read_is_refused(self) -> None:
         with pytest.raises(PredictorError, match="NOISE"):
-            make_predictor(make_spec(bot_path("frequency"), {"NOISE": 0.1}))
+            make_predictor(make_spec(bot_path("frequency_v1"), {"NOISE": 0.1}))
 
     def test_a_kernel_module_is_not_a_predictor(self, tmp_path: pathlib.Path) -> None:
         d = str(tmp_path)
@@ -164,7 +164,7 @@ class TestPredictionKernel:
     def test_both_sides_are_predicted_from_the_past_only(self) -> None:
         seqs = sequences([ROCK] * 5, [SCISSORS] * 5)
         out = predict.predictions(
-            make_predictor(make_spec(bot_path("frequency"))), seqs
+            make_predictor(make_spec(bot_path("frequency_v1"))), seqs
         )
         assert out.shape == (2, 5)
         # From round 1 on, the most frequent move so far is the only one.
@@ -179,13 +179,15 @@ class TestPredictionKernel:
 
     def test_predictions_are_reproducible(self) -> None:
         seqs = sequences([ROCK, PAPER, SCISSORS] * 3, [PAPER] * 9, seed=5)
-        nash = make_predictor(make_spec(bot_path("nash")))
+        nash = make_predictor(make_spec(bot_path("nash_v1")))
         first = predict.predictions(nash, seqs)
         assert np.array_equal(first, predict.predictions(nash, seqs))
 
     def test_evaluate_scores_overall_and_per_player(self) -> None:
         seqs = sequences([ROCK] * 6, [PAPER] * 6)
-        got = predict.evaluate(make_predictor(make_spec(bot_path("frequency"))), seqs)
+        got = predict.evaluate(
+            make_predictor(make_spec(bot_path("frequency_v1"))), seqs
+        )
         assert got.scores.n == 12
         assert got.scores.accuracy >= 10 / 12
         assert [name for name, _ in got.by_player] == ["a", "b"]
@@ -226,7 +228,7 @@ class TestDataset(StoredDataset):
         finally:
             con.close()
         assert (info["matches"], info["rounds"]) == (12, 12 * ROUNDS)
-        assert row == (ROUNDS, "rock", "cycler", '{"NOISE": 0.0}')
+        assert row == (ROUNDS, "rock_v1", "cycler_v1", '{"NOISE": 0.0}')
 
     def test_a_chunked_batch_equals_one_transaction(self) -> None:
         chunked = os.path.join(self.dir, "chunked.duckdb")
@@ -330,10 +332,10 @@ class TestDataset(StoredDataset):
 
     def test_expand_reads_directories_and_specs(self, tmp_path: pathlib.Path) -> None:
         d = str(tmp_path)
-        for stem in ("rock", "cycler"):
+        for stem in ("rock_v1", "cycler_v1"):
             shutil.copy(bot_path(stem), d)
-        specs = collect.expand([d, os.path.join(d, "cycler.yaml") + ":STEP=2"])
-        assert [s.stem for s in specs] == ["cycler", "rock", "cycler"]
+        specs = collect.expand([d, os.path.join(d, "cycler_v1.yaml") + ":STEP=2"])
+        assert [s.stem for s in specs] == ["cycler_v1", "rock_v1", "cycler_v1"]
         assert specs[2].params == {"STEP": 2}
 
 
@@ -343,7 +345,7 @@ class TestPredictTune(StoredDataset):
         self.grow(seed=3, matches=3)
         self.spaces = [
             space.load(os.path.join(SPACES_DIR, f"{stem}.yaml"))
-            for stem in ("frequency", "transition_matrix")
+            for stem in ("frequency_v1", "transition_matrix_v1")
         ]
         self.setup = predict_tune.Setup(
             db=self.db, metric="accuracy", holdout=HOLDOUT, chunks=2, root=self.dir
@@ -357,9 +359,9 @@ class TestPredictTune(StoredDataset):
         study = self.tune("automl", self.setup)
         assert len(study.trials) == 3
         first = study.trials[0].params  # the baselines run first
-        assert first[predict_tune.PREDICTOR] == "frequency"
-        assert "frequency.NOISE" not in first  # a guard's param is dropped
-        assert predict_tune.spec_of(first, self.spaces).label == "frequency"
+        assert first[predict_tune.PREDICTOR] == "frequency_v1"
+        assert "frequency_v1.NOISE" not in first  # a guard's param is dropped
+        assert predict_tune.spec_of(first, self.spaces).label == "frequency_v1"
         assert all(t.value is not None for t in study.trials)
 
     def test_a_study_resumes_only_under_its_setup(self) -> None:
@@ -377,7 +379,7 @@ class TestPredictTune(StoredDataset):
         study = self.tune("validated", self.setup)
         rows = RunStore.at(self.dir).validations("predict_validations", "validated")
         defaults = rows.filter(rows["trial"] == -1)
-        assert sorted(defaults["config"]) == ["frequency", "transition_matrix"]
+        assert sorted(defaults["config"]) == ["frequency_v1", "transition_matrix_v1"]
         assert (rows["split"] == "test").all()
         assert ((rows["accuracy"] >= 0) & (rows["accuracy"] <= 1)).all()
         assert len(study.user_attrs["validations"]) == 1
@@ -395,15 +397,15 @@ class TestCli(StoredDataset):
         args = ["--workspace", self.dir, "--cache", "off"]
         outputs = []
         for command in (
-            ["lab", "dataset", "add", bot_path("rock"), bot_path("cycler")]
+            ["lab", "dataset", "add", bot_path("rock_v1"), bot_path("cycler_v1")]
             + ["--rounds", "5", "--seed", "1"],
             ["lab", "dataset", "info", "--players"],
-            ["lab", "predict", bot_path("frequency"), "--split", "all"],
+            ["lab", "predict", bot_path("frequency_v1"), "--split", "all"],
         ):
             result = runner.invoke(app, [*command, *args])
             assert result.exit_code == 0, result.output
             outputs.append(result.output)
         text = "".join(outputs)
         assert "appended 1 matches" in text
-        assert "| cycler | 1 | 5 | 0 |" in text
-        assert "| frequency | 10 |" in text
+        assert "| cycler_v1 | 1 | 5 | 0 |" in text
+        assert "| frequency_v1 | 10 |" in text

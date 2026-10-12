@@ -166,3 +166,29 @@ max_rounds = 1000
 # the builtins it may not name (file access, dynamic code, introspection).
 allowed_modules = ["abc", "array", "bisect", "collections", "copy", "dataclasses", "datetime", "decimal", "enum", "fractions", "functools", "heapq", "itertools", "json", "math", "numbers", "random", "re", "statistics", "string", "time", "typing"]
 banned_names = ["open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars", "getattr", "setattr", "delattr", "exit", "quit", "help"]
+
+[species]
+# How `janken species classify` decides what a kept bot is. Alike: its core agrees with
+# a species' current version on at least `agreement` of the predicted moves (dataset
+# `split`) AND their per-opponent scores in a paired run of `round_robins` correlate at
+# least `profile_correlation`. Better: no matchup's 95% CI below 0, and one above 0 at
+# the Bonferroni level alpha / matchups (matchups with >= min_matchup_matches matches),
+# or as good and speed_factor times faster.
+agreement = 0.8
+profile_correlation = 0.7
+round_robins = 40
+min_matchup_matches = 10
+alpha = 0.05
+split = "test"
+# Matches of the split the cores replay, evenly spread over it. The bots that replay
+# smartbot_sims (anti_smartbot_sims, the gates) cost ~1s a match each; 30 matches give
+# ~15k predictions per pair, plenty for an agreement rate.
+matches = 30
+# A challenger as good as the incumbent (worse on no matchup, better on none) still
+# replaces it when it plays speed_factor times faster: each bot plays speed_matches
+# self-play matches, timed speed_repeats times (the fastest repeat counts).
+speed_factor = 2.0
+speed_matches = 8
+speed_repeats = 3
+# Retired versions and variants go here, relative to the bots dir (never in a pool).
+legacy_dir = "inactive/legacy"

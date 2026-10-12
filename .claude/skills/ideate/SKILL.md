@@ -17,6 +17,8 @@ uv run janken insight list                 # what is known
 uv run janken idea list --all              # what was tried (done / dropped)
 uv run janken lab leaderboard --rounds 200 # the current best candidates
 uv run janken lab report <best bot's latest run>   # its weakest matchups
+uv run janken species census               # species per level, and alike pairs
+uv run janken species list                 # every species and its lineage
 ```
 
 Then the background: `research/rps_kaggle.md` (techniques, §4–7) and `research/sources/`
@@ -29,6 +31,10 @@ Then the background: `research/rps_kaggle.md` (techniques, §4–7) and `researc
   decisive information is there. Dig in:
   `janken lab query "SELECT ... FROM matches WHERE ..."` and `janken lab match A B` for
   transcripts.
+- **Diversity.** A level with few species (L1, L2, L3 alike), or alike pairs in the
+  `census`: ideas for a mechanism no species has yet are worth more than another
+  variant of a crowded family. Variants recorded in `research/species.md` show which
+  directions were already tried.
 - **Insight implications** not yet in the backlog.
 - **Dropped ideas** whose verdict suggested a variant.
 - **Techniques** from `rps_kaggle.md` / `sources/` the kit can express (or that need one

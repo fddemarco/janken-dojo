@@ -8,7 +8,7 @@ that validation is evidence.
 ## With a note: `janken tune`
 
 ```bash
-uv run janken tune bots/l3/smartbot_sims.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
+uv run janken tune bots/l3/smartbot_sims_v1.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
 uv run janken tune bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml --support bots/inactive/fleets/iliad_v3/achilles_v3.yaml \
   --support bots/inactive/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
 uv run janken tune --note 0009              # resume the note's study, revalidate
@@ -111,5 +111,5 @@ logic. So:
 
 - keep a tuned configuration as a **variant** (`bots/l1/x.yaml:NAME=value,...`), which works
   anywhere a bot spec does; or
-- make it a **new bot**: `janken bot new x_tuned --from x`, then set its defaults, then
+- make it a **new bot**: `janken bot new x_tuned --from x_v1`, then set its defaults, then
   `janken evaluate` it against `x`.

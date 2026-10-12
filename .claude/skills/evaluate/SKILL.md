@@ -53,7 +53,8 @@ uv run janken verdict NNNN keep|drop|iterate \
 ```
 
 - **keep:** the candidate is better (CI excludes 0 in its favour), or it's equal and
-  simpler. The idea becomes `done`.
+  simpler. The idea becomes `done`, and the bot goes to `/classify` next (a new species,
+  the next version of one, or a variant that retires).
 - **drop:** no better, or worse. The idea becomes `dropped`.
 - **iterate:** promising but unresolved (say why). The idea stays in progress. Plan the
   follow-up as a new note, with `--effort thorough` or a variant.

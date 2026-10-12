@@ -6,7 +6,7 @@ description: |
   split the rest; `janken lab calibrate gate_edge`, 16 seeds, 2026-10-11), and draws
   vs another Oracle. Pools use it in place of gate_edge with `pool.mocks`. It cheats:
   never in a tournament or an export.
-mocks: gate_edge
+mocks: gate_edge_v1
 defaults:
   WIN_L1: 0.6791
   WIN_L2: 0.4632

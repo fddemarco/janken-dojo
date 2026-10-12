@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-12: Replaying more of the field's learners keeps paying (+5.4 pts over the field for four more replays) until what is left under 36% of rounds is the unreplayable: the other strong L4s and the samplers
+
+- **Evidence:** experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md (run 20261012-173356_0034-replay-hunter-wide-vs-replay-hunter-gate): `replay_hunter_wide - replay_hunter_gate_v1 = +5.4 pts [+0.8, +10.0]` over 315 shared matches: replay_hunter_wide better
+- **Mechanism:** each replay turns a learner that splits the rounds near 1/3 into a 38-59% matchup; an L4 can't replay an L4 (that would be L5), and a sampler's next move is fresh randomness
+- **Implication:** a per-round bar vs every bot is out of reach by construction; next gains: a frequency expert for fixed distributions (biased_v1 35.5%), replays of the last learners (geometry_ensemble, leader_hunter, period_detector, sicilian_meta), the EDGE-gate state model (#42) for double_bluff_gate
+
 ## 2026-10-12: An adaptive learner that splits the rounds with a metabot (31-34%) is beaten by its own replay from its seat: Thompson and greedy learners commit to a move a replay can name, lifting them to 38-49% of rounds; a learner that samples its moves (sampled_markov, transition_matrix, geometry, nash) has no fixed move to replay
 
 - **Evidence:** experiments/0033-replay-hunter-vs-level-k-gate.md (run 20261012-171926_0033-replay-hunter-vs-level-k-gate): `replay_hunter_gate - level_k_gate_v1 = +16.1 pts [+4.8, +28.2]` over 62 shared matches: replay_hunter_gate better

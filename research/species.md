@@ -76,3 +76,4 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `double_bluff_gate` | L4 | `double_bluff_gate_v1` | `gate_counter_sims` ([0031](experiments/0031-counter-anti-sims-vs-smartbot-sims.md)) --> v1 | |
 | `level_k_gate` | L4 | `level_k_gate_v1` | `level_k_gate` ([0032](experiments/0032-level-k-vs-double-bluff-gate.md)) --> v1 | |
 | `replay_hunter_gate` | L4 | `replay_hunter_gate_v1` | `replay_hunter_gate` ([0033](experiments/0033-replay-hunter-vs-level-k-gate.md)) --> v1 | |
+| `replay_hunter_wide` | L4 | `replay_hunter_wide_v1` | `replay_hunter_wide` ([0034](experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md)) --> v1 | |

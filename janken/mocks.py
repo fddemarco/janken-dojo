@@ -19,10 +19,10 @@ play PAPER). They never enter a tournament or an export.
 
 from collections.abc import Sequence
 
-from . import botfile
+from . import botfile, library
 from .kit import blueprint as bp
 from .kit import codes as c
-from .kit import declare, levels
+from .kit import levels
 from .match import bot_name
 
 
@@ -32,8 +32,8 @@ def kind(blueprint: bp.Blueprint) -> int:
         return c.ORACLE_NONE
     core = blueprint.core
     alone = (
-        isinstance(core, bp.Bandit)
-        and len(core.predictors) == 1
+        isinstance(core, bp.Heuristic)
+        and isinstance(core.signal, bp.Oracle)
         and not blueprint.guards
         and not blueprint.overlays
     )
@@ -54,7 +54,7 @@ def oracle_cell(compiled: bp.Compiled) -> int:
 
 def read_blueprint(path: str) -> bp.Blueprint:
     """A bot file's blueprint (a kernel module has an empty one)."""
-    return declare.blueprint_from_data(botfile.read(path).blueprint)
+    return library.read_blueprint(path)
 
 
 def path_level(path: str) -> int:

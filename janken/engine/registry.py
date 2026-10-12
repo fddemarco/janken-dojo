@@ -5,7 +5,7 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
-from .. import botfile, mocks
+from .. import botfile, library, mocks
 from ..kit import levels
 from ..match import bot_name
 
@@ -99,4 +99,4 @@ def pack_params(
 def module_name(path: str) -> str:
     """The name a kernel module is imported under: unique per file content, so two
     files with one stem (or one file before and after an edit) never collide."""
-    return f"janken_bot_{bot_name(path)}_{botfile.source_hash(path)[:12]}"
+    return f"janken_bot_{bot_name(path)}_{library.source_hash(path)[:12]}"

@@ -15,13 +15,22 @@ app = typer.Typer(
 
 
 def _check_folder(lab: Lab, path: str) -> None:
-    """Refuse a bot of the field that isn't in its level's folder.
+    """Refuse a bot of the field that isn't in its level's folder, and a block
+    that isn't a heuristic (L1, or an Oracle's research stand-in).
 
     Raises:
         typer.Exit: the bot is in the field but not in its level folder.
     """
+    from .. import library, mocks
     from ..engine import registry
+    from ..kit import levels
 
+    folder_name = os.path.basename(os.path.dirname(os.path.normpath(path)))
+    if folder_name == library.BLOCKS:
+        level = mocks.path_level(path)
+        if level not in (1, levels.ORACLE):
+            raise fail(f"{path}: a block is a heuristic (L1), not an L{level}")
+        return
     root = os.path.normpath(registry.field_root(path))
     if root != os.path.normpath(lab.bots_dir):
         return  # outside the field (bots/inactive/...): no level folder to be in
@@ -74,11 +83,9 @@ def new(
     Edit the blueprint afterwards; `janken bot check NAME` verifies it, and refuses
     it until it sits in its new blueprint's level folder (move it there).
     """
-    from .. import botfile, mocks
-    from ..engine import registry
+    from .. import botfile, library, mocks
     from ..kit import levels
     from ..lab import space
-    from ..match import bot_name
     from ..notebook import ideas, species
 
     if not name.isidentifier():
@@ -88,7 +95,7 @@ def new(
             f"{name} names a version: versions are given by `janken species classify`"
             " after a keep; pick a plain stem"
         )
-    taken = [p for p in registry.discover(lab.bots_dir) if bot_name(p) == name]
+    taken = library.Library(lab.bots_dir).paths(name)
     if taken:
         raise fail(f"{taken[0]} exists: a stem's logic never changes; pick a new name")
     source = bot_path(lab, template)

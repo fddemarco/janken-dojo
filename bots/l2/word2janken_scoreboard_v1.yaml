@@ -3,9 +3,13 @@ description: |
 
   The strategies are word2janken's n-gram predictor, its counter, and the
   counter's counter. Each is scored every round on what it would have played; the
-  earliest strategy with the best positive score is played, random otherwise. The core
-  is presets.staller() in janken/kit/presets.py.
+  earliest strategy with the best positive score is played, random otherwise. Its
+  arms are word2janken_v1, played COPY, BEAT and BEAT_BEAT.
 blueprint:
   guards: [{OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}}]
   core:
-    staller: {selector: {Greedy: {ties: TIES_FIRST}}}
+    Bandit:
+      predictors: [{bot: word2janken_v1, rotations: [COPY, BEAT, BEAT_BEAT]}]
+      scorer: {DecayedNet: {decay: 1.0}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_FIRST}}

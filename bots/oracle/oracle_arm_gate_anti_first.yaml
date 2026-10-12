@@ -13,19 +13,10 @@ defaults:
 blueprint:
   core:
     Gate:
-      main:
-        Bandit:
-          predictors:
-            - {metabot_signals: {table_decay: 0.9, max_match: 12}}
-            - {sims: [10]}
-          rotations: ALL_ROTATIONS
-          scorer: {Dirichlet: {decay: 0.95}}
-          random_arm: RA_SCORED
-          selector: Thompson
+      main: {bot: smartbot_sims_v1}
       experts:
-        - Rotated:
-            signal: {Oracle: {wins: [0.3367, 0.4059, 0.415, 0.3681]}}
-            rotations: [BEAT]
+        - bot: oracle_expert
+          space: {WIN_L1: 0.3367, WIN_L2: 0.4059, WIN_L3: 0.415, WIN_L4: 0.3681}
       rule: ANTI_FIRST
       edge: $EDGE
       decay: $GATE_DECAY

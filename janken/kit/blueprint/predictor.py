@@ -3,18 +3,20 @@
 A bot's core is a tree of predictors (the composite pattern):
 
     leaf        a signal: an opponent model or a generator (LastMove, NGram, ...)
-    decorator   one predictor, seen differently: Sim (from the opponent's side),
-                Rotated (with its own rotations), Replay (a whole bandit from the
-                opponent's side)
-    composite   a higher-order predictor made of others: Bandit (a scorer and a
-                selector over its predictors' arms), Gate (a gatekeeper between a
-                main bandit and gated experts), NaiveBayes (a posterior over its
-                inputs' symbols)
+    decorator   one predictor, seen differently: Heuristic (one predictor played
+                with one rotation: an L1 bot's core), Sim (from the opponent's
+                side), Rotated (with its own rotations), Replay (a whole bandit,
+                from either side)
+    composite   an aggregator, a higher-order predictor made of others: Bandit (a
+                scorer and a selector over its predictors' arms), Gate (a
+                gatekeeper between a main bandit and gated experts), NaiveBayes (a
+                posterior over its inputs' symbols)
 
 Every node answers `children()` and `level()`, so the bot's level (janken/kit/
 levels.py) is the tree's, never re-derived per kind: a leaf is L1, a decorator its
-child's level, and a composite one layer above its highest child (a Bandit only
-when it really is one: a scorer over two arms or more).
+child's level, and an aggregator always one layer above its highest child. So a
+heuristic (no aggregator) is L1, an aggregator over L1s is L2, one over L2s (and
+maybe L1s) is L3, and so on.
 """
 
 import abc
@@ -66,12 +68,7 @@ class Decorator(Predictor):
 
 
 class Composite(Predictor):
-    """A higher-order predictor: one layer above its highest child."""
-
-    def stacks_level(self) -> bool:
-        """Whether combining the children adds a layer (it does unless overridden)."""
-        return True
+    """An aggregator, a higher-order predictor: one layer above its highest child."""
 
     def level(self) -> int:
-        top = max((child.level() for child in self.children()), default=LEAF_LEVEL)
-        return top + 1 if self.stacks_level() else top
+        return max((child.level() for child in self.children()), default=LEAF_LEVEL) + 1

@@ -12,11 +12,24 @@ blueprint:
   core:
     Bandit:
       predictors:
-        - {metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}}
-        - Rotated:
-            signal: {Geometry: {alpha: $ALPHA, max_len: $MAX_MATCH}}
-            rotations: [BEAT]
-      rotations: ALL_ROTATIONS
+        # smartbot's 18 opponent models, each played 3 ways
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: geometry, space: {ALPHA: $ALPHA, MAX_LEN: $MAX_MATCH}}
       scorer: {Dirichlet: {decay: $ARM_DECAY}}
       random_arm: RA_SCORED
       selector: Thompson

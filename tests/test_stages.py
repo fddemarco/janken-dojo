@@ -245,6 +245,52 @@ class TestNaiveBayes:
         assert all(0 <= m <= 2 for m in moves)
 
 
+def rock_or_paper() -> bot.Bandit:
+    """A bandit of two arms, rock and paper, on net scores."""
+    return bot.Bandit(
+        (bot.Constant(R), bot.Constant(P)),
+        rotations=(bot.COPY,),
+        scorer=bot.DecayedNet(1.0),
+        selector=bot.Greedy(),
+    )
+
+
+def replaying(replay: bot.Replay) -> Runner:
+    """A bot that plays a replay's symbol as is."""
+    return Runner(bot.Blueprint(core=bot.Heuristic(replay, bot.COPY)))
+
+
+class TestReplaySide:
+    """A whole bandit replayed: from the opponent's side its likely move, from ours
+    its own (a bot of level 2+ as an arm). We play paper, the opponent scissors:
+    rock wins for us, paper for them."""
+
+    MY_MOVES, OPP_MOVES = [P] * 4, [S] * 4
+
+    def test_from_our_side_it_plays_its_own_best_arm(self) -> None:
+        runner = replaying(bot.Replay(rock_or_paper(), side=bot.MY))
+        assert runner.last(self.MY_MOVES, self.OPP_MOVES) == R
+
+    def test_from_the_opponents_side_it_names_their_move(self) -> None:
+        runner = replaying(bot.Replay(rock_or_paper(), side=bot.OPP))
+        assert runner.last(self.MY_MOVES, self.OPP_MOVES) == P
+
+    def test_a_nested_replays_side_is_relative_to_the_one_holding_it(self) -> None:
+        def nested(outer: int, inner: int) -> int:
+            middle = bot.Bandit(
+                (bot.Replay(rock_or_paper(), side=inner),),
+                rotations=(bot.COPY,),
+                scorer=bot.DecayedNet(1.0),
+            )
+            runner = replaying(bot.Replay(middle, side=outer))
+            return runner.last(self.MY_MOVES, self.OPP_MOVES)
+
+        assert nested(bot.MY, bot.MY) == R
+        assert nested(bot.MY, bot.OPP) == P
+        assert nested(bot.OPP, bot.MY) == P
+        assert nested(bot.OPP, bot.OPP) == R  # swapped twice: our side again
+
+
 def longest_match_by_scan(stream: Sequence[int], max_len: int, n: int) -> int:
     """The matcher's definition, by brute force (the algorithm the index replaced):
     the end just after the most recent earlier repeat of the longest suffix."""

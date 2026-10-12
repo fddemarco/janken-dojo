@@ -1,16 +1,18 @@
-"""Replays, compiled: a whole bot core run from the opponent's side.
+"""Replays, compiled: a whole bot core run on the shared history, from either side.
 
 Many bots predict our next move and play what beats it. Replaying their machinery
-on the shared history, with the roles swapped, predicts their move outright
-(experiment 0003: +9.1 pts over smartbot), and a replay of a Thompson metabot's
-arm scores names its move often enough to tip close matches (experiment 0005).
+on the shared history, with the roles swapped (R_SWAP: the opponent's side),
+predicts their move outright (experiment 0003: +9.1 pts over smartbot), and a
+replay of a Thompson metabot's arm scores names its move often enough to tip close
+matches (experiment 0005). Replayed from our side, a whole bot (an L2 or above)
+is an arm of a higher-level bot: its symbol is its own move.
 
 The replayed ensemble lives in its own blocks of f / i; its symbol is its
 best-scored arm's move (janken/kit/ensemble.py `best_arm`). A replayed ensemble
-may hold replays of its own (a replay of a bot that replays others), which see
-the history swapped back; those may not (numba compiles no recursion, so each
-depth has its own functions: `fold` / `predict` and `_fold_inner` /
-`_predict_inner`).
+may hold replays of its own (a replay of a bot that replays others), each from
+its own side relative to the one holding it; those may not (numba compiles no
+recursion, so each depth has its own functions: `fold` / `predict` and
+`_fold_inner` / `_predict_inner`).
 """
 
 import random
@@ -85,7 +87,10 @@ def _fold_inner(
     my: np.ndarray,
     opp: np.ndarray,
 ) -> None:
-    ensemble.fold(spec, spec[r + c.R_SUB], f, i, kn, k, rk, opp, my)
+    if spec[r + c.R_SWAP]:
+        ensemble.fold(spec, spec[r + c.R_SUB], f, i, kn, k, rk, opp, my)
+    else:
+        ensemble.fold(spec, spec[r + c.R_SUB], f, i, kn, k, rk, my, opp)
 
 
 @kernel
@@ -101,13 +106,15 @@ def fold(
     opp: np.ndarray,
 ) -> None:
     """Fold valid round k into replay record r's ensemble, from its side, and into
-    the replays it holds."""
+    the replays it holds. `my` / `opp` are the history as the bandit holding r
+    sees it."""
     sub = spec[r + c.R_SUB]
-    ensemble.fold(spec, sub, f, i, kn, k, rk, opp, my)
+    a, b = (opp, my) if spec[r + c.R_SWAP] else (my, opp)
+    ensemble.fold(spec, sub, f, i, kn, k, rk, a, b)
     for s in range(spec[sub + c.E_NSIG]):
         r2 = spec[sub + c.E_SIG_AT] + s * c.REC
         if spec[r2 + c.R_KIND] == c.S_REPLAY:
-            _fold_inner(spec, r2, f, i, kn, k, rk, opp, my)
+            _fold_inner(spec, r2, f, i, kn, k, rk, a, b)
 
 
 @kernel
@@ -123,7 +130,8 @@ def _predict_inner(
     opp: np.ndarray,
 ) -> int:
     sub = spec[r + c.R_SUB]
-    symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, opp, my)
+    a, b = (opp, my) if spec[r + c.R_SWAP] else (my, opp)
+    symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, a, b)
     bayes.combine(spec, sub, f, symbols)
     ensemble.set_arms(spec, sub, i, symbols, rn)
     return _guess(spec, r, sub, f, i)
@@ -141,13 +149,15 @@ def predict(
     my: np.ndarray,
     opp: np.ndarray,
 ) -> int:
-    """The replayed bot's most likely move this round, or NO_MOVE."""
+    """The replayed bot's most likely move this round, or NO_MOVE. `my` / `opp`
+    are the history as the bandit holding r sees it."""
     sub = spec[r + c.R_SUB]
-    symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, opp, my)
+    a, b = (opp, my) if spec[r + c.R_SWAP] else (my, opp)
+    symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, a, b)
     for s in range(spec[sub + c.E_NSIG]):
         r2 = spec[sub + c.E_SIG_AT] + s * c.REC
         if spec[r2 + c.R_KIND] == c.S_REPLAY:
-            symbols[s] = _predict_inner(spec, r2, f, i, kn, n, rn, opp, my)
+            symbols[s] = _predict_inner(spec, r2, f, i, kn, n, rn, a, b)
     bayes.combine(spec, sub, f, symbols)
     ensemble.set_arms(spec, sub, i, symbols, rn)
     return _guess(spec, r, sub, f, i)

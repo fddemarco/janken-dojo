@@ -10,9 +10,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from janken import botfile, export, sandbox, settings
+from janken import botfile, export, library, sandbox, settings
 from janken.engine import registry
-from janken.kit import bot, declare
+from janken.kit import bot
 from janken.kit import codes as c
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
 from tests.test_stages import Runner
@@ -51,7 +51,7 @@ def bot_file(folder: str, name: str, overlay: str) -> None:
             f"description: {name}, a test fleet bot\n"
             "blueprint:\n"
             "  core:\n"
-            "    Bandit: {predictors: [{Constant: [SCISSORS]}], rotations: [COPY]}\n"
+            "    Heuristic: {signal: {Constant: [SCISSORS]}, rotation: COPY}\n"
             f"  overlays: [{overlay}]\n"
         )
 
@@ -83,7 +83,7 @@ class TestExportedBots:
         opp = [history.randrange(3) for _ in range(rounds)]
         if invalid_at >= 0:
             opp[invalid_at] = X  # an invalid move reaches both as INVALID
-        runner = Runner(declare.blueprint_from_data(found.blueprint), found.defaults)
+        runner = Runner(library.read_blueprint(path), found.defaults)
         random.seed(seed)
         expected = runner.moves(my, opp)
         module = load(self.exported(path)[stem], self.tmp, stem)

@@ -24,11 +24,10 @@ import importlib
 import os
 from collections.abc import Iterator, Mapping, Sequence
 
-from . import botfile, match, mocks
+from . import botfile, library, match, mocks
 from .engine import registry
 from .kit import blueprint as bp
 from .kit import codes as c
-from .kit import declare
 
 # The kit's runtime modules, in the order their module-level statements need.
 RUNTIME = (
@@ -335,7 +334,7 @@ class Fleet:
 
 
 def _blueprint(path: str) -> bp.Blueprint:
-    return declare.blueprint_from_data(botfile.read(path).blueprint)
+    return library.read_blueprint(path)
 
 
 def _teams(blueprint: bp.Blueprint) -> list[bp.Team]:

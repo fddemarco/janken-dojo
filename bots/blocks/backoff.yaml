@@ -1,0 +1,10 @@
+description: |
+  Block: beats OF's next move as a back-off n-gram (orders MAX_ORDER down to 0)
+  over the CTX history predicts it.
+defaults:
+  MAX_ORDER: 3
+  CTX: JOINT
+  OF: OPP
+blueprint:
+  core:
+    Heuristic: {signal: {Backoff: {max_order: $MAX_ORDER, ctx: $CTX, of: $OF}}, rotation: BEAT}

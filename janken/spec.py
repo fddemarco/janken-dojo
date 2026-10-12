@@ -15,7 +15,7 @@ import json
 import os
 from collections.abc import Mapping
 
-from . import botfile
+from . import botfile, library
 from .match import bot_name
 
 
@@ -87,5 +87,5 @@ def to_dict(spec: BotSpec) -> dict:
         "stem": spec.stem,
         "path": spec.path,
         "params": spec.params,
-        "sha256": botfile.source_hash(spec.path),
+        "sha256": library.source_hash(spec.path),
     }

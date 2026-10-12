@@ -8,6 +8,4 @@ blueprint:
     - {Opening: {rounds: 1, move: ROCK}}
     - {OnInvalid: {action: CRASH_ACTION, scope: LAST, side: OPP}}
   core:
-    Bandit:
-      predictors: [{LastMove: {of: OPP}}]
-      rotations: [COPY]
+    Heuristic: {signal: {LastMove: {of: OPP}}, rotation: COPY}

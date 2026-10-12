@@ -1,16 +1,20 @@
-"""Predictors made of predictors: the bandit, the gate, the naive-Bayes combiner, and
-the replay of a whole bandit (see predictor.py for the tree they make).
+"""Predictors made of predictors: the aggregators (the bandit, the gate, the
+naive-Bayes combiner) and the replay of a whole bandit (see predictor.py for the
+tree they make).
 
-    Bandit      its predictors' arms (each predictor x each rotation, plus an
-                optional random arm), every arm's record (a scorer) and the arm to
-                play (a selector): smartbot, iocaine, a scoreboard
+    Bandit      its predictors' arms (each predictor x each of its rotations, plus
+                an optional random arm), every arm's record (a scorer) and the arm
+                to play (a selector): smartbot, iocaine, a scoreboard
     Gate        a gatekeeper between a main Bandit (Thompson sampling over its arms)
                 and gated experts, one arm each, by their own records
     NaiveBayes  a posterior over the opponent's move from its inputs' symbols
-    Replay      a whole Bandit, run from the opponent's side: its likely move
+    Replay      a whole Bandit, run from the opponent's side (its likely move) or
+                from ours (its own move): how a bot of level 2 or more becomes an
+                arm of another
 
-The compiled pipeline plays one flat bandit, so lowering.py flattens a Gate into
-one and checks the shapes it can play.
+In a bot file, an aggregator's arms are bots, named (declare.py, refs.py). The
+compiled pipeline plays one flat bandit, so lowering.py flattens a Gate into one
+and checks the shapes it can play.
 """
 
 import dataclasses
@@ -26,15 +30,19 @@ from .signals import Rotated, Signal, Sim
 
 @dataclasses.dataclass(frozen=True)
 class Replay(Decorator, Signal):
-    """A model of us: a whole bot core (`bandit`) replayed from the opponent's side.
-    The symbol is its most likely move, read from its arms' records (its own
+    """A whole bot core (`bandit`) replayed on the shared history, from `side`: OPP
+    (the default), the opponent's side, as a model of us; MY, ours, as a nested
+    bot. The symbol is its most likely move, read from its arms' records (its own
     selector isn't run): the arm with the best score, or, with `draws` > 0, the move
     Thompson sampling picks most often in that many draws of every arm's Dirichlet
-    (a scored random arm counts for each move)."""
+    (a scored random arm counts for each move). Bot files name it as an arm
+    (refs.py), never directly."""
 
     kind: ClassVar[int] = c.S_REPLAY
+    declarable: ClassVar[bool] = False
     bandit: "Bandit"
     draws: int = 0
+    side: int = c.OPP
 
     def child(self) -> Predictor:
         return self.bandit
@@ -44,6 +52,7 @@ class Replay(Decorator, Signal):
 
     def validate(self) -> None:
         check(self.draws >= 0, "Replay draws must be >= 0")
+        check(self.side in (c.OPP, c.MY), "a Replay's side is OPP or MY")
         check(
             self.draws == 0 or isinstance(self.bandit.scorer, Dirichlet),
             "Replay draws sample a Dirichlet: use the Dirichlet scorer",
@@ -61,7 +70,7 @@ class NaiveBayes(Composite, Signal):
     it with BEAT."""
 
     kind: ClassVar[int] = c.S_BAYES
-    inputs: tuple["SignalLike", ...]
+    inputs: tuple["SignalLike", ...] = ()  # a bot file leaves them out: declare.py
     decay: Value = 0.95
 
     def children(self) -> tuple[Predictor, ...]:
@@ -91,8 +100,7 @@ def arm_count(predictor: SignalLike, rotations: tuple[int, ...]) -> int:
 class Bandit(Composite):
     """A multi-armed bandit over its predictors: each predictor x each rotation is
     an arm, plus an optional random arm; the scorer keeps every arm's record and
-    the selector picks the arm to play. With no scorer (First) it is a plain
-    priority list, which adds no level."""
+    the selector picks the arm to play. Like every aggregator it adds a level."""
 
     predictors: tuple[SignalLike, ...] = ()
     rotations: tuple[int, ...] = (c.BEAT,)
@@ -106,9 +114,6 @@ class Bandit(Composite):
     def arms(self) -> int:
         """Its arms, the random arm aside."""
         return sum(arm_count(p, self.rotations) for p in self.predictors)
-
-    def stacks_level(self) -> bool:
-        return not isinstance(self.scorer, NoScore) and self.arms() >= 2
 
 
 @dataclasses.dataclass(frozen=True)

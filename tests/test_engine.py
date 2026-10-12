@@ -42,7 +42,7 @@ YAML_FIXTURES = {
     "stone": (
         "blueprint:\n"
         "  core:\n"
-        "    Bandit: {predictors: [{Constant: {move: ROCK}}], rotations: [COPY]}\n"
+        "    Heuristic: {signal: {Constant: {move: ROCK}}, rotation: COPY}\n"
     ),
     # History matchers: their per-match workspace is sized by the match's rounds.
     "matcher": (
@@ -50,11 +50,28 @@ YAML_FIXTURES = {
         "  core:\n"
         "    Bandit:\n"
         "      predictors:\n"
-        "        - LongestMatch: {max_len: 6, ctx: JOINT}\n"
-        "        - Sim: {signal: {LongestMatch: {max_len: 3, ctx: OPP}}}\n"
-        "        - Geometry: {alpha: 0.1, max_len: 6}\n"
+        "        - {bot: longest}\n"
+        "        - {bot: longest, side: OPP, space: {MAX_LEN: 3, CTX: OPP}}\n"
+        "        - {bot: geometric}\n"
         "      scorer: {DecayedNet: {decay: 0.9}}\n"
         "      selector: Greedy\n"
+    ),
+}
+
+# The L1 blocks the YAML fixtures name as arms (blocks/: never in a pool).
+YAML_BLOCKS = {
+    "longest": (
+        "defaults: {MAX_LEN: 6, CTX: JOINT}\n"
+        "blueprint:\n"
+        "  core:\n"
+        "    Heuristic:\n"
+        "      signal: {LongestMatch: {max_len: $MAX_LEN, ctx: $CTX}}\n"
+        "      rotation: BEAT\n"
+    ),
+    "geometric": (
+        "blueprint:\n"
+        "  core:\n"
+        "    Heuristic: {signal: {Geometry: {alpha: 0.1, max_len: 6}}, rotation: BEAT}\n"
     ),
 }
 
@@ -86,6 +103,10 @@ def fixture_bots_dir(
             f.write(bot_source(body))
     for name, text in YAML_FIXTURES.items():
         with open(os.path.join(cls.dir, name + ".yaml"), "w") as f:
+            f.write(text)
+    os.makedirs(os.path.join(cls.dir, "blocks"))
+    for name, text in YAML_BLOCKS.items():
+        with open(os.path.join(cls.dir, "blocks", name + ".yaml"), "w") as f:
             f.write(text)
 
 

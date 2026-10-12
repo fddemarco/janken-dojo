@@ -8,6 +8,4 @@ blueprint:
     - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}}
     - {Opening: {rounds: 1, move: RANDOM_MOVE}}
   core:
-    Bandit:
-      predictors: [{Relative: {ref: OPP, by_outcome: true, decay: $DECAY}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {Relative: {ref: OPP, by_outcome: true, decay: $DECAY}}, rotation: BEAT}

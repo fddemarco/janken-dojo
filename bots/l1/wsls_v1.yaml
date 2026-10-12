@@ -10,6 +10,4 @@ blueprint:
     - {Opening: {rounds: 1, move: ROCK}}
     - {OnInvalid: {action: CRASH_ACTION, scope: LAST, side: BOTH}}
   core:
-    Bandit:
-      predictors: [{WinStay: {shift: $SHIFT}}]
-      rotations: [COPY]
+    Heuristic: {signal: {WinStay: {shift: $SHIFT}}, rotation: COPY}

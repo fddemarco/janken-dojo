@@ -6,12 +6,12 @@ code that builds blueprints directly, such as the tests:
     blueprint = bot.Blueprint(guards=(bot.Noise(bot.Knob("NOISE")),), ...)
     STATE, SPEC, KNOBS = blueprint.compile({"NOISE": 0.05})
 
-See janken/kit/blueprint/ for the stages and presets.py for the shared bot cores.
+See janken/kit/blueprint/ for the stages. A bot file names the bots an aggregator
+combines (blueprint/refs.py); here, a core is built from its predictors directly.
 """
 
 import numpy as np
 
-from . import presets
 from .blueprint import (
     ALL_ROTATIONS,
     Backoff,
@@ -30,6 +30,7 @@ from .blueprint import (
     Gate,
     Geometry,
     Greedy,
+    Heuristic,
     Knob,
     LastMove,
     LongestMatch,
@@ -50,6 +51,7 @@ from .blueprint import (
     SecondMatch,
     Selector,
     SignalLike,
+    Silent,
     Sim,
     Stall,
     Team,
@@ -146,6 +148,7 @@ __all__ = [
     "Gate",
     "Geometry",
     "Greedy",
+    "Heuristic",
     "Knob",
     "LastMove",
     "LongestMatch",
@@ -166,6 +169,7 @@ __all__ = [
     "SecondMatch",
     "Selector",
     "SignalLike",
+    "Silent",
     "Sim",
     "Stall",
     "Team",
@@ -173,5 +177,4 @@ __all__ = [
     "WinStay",
     "kernel",
     "play",
-    "presets",
 ]

@@ -1,15 +1,87 @@
-"""janken/kit/declare.py: blueprints declared as YAML data."""
+"""janken/kit/declare.py: blueprints declared as YAML data, their arms named as bots."""
+
+import dataclasses
+import textwrap
+from collections.abc import Mapping
 
 import pytest
 import yaml
 
-from janken.kit import bot, presets
-from janken.kit.blueprint import Blueprint, BlueprintError
-from janken.kit.declare import blueprint_from_data
+from janken.kit import bot
+from janken.kit.blueprint import Blueprint, BlueprintError, refs
+from janken.kit.declare import blueprint_from_data, symbol
+
+# The bots the declarations below name, by stem: L1 heuristics, an L2 bandit, a
+# gate, a silent bot.
+SHELF = {
+    "last": """
+        defaults: {OF: OPP}
+        blueprint:
+          guards: [{Noise: {p: 0.5}}]
+          core: {Heuristic: {signal: {LastMove: {of: $OF}}, rotation: BEAT}}
+    """,
+    "coin": """
+        defaults: {P_ROCK: 0.5, P_PAPER: 0.3}
+        blueprint:
+          core:
+            Heuristic: {signal: {Biased: {p_rock: $P_ROCK, p_paper: $P_PAPER}}}
+    """,
+    "gram": """
+        defaults: {ORDER: 1, CTX: 0, DECAY: 1.0}
+        blueprint:
+          core:
+            Heuristic:
+              signal: {NGram: {order: $ORDER, ctx: $CTX, decay: $DECAY}}
+              rotation: BEAT
+    """,
+    "board": """
+        defaults: {DECAY: 0.9}
+        blueprint:
+          core:
+            Bandit:
+              predictors: [{bot: last, rotations: [COPY, BEAT]}]
+              scorer: {Dirichlet: {decay: $DECAY}}
+              random_arm: RA_SCORED
+              selector: Thompson
+    """,
+    "gated": """
+        blueprint:
+          core:
+            Gate: {main: {bot: board}, experts: [{bot: last}]}
+    """,
+    "nash": "blueprint: {}",
+    "loop_a": "blueprint: {core: {Bandit: {predictors: [{bot: loop_b}]}}}",
+    "loop_b": "blueprint: {core: {Bandit: {predictors: [{bot: loop_a}]}}}",
+}
+
+
+class Shelf:
+    """A library of the bots in SHELF, read from memory."""
+
+    def __init__(self, files: Mapping[str, str]) -> None:
+        self.files = {k: yaml.safe_load(textwrap.dedent(v)) for k, v in files.items()}
+        self.reading: list[str] = []
+
+    def bot(self, stem: str) -> refs.Referenced:
+        if stem not in self.files:
+            raise BlueprintError(f"no bot {stem!r}")
+        if stem in self.reading:
+            raise BlueprintError(f"a cycle through {stem}")
+        self.reading.append(stem)
+        try:
+            data = self.files[stem]
+            blueprint = blueprint_from_data(data.get("blueprint"), self)
+        finally:
+            self.reading.pop()
+        defaults = {
+            name: symbol(v) if isinstance(v, str) else v
+            for name, v in (data.get("defaults") or {}).items()
+        }
+        return refs.Referenced(stem, blueprint, defaults)
 
 
 def declared(text: str) -> Blueprint:
-    return blueprint_from_data(yaml.safe_load(text))
+    return blueprint_from_data(yaml.safe_load(textwrap.dedent(text)), Shelf(SHELF))
 
 
 def bandit(text: str) -> bot.Bandit:
@@ -19,22 +91,29 @@ def bandit(text: str) -> bot.Bandit:
     return core
 
 
+def arms(text: str) -> tuple[bot.SignalLike, ...]:
+    """The arms of `core: {Bandit: {predictors: <text>}}`."""
+    return bandit(f"core: {{Bandit: {{predictors: {text}}}}}").predictors
+
+
+BOARD = bot.Bandit(
+    (bot.Rotated(bot.LastMove(bot.OPP), (bot.BEAT, bot.BEAT_BEAT)),),
+    scorer=bot.Dirichlet(0.9),
+    random_arm=bot.RA_SCORED,
+    selector=bot.Thompson(),
+)
+
+
 class TestGrammar:
     def test_keywords_positional_and_bare_calls(self) -> None:
         expected = bot.Blueprint(
             guards=(bot.Noise(bot.Knob("NOISE")), bot.Opening(1, bot.ROCK)),
-            core=bot.Bandit(
-                predictors=(bot.React(), bot.LastMove(bot.MY)),
-                rotations=(bot.BEAT, bot.COPY),
-            ),
+            core=bot.Heuristic(bot.React(), bot.BEAT),
         )
         assert (
             declared("""
                 guards: [{Noise: {p: $NOISE}}, {Opening: [1, ROCK]}]
-                core:
-                  Bandit:
-                    predictors: [React, {LastMove: {of: MY}}]
-                    rotations: [BEAT, COPY]
+                core: {Heuristic: {signal: React, rotation: BEAT}}
             """)
             == expected
         )
@@ -42,78 +121,101 @@ class TestGrammar:
     def test_an_empty_section_is_the_default_blueprint(self) -> None:
         assert blueprint_from_data(None) == Blueprint()
         assert blueprint_from_data({}) == Blueprint()
-
-    def test_wrappers_nest(self) -> None:
-        assert bandit("""
-                core:
-                  Bandit:
-                    predictors:
-                      - Sim: {signal: {NGram: {order: 2, ctx: JOINT}}}
-                      - Rotated: {signal: {Geometry: {alpha: 0.1}}, rotations: [BEAT]}
-                      - Replay: {bandit: {staller: {}}}
-                    rotations: ALL_ROTATIONS
-            """).predictors == (
-            bot.Sim(bot.NGram(2, ctx=bot.JOINT)),
-            bot.Rotated(bot.Geometry(0.1), (bot.BEAT,)),
-            bot.Replay(presets.staller()),
-        )
-
-    def test_a_preset_core(self) -> None:
-        assert declared("""
-                core: {iocaine: {decay: $DECAY, max_len: 12, selector: Thompson}}
-                overlays: [{Team: {role: SUPPORT}}]
-            """) == bot.Blueprint(
-            core=presets.iocaine(bot.Knob("DECAY"), 12, bot.Thompson()),
-            overlays=(bot.Team(bot.SUPPORT),),
-        )
-
-    def test_a_gate_over_a_main_bandit_and_its_experts(self) -> None:
-        main = bot.Bandit(
-            (bot.LastMove(),), scorer=bot.Dirichlet(), selector=bot.Thompson()
-        )
-        assert declared("""
-                core:
-                  Gate:
-                    main:
-                      Bandit:
-                        predictors: [LastMove]
-                        scorer: Dirichlet
-                        selector: Thompson
-                    experts: [{Rotated: {signal: React, rotations: [COPY]}}]
-                    rule: MAIN_FIRST
-                    edge: $EDGE
-            """).core == bot.Gate(
-            main,
-            (bot.Rotated(bot.React(), (bot.COPY,)),),
-            rule=bot.MAIN_FIRST,
-            edge=bot.Knob("EDGE"),
-        )
-
-    def test_a_naive_bayes_lists_its_inputs(self) -> None:
-        core = bandit("""
-                core:
-                  Bandit:
-                    predictors:
-                      - React
-                      - NaiveBayes: {inputs: [React], decay: 0.9}
-            """)
-        assert core.predictors == (bot.React(), bot.NaiveBayes((bot.React(),), 0.9))
+        assert Blueprint().core == bot.Heuristic(bot.Silent())
 
     def test_a_vigilant_team_of_a_named_fleet(self) -> None:
         assert declared("""
                 overlays: [{Team: {role: CHAMPION, fleet: ILIAD_V2, vigilant: true}}]
             """).overlays == (bot.Team(bot.CHAMPION, bot.ILIAD_V2, vigilant=True),)
 
-    def test_a_preset_returning_signals_is_spliced(self) -> None:
-        predictors = bandit("""
-            core: {Bandit: {predictors: [{metabot_signals: [0.9, 12]}, React]}}
-        """).predictors
-        assert predictors == (*presets.metabot_signals(0.9, 12), bot.React())
+
+class TestReference:
+    def test_an_l1_arm_is_its_signal_with_its_rotation_plus_the_arms(self) -> None:
+        # last plays BEAT: COPY'd, its move; BEAT, the move that beats it.
+        assert arms("[{bot: last, rotations: [COPY, BEAT]}]") == (
+            bot.Rotated(bot.LastMove(bot.OPP), (bot.BEAT, bot.BEAT_BEAT)),
+        )
+        assert arms("[{bot: coin}]") == (  # by default, its move as it is
+            bot.Rotated(bot.Biased(0.5, 0.3), (bot.COPY,)),
+        )
+
+    def test_arms_take_one_value_each_or_share_one(self) -> None:
+        assert arms(
+            "[{bot: gram, arms: 3, space: {ORDER: [1, 2, 3], CTX: JOINT}}]"
+        ) == tuple(
+            bot.Rotated(bot.NGram(o, ctx=bot.JOINT), (bot.BEAT,)) for o in (1, 2, 3)
+        )
+
+    def test_parameters_are_named_in_any_case_and_may_be_knobs(self) -> None:
+        (arm,) = arms("[{bot: coin, space: {p_rock: $ROCKY}}]")
+        assert arm == bot.Rotated(bot.Biased(bot.Knob("ROCKY"), 0.3), (bot.COPY,))
+
+    def test_arms_are_spliced_in_order(self) -> None:
+        assert arms("[{bot: coin}, {bot: last, space: {OF: MY}}]") == (
+            bot.Rotated(bot.Biased(0.5, 0.3), (bot.COPY,)),
+            bot.Rotated(bot.LastMove(bot.MY), (bot.BEAT,)),
+        )
+
+    def test_an_l1_from_the_opponents_side_is_a_sim(self) -> None:
+        # A Sim's symbol is their move when they play BEAT; BEAT beats it.
+        assert arms("[{bot: last, side: OPP}]") == (
+            bot.Rotated(bot.Sim(bot.LastMove(bot.OPP)), (bot.BEAT,)),
+        )
+        # coin plays COPY: their move is the Sim's symbol turned back by one.
+        assert arms("[{bot: coin, side: OPP, rotations: [COPY]}]") == (
+            bot.Rotated(bot.Sim(bot.Biased(0.5, 0.3)), (bot.BEAT_BEAT,)),
+        )
+
+    def test_a_bandit_arm_is_a_replay_from_either_side(self) -> None:
+        assert arms("[{bot: board}]") == (
+            bot.Rotated(bot.Replay(BOARD, side=bot.MY), (bot.COPY,)),
+        )
+        (anti,) = arms(
+            "[{bot: board, side: OPP, draws: 64, random_arm: RA_NONE,"
+            " rotations: [BEAT]}]"
+        )
+        replayed = bot.Replay(dataclasses.replace(BOARD, random_arm=bot.RA_NONE), 64)
+        assert anti == bot.Rotated(replayed, (bot.BEAT,))
+
+    def test_a_heuristic_over_a_named_bot(self) -> None:
+        core = declared("core: {Heuristic: {signal: {bot: board, side: OPP}}}").core
+        assert core == bot.Heuristic(
+            bot.Rotated(bot.Replay(BOARD), (bot.BEAT,)), bot.COPY
+        )
+        assert core.level() == 2
+
+    def test_a_gate_names_its_main_bandit_and_experts(self) -> None:
+        core = declared(
+            "core: {Gate: {main: {bot: board}, experts: [{bot: last}]}}"
+        ).core
+        assert core == bot.Gate(
+            BOARD, (bot.Rotated(bot.LastMove(bot.OPP), (bot.BEAT,)),)
+        )
+
+    def test_a_core_is_another_bot_bound_without_its_guards(self) -> None:
+        blueprint = declared("""
+            core: {bot: board, space: {DECAY: $DECAY}}
+            overlays: [{Team: {role: SUPPORT}}]
+        """)
+        assert blueprint.guards == ()
+        assert blueprint.core == dataclasses.replace(
+            BOARD, scorer=bot.Dirichlet(bot.Knob("DECAY"))
+        )
+
+    def test_a_naive_bayes_combines_the_other_arms(self) -> None:
+        core = bandit("""
+            core:
+              Bandit:
+                predictors: [{bot: last}, {NaiveBayes: {decay: 0.9}}, {bot: coin}]
+        """)
+        last, coin = core.predictors[0], core.predictors[2]
+        assert core.predictors[1] == bot.NaiveBayes((last, coin), 0.9)
 
     def test_choose_selector(self) -> None:
         assert bandit("""
                 core:
                   Bandit:
+                    predictors: [{bot: last}]
                     selector:
                       ChooseSelector:
                         index: $SELECT
@@ -131,28 +233,57 @@ def assert_refused(text: str, where: str) -> None:
 class TestError:
     def test_unknown_names_are_refused_with_their_path(self) -> None:
         assert_refused(
-            "core: {Bandit: {predictors: [React, NGrm]}}",
-            r"blueprint\.core\.Bandit\.predictors\[1\]",
+            "core: {Heuristic: {signal: NGrm}}", r"blueprint\.core\.Heuristic\.signal"
         )
-        assert_refused("core: {Bandit: {predictors: [{LastMove: {of: THEM}}]}}", "THEM")
+        assert_refused("core: {Heuristic: {signal: {LastMove: {of: THEM}}}}", "THEM")
         assert_refused("guards: [{Noise: {q: 0.1}}]", r"guards\[0\]\.Noise")
         assert_refused("signals: [React]", "unknown key")
 
     def test_malformed_calls_are_refused(self) -> None:
         assert_refused("core: {React: {}, LastMove: {}}", "one `Name")
         assert_refused("guards: [{Opening: [1, 2, 3, 4]}]", "Opening")
-        assert_refused(
-            "core: {Bandit: {predictors: [{LastMove: {of: $}}]}}", "bad knob"
-        )
+        assert_refused("core: {Heuristic: {signal: {LastMove: {of: $}}}}", "bad knob")
 
-    def test_the_old_flat_grammar_is_gone(self) -> None:
+    def test_the_old_grammars_are_gone(self) -> None:
         assert_refused("around: staller\nselector: First", "unknown key")
         assert_refused("selector: Thompson", "unknown key")
+        assert_refused("core: {metabot: [0.9, 0.9, 12]}", "unknown stage 'metabot'")
+        assert_refused("core: {Bandit: {predictors: [{Sim: {}}]}}", "unknown stage")
+
+    def test_an_aggregators_arms_are_bots(self) -> None:
+        assert_refused("core: {Bandit: {predictors: [React]}}", "arms are bots")
+        assert_refused(
+            "core: {Gate: {main: {bot: board}, experts: [React]}}", "arms are bots"
+        )
+
+    def test_a_reference_names_the_bots_parameters(self) -> None:
+        assert_refused("core: {bot: coin, space: {P_SCISSORS: 0.2}}", "P_ROCK, P_PAPER")
+        assert_refused("core: {bot: coin, typo: 1}", "unknown key")
+        assert_refused(
+            "core: {Bandit: {predictors: [{bot: gram, arms: 2, space: {ORDER: [1, 2, 3]}}]}}",
+            "3 values for 2 arms",
+        )
+
+    def test_a_structural_parameter_takes_literals(self) -> None:
+        assert_refused(
+            "core: {Bandit: {predictors: [{bot: gram, space: {ORDER: $ORDER}}]}}",
+            "ORDER",
+        )
+
+    def test_what_cannot_be_an_arm(self) -> None:
+        assert_refused("core: {Bandit: {predictors: [{bot: gated}]}}", "a Gate")
+        assert_refused("core: {Bandit: {predictors: [{bot: nash}]}}", "at random")
+        assert_refused("core: {Bandit: {predictors: [{bot: nobody}]}}", "nobody")
+        assert_refused("core: {Bandit: {predictors: [{bot: loop_a}]}}", "cycle")
+        assert_refused("guards: [{bot: last}]", "an arm of a Bandit or a Gate")
+
+    def test_a_reference_needs_a_library(self) -> None:
+        with pytest.raises(BlueprintError, match="no bot library"):
+            blueprint_from_data({"core": {"bot": "board"}})
 
     def test_a_core_is_a_predictor(self) -> None:
         assert_refused("core: Thompson", "a core is a predictor")
 
-    def test_a_gatekeeper_is_built_by_the_compiler_only(self) -> None:
-        assert_refused(
-            "core: {Bandit: {selector: Gatekeeper}}", "unknown name 'Gatekeeper'"
-        )
+    def test_a_gatekeeper_and_a_replay_are_built_by_the_compiler_only(self) -> None:
+        assert_refused("core: {Bandit: {selector: Gatekeeper}}", "'Gatekeeper'")
+        assert_refused("core: {Heuristic: {signal: Replay}}", "'Replay'")

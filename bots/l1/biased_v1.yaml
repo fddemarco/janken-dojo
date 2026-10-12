@@ -5,6 +5,4 @@ defaults:
   P_PAPER: 0.3
 blueprint:
   core:
-    Bandit:
-      predictors: [{Biased: {p_rock: $P_ROCK, p_paper: $P_PAPER}}]
-      rotations: [COPY]
+    Heuristic: {signal: {Biased: {p_rock: $P_ROCK, p_paper: $P_PAPER}}, rotation: COPY}

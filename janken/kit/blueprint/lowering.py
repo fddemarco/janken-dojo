@@ -4,6 +4,8 @@ The runtime (janken/kit/ensemble.py, selectors.py, bayes.py, replay.py) plays a
 single bandit of arms, its replays aside, so the tree is flattened before it is
 encoded (encoder.py):
 
+* a Heuristic (an L1 core) is a bandit of its one arm, with no scorer: First
+  plays it, or a random move when it has none (a Silent heuristic has no arm);
 * a Gate is its main bandit with the gated experts appended as its last arms, under
   the Gatekeeper selector (the gate's rule, edge, decay and warmup, and the main
   bandit's Thompson sharpness);
@@ -18,6 +20,7 @@ import dataclasses
 
 from .base import BlueprintError, check
 from .composites import Bandit, Gate, NaiveBayes, Replay, SignalLike, arm_count
+from .heuristic import Heuristic, Silent
 from .predictor import Predictor
 from .selectors import Gatekeeper, Thompson
 from .signals import Rotated, Signal, Sim
@@ -38,13 +41,23 @@ def lower(core: Predictor) -> Bandit:
 
 
 def _flatten(core: Predictor) -> Bandit:
+    if isinstance(core, Heuristic):
+        return _played(core)
     if isinstance(core, Gate):
         return _gated(core)
     if not isinstance(core, Bandit):
         raise BlueprintError(
-            f"a bot's core is a Bandit or a Gate, got {type(core).__name__}"
+            f"a bot's core is a Heuristic, a Bandit or a Gate, got {type(core).__name__}"
         )
     return core
+
+
+def _played(heuristic: Heuristic) -> Bandit:
+    """A Heuristic as a one-arm bandit with no scorer (no arm: random play)."""
+    signal, rotation = heuristic.played()
+    if isinstance(signal, Silent):
+        return Bandit()
+    return Bandit(predictors=(signal,), rotations=(rotation,))
 
 
 def _gated(gate: Gate) -> Bandit:

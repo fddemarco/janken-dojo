@@ -1,14 +1,16 @@
 """Bot files: a bot declared as YAML, read without compiling anything.
 
     description: plays what beats the opponent's last move.
-    defaults: {NOISE: 0.05}            # the bot as submitted
+    defaults: {NOISE: 0.05}            # the bot as submitted: its parameters
     blueprint:                          # janken/kit/declare.py reads this section
       guards: [{Noise: {p: $NOISE}}]
       core:
-        Bandit: {predictors: [{LastMove: {of: OPP}}], rotations: [BEAT]}
+        Heuristic: {signal: {LastMove: {of: OPP}}, rotation: BEAT}
     mocks: gate_edge                    # a pure Oracle only: the bot it stands in for
 
-The engine passes a bot its parameters at run time, as the `prm` vector in
+A bot's defaults are its parameter interface: what a variant, a space file or an
+aggregator naming it as an arm may set. A default is a number, or a constant of
+janken/kit/declare.py (`CTX: OPP`). The engine passes a bot its parameters at run time, as the `prm` vector in
 `defaults` order (engine/registry.py), so a variant needs no new file. What a
 bot's parameters may be tuned over is not the bot's business: it lives in a space
 file (janken/lab/space.py).
@@ -23,6 +25,9 @@ import hashlib
 from collections.abc import Mapping
 
 import yaml
+
+from .kit import blueprint as bp
+from .kit import declare
 
 BOT_SUFFIX = ".yaml"
 KERNEL_SUFFIX = ".py"
@@ -94,10 +99,20 @@ def _defaults(path: str, data: object) -> dict[str, Number]:
     for name, value in data.items():
         if not (isinstance(name, str) and name.isidentifier()):
             raise BotFileError(f"{path}: bad parameter name {name!r}")
-        if isinstance(value, bool) or not isinstance(value, int | float):
-            raise BotFileError(f"{path}: parameter {name} must be a number")
-        out[name] = value
+        out[name] = _number(path, name, value)
     return out
+
+
+def _number(path: str, name: str, value: object) -> Number:
+    """A default's value: a number, or the constant an UPPER_CASE word names."""
+    if isinstance(value, str):
+        try:
+            return declare.symbol(value)
+        except bp.BlueprintError as exc:
+            raise BotFileError(f"{path}: parameter {name}: {exc}") from exc
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise BotFileError(f"{path}: parameter {name} must be a number")
+    return value
 
 
 def defaults(path: str) -> dict[str, Number]:

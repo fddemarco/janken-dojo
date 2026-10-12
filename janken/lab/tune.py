@@ -45,7 +45,7 @@ import optuna
 import polars as pl
 import tqdm
 
-from .. import botfile, progress, settings
+from .. import library, progress, settings
 from ..engine import play_pairs
 from ..match import MatchResult
 from ..spec import BotSpec, format_spec, make_spec
@@ -264,7 +264,7 @@ def _open_study(
         ),
     )
     config = study_config(spaces, setup)
-    hashes = {s.stem: botfile.source_hash(s.bot) for s in spaces}
+    hashes = {s.stem: library.source_hash(s.bot) for s in spaces}
     stored = study.user_attrs.get("config")
     if stored is None:
         study.set_user_attr("config", config)

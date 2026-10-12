@@ -19,13 +19,28 @@ blueprint:
   core:
     Bandit:
       predictors:
-        - LongestMatch: {max_len: $MAX_LEN}
-        - Frequency: {decay: $DECAY}
+        - {bot: matcher, space: {MAX_LEN: $MAX_LEN}}
+        - {bot: gram, space: {DECAY: $DECAY}}
       selector:
         ChooseSelector: {index: $SELECT, options: [Greedy]}
       scorer: {Dirichlet: {decay: $LOCK_Z}}
   overlays: [{EmitInvalid: {first_at: $OFFSET}}]
 """
+
+
+# The blocks the probe names: a matcher, and an n-gram whose ORDER is structural.
+BLOCKS = {
+    "matcher": """\
+defaults: {MAX_LEN: 12}
+blueprint:
+  core: {Heuristic: {signal: {LongestMatch: {max_len: $MAX_LEN}}, rotation: BEAT}}
+""",
+    "gram": """\
+defaults: {ORDER: 2, DECAY: 1.0}
+blueprint:
+  core: {Heuristic: {signal: {NGram: {order: $ORDER, decay: $DECAY}}, rotation: BEAT}}
+""",
+}
 
 
 class TestSpaceFile:
@@ -37,9 +52,23 @@ class TestSpaceFile:
         self.bot = os.path.join(self.dir, "bots", "probe.yaml")
         with open(self.bot, "w") as f:
             f.write(BOT)
+        os.mkdir(os.path.join(self.dir, "bots", "blocks"))
+        for stem, text in BLOCKS.items():
+            with open(
+                os.path.join(self.dir, "bots", "blocks", stem + ".yaml"), "w"
+            ) as f:
+                f.write(text)
 
     def load(self, data: dict[str, object]) -> space.Space:
         return space.from_data({"bot": self.bot, **data}, "test")
+
+    def test_a_structural_parameter_is_never_tuned(self) -> None:
+        gram = os.path.join(self.dir, "bots", "blocks", "gram.yaml")
+        order = {"ORDER": {"type": "int", "low": 1, "high": 3}}
+        with pytest.raises(space.SpaceError, match="structural"):
+            space.from_data({"bot": gram, "params": order}, "test")
+        scaffolded = space.scaffold(gram, 1.0, settings.config().space)
+        assert list(scaffolded.params) == ["DECAY"]
 
     def test_a_space_loads_and_round_trips(self) -> None:
         found = self.load(

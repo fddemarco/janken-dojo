@@ -1,7 +1,7 @@
 description: |
   The EDGE gatekeeper: smartbot_sims's arms, plus anti_smartbot_sims' replay as a gated expert (idea #30).
 
-  The core is smartbot_sims's (the smartbot_sims preset at 0.95, 0.9, 12, Thompson). One more
+  The main bandit is smartbot_sims_v1's (at its defaults 0.95, 0.9, 12, Thompson). One more
   signal, last: anti_smartbot_sims' Replay of that core (256 Thompson draws), played
   BEAT. The Gatekeeper selector keeps the replay arm's own record, played or not, and
   plays it while its posterior mean P(win) - P(loss) is above EDGE (from round
@@ -16,27 +16,9 @@ defaults:
 blueprint:
   core:
     Gate:
-      main:
-        Bandit:
-          predictors:
-            - {metabot_signals: {table_decay: 0.9, max_match: 12}}
-            - {sims: [10]}
-          rotations: ALL_ROTATIONS
-          scorer: {Dirichlet: {decay: 0.95}}
-          random_arm: RA_SCORED
-          selector: Thompson
+      main: {bot: smartbot_sims_v1}
       experts:
-        - Rotated:
-            signal:
-              Replay:
-                bandit:
-                  smartbot_sims:
-                    n: 10
-                    arm_decay: 0.95
-                    table_decay: 0.9
-                    max_match: 12
-                draws: 256
-            rotations: [BEAT]
+        - {bot: smartbot_sims_v1, side: OPP, draws: 256, rotations: [BEAT]}
       edge: $EDGE
       decay: $GATE_DECAY
       warmup: $WARMUP

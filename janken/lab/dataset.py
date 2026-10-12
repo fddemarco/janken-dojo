@@ -26,7 +26,7 @@ import duckdb
 import numpy as np
 import polars as pl
 
-from .. import botfile, settings
+from .. import botfile, library, settings
 from ..kit.moves import INVALID
 from ..match import MatchResult
 from ..spec import BotSpec
@@ -247,7 +247,7 @@ def _player(prefix: str, spec: BotSpec) -> dict[str, object]:
         f"{prefix}_path": spec.path,
         f"{prefix}_params": json.dumps(params, sort_keys=True),
         f"{prefix}_overrides": json.dumps(spec.params, sort_keys=True),
-        f"{prefix}_sha256": botfile.source_hash(spec.path),
+        f"{prefix}_sha256": library.source_hash(spec.path),
     }
 
 

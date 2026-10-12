@@ -14,7 +14,16 @@ defaults:
 blueprint:
   guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
   core:
-    rps4:
-      decay: $DECAY
-      table_decay: $TABLE_DECAY
+    Bandit:
+      predictors:
+        - bot: ngram  # orders 0-3 of the joint history, each for both players
+          arms: 8
+          space:
+            ORDER: [0, 0, 1, 1, 2, 2, 3, 3]
+            CTX: JOINT
+            OF: [OPP, MY, OPP, MY, OPP, MY, OPP, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
       selector: {Greedy: {ties: TIES_RANDOM}}

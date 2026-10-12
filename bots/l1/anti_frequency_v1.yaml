@@ -6,6 +6,4 @@ defaults:
 blueprint:
   guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: RANDOM_MOVE}}]
   core:
-    Bandit:
-      predictors: [{Frequency: {of: MY, decay: $DECAY}}]
-      rotations: [BEAT_BEAT]
+    Heuristic: {signal: {Frequency: {of: MY, decay: $DECAY}}, rotation: BEAT_BEAT}

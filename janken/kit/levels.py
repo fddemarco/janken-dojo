@@ -1,16 +1,19 @@
-"""Bot levels: how many layers of meta-reasoning a blueprint stacks.
+"""Bot levels: how many layers of aggregation a blueprint stacks.
 
-    L1      a heuristic: signals played without a bandit (copycat, an n-gram, rock)
-    L2      a bandit over L1 arms (smartbot, iocaine, a scoreboard of rotations)
-    L3      a bandit whose arms include an L2 (a replay of smartbot: smartbot_sims)
-    L4 ...  one more layer per composite over predictors of the level below
+    L1      a heuristic: one signal played with one rotation, no Bandit and no Gate
+            (copycat, an n-gram, rock)
+    L2      a meta-heuristic: a Bandit or a Gate over L1s (smartbot, iocaine, a
+            scoreboard)
+    L3      a Bandit or a Gate over L2s, and maybe L1s (smartbot_sims: L1s and
+            replays of L2s)
+    L4 ...  one more layer per aggregator: over L3s, and maybe L2s and L1s
     ORACLE  a bot holding an Oracle (research only: janken/mocks.py)
 
 The level is the core predictor tree's (janken/kit/blueprint/predictor.py), never
-written down: a signal is L1, a Sim, Rotated or Replay its child's level, and a
-composite (a Bandit that really is one, a Gate, a NaiveBayes) one above its highest
-child. Guards and overlays add nothing. A bot of the field lives in its level's
-folder of the bots dir (bots/l1, bots/l2, ..., bots/oracle).
+written down: a signal is L1; a Heuristic, Sim, Rotated or Replay its child's level;
+an aggregator (a Bandit, a Gate, a NaiveBayes) always one above its highest child.
+Guards and overlays add nothing. A bot of the field lives in its level's folder of
+the bots dir (bots/l1, bots/l2, ..., bots/oracle).
 """
 
 from . import blueprint as bp

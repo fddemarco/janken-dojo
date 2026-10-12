@@ -55,13 +55,13 @@ uv run janken config show                    # every default (janken.toml)
 
 | path | what |
 | --- | --- |
-| `bots/` | the field: one YAML file per bot, in its level's folder (`l1/` … `l4/`, `oracle/`), indexed in [bots/README.md](bots/README.md) (levels, what each does, old names) |
+| `bots/` | the field: one YAML file per bot, in its level's folder (`l1/` … `l4/`, `oracle/`; `blocks/`: L1 arms for aggregators), indexed in [bots/README.md](bots/README.md) (levels, what each does, old names) |
 | `bots/inactive/` | bots out of the field (never in a pool): |
 | `bots/inactive/fleets/iliad_v3/` | the Iliad v3 fleet: a champion and four supports |
 | `bots/inactive/legacy/` | retired bots, kept for the research record ([README](bots/inactive/legacy/README.md)) |
 | `spaces/` | one tuning space per tunable bot of the field |
 | `janken/engine/` | compiles bots (numba) and referees matches |
-| `janken/kit/` | the bot anatomy: stage catalogue (`blueprint/`), YAML grammar (`declare.py`), compiled stages, presets, levels |
+| `janken/kit/` | the bot anatomy: stage catalogue (`blueprint/`), YAML grammar (`declare.py`), compiled stages, levels |
 | `janken/lab/` | experiments, runs database, analysis, Optuna tuning, Oracle calibration, move dataset and predictors |
 | `janken/notebook/` | the research notebook as data: ideas, notes, insights, the next step |
 | `janken/cli/` | the `janken` command (typer); `reference.py` generates the CLI reference |

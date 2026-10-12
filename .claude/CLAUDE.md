@@ -46,15 +46,24 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 - Every bot has the same anatomy (`janken/kit/blueprint/`): guards → valid-only view →
   track → signals → move choice (rotations) → select (scorer + selector) → overlays.
 - A blueprint is `guards`, a `core` and `overlays`. The core is a predictor tree
-  (composite pattern, `janken/kit/blueprint/predictor.py`): signals are leaves; `Sim`,
-  `Rotated`, `Replay` decorate one predictor; `Bandit`, `Gate`, `NaiveBayes` combine
-  several into a higher-order one. Every way of combining predictors is a composite,
-  and a bot's level is the tree's. `lowering.py` flattens the tree into the one bandit
-  the compiled pipeline plays, and refuses the shapes it can't.
+  (composite pattern, `janken/kit/blueprint/predictor.py`): signals are leaves;
+  `Heuristic`, `Sim`, `Rotated`, `Replay` decorate one predictor; the aggregators
+  `Bandit`, `Gate`, `NaiveBayes` combine several into a higher-order one. Every way of
+  combining predictors is an aggregator. `lowering.py` flattens the tree into the one
+  bandit the compiled pipeline plays, and refuses the shapes it can't.
+- **Levels** (`janken/kit/levels.py`) are the tree's: **L1** is a heuristic (a
+  `Heuristic` core, one signal and one rotation; no Bandit, no Gate); **L2** a Bandit or
+  Gate over L1s; **L3** over L2s (and L1s); **L4** over L3s (and L2s, L1s); and so on.
+  Every aggregator adds one level above its highest arm.
+- An aggregator's arms are **bots, named** (`janken/kit/blueprint/refs.py`):
+  `{bot: <stem>, arms: N, space: {PARAM: [one value per arm] | shared}, rotations: [...], side: MY|OPP}`. A bot's `defaults` are its parameter interface: an unknown parameter is
+  an error. An L1 arm is its signal; an L2+ arm is a `Replay` of its bandit (from our
+  side its move, from theirs their likely move). A blueprint's `core` or a Gate's `main`
+  may name a bot too. Bots are read by stem through `janken/library.py`.
 - One YAML file per bot, `bots/<level>/<name>.yaml`: a `description`, its `defaults` (at most 8,
   the bot as submitted) and a `blueprint` of kit stages whose knobs are literals or
   `$NAME` (grammar in `janken/kit/declare.py`; copy any bot in `bots/`). Stems are
-  unique across levels. A bot file holds
+  unique across all of `bots/` (levels, `blocks/`, `inactive/`). A bot file holds
   no Python.
 - The field holds one bot per **species**, its current version `<species>_vN`
   (lineage: `research/species.md`; rules: docs/experiments.md, Species). A new bot gets
@@ -69,8 +78,9 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   (dataclass in its `janken/kit/blueprint/` module, compiled half in its stage module,
   unit tests in
   `tests/test_stages.py`), and then any bot can use it (`declare.py` finds stage classes
-  by their `kind`; a new preset or constant is added to its registries). Shared cores go
-  in `presets.py`.
+  by their `kind`; a new constant is added to its registry). A new signal usually gets
+  a block too (`bots/blocks/`, every field a parameter). What bots share is a bot they
+  all name, never copied arms.
 - Randomness only via `random.random/randrange/gammavariate` inside compiled stages, in a
   deterministic order.
 - A stem's logic never changes under the same filename once it has results; a new idea
@@ -159,16 +169,18 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
 - `bots/` holds the field (YAML, indexed in `bots/README.md`, with the map of old names),
   one folder per level: `bots/l1/`, `bots/l2/`, …, `bots/oracle/`. A bot sits in the
   folder of its computed level (`janken bot check` and `tests/test_bots.py` enforce it).
-  `bots/inactive/` holds the bots out of the field: `fleets/` and `legacy/` (discovery
-  reads only the level folders, so they never enter a pool). `spaces/` holds one space file per tunable
+  `bots/blocks/` holds L1 heuristics that exist to be named as arms, and
+  `bots/inactive/` the bots out of the field: `fleets/` and `legacy/` (discovery reads
+  only the level folders, so neither ever enters a pool). `spaces/` holds one space file per tunable
   bot of the field.
 - `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `species.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
   and `rps_kaggle.md`.
 - `janken/engine/` compiles bots and referees matches. `janken/kit/` holds the bot
   anatomy: `blueprint/` (the stage catalogue, the predictor tree and its compiler: one
   module per stage family), `declare.py` (the YAML
-  grammar), `pipeline.py` and the compiled stages, `presets.py` (shared cores), and
-  `bot.py` (the whole vocabulary in Python, for tests).
+  grammar), `levels.py`, `pipeline.py` and the compiled stages, and `bot.py` (the whole
+  vocabulary in Python, for tests). `janken/library.py` reads bots by stem (references,
+  their transitive source hash).
 - `janken.toml` holds every default; `janken/settings.py` is its schema and loader, and
   `janken/config_file.py` edits it line by line.
 - Tests: `uv run pytest` (about 20 s, JIT off).

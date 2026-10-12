@@ -1,13 +1,17 @@
-"""Every bot in bots/ honours the bot contract, sits in its level's folder, and every space in spaces/ fits it."""
+"""Every bot in bots/ honours the bot contract, sits in its level's folder, and every space in spaces/ fits it.
+
+The blocks (bots/blocks/) are heuristics that exist to be named as arms: they
+compile, and are L1 (or an Oracle's research stand-in)."""
 
 import os
 
 import pytest
 
-from janken import botfile
+from janken import botfile, library, mocks
 from janken.engine import registry
 from janken.engine.build import BlueprintBot, load_bot
 from janken.engine.registry import P_MAX, discover
+from janken.kit import levels
 from janken.lab import space
 from janken.match import bot_name
 from janken.notebook import species
@@ -17,6 +21,8 @@ BOTS_DIR = os.path.join(ROOT, "bots")
 SPACES_DIR = os.path.join(ROOT, "spaces")
 BOT_PATHS = discover(BOTS_DIR)
 SPACE_FILES = sorted(os.listdir(SPACES_DIR))
+BLOCKS_DIR = os.path.join(BOTS_DIR, library.BLOCKS)
+BLOCK_PATHS = sorted(os.path.join(BLOCKS_DIR, f) for f in os.listdir(BLOCKS_DIR))
 
 
 class TestContract:
@@ -49,6 +55,23 @@ class TestLayout:
     def test_stems_are_unique_across_levels(self) -> None:
         stems = [bot_name(p) for p in BOT_PATHS]
         assert len(stems) == len(set(stems))
+
+    def test_stems_are_unique_across_the_library(self) -> None:
+        shelf = library.Library(BOTS_DIR)
+        for stem in shelf.stems():
+            assert len(shelf.paths(stem)) == 1, stem
+
+
+class TestBlocks:
+    @pytest.mark.parametrize("path", BLOCK_PATHS, ids=bot_name)
+    def test_every_block_is_a_heuristic_that_compiles(self, path: str) -> None:
+        assert isinstance(load_bot(path), BlueprintBot)
+        assert botfile.read(path).description
+        assert len(botfile.defaults(path)) <= P_MAX
+        assert mocks.path_level(path) in (1, levels.ORACLE)
+
+    def test_blocks_are_never_in_the_field(self) -> None:
+        assert not set(BLOCK_PATHS) & set(BOT_PATHS)
 
     @pytest.mark.parametrize("name", SPACE_FILES)
     def test_every_space_names_its_bots_file(self, name: str) -> None:

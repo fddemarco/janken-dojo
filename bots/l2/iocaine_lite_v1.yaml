@@ -13,4 +13,12 @@ defaults:
 blueprint:
   guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
   core:
-    iocaine: {decay: $DECAY, max_len: $MAX_LEN, selector: {Greedy: {ties: TIES_RANDOM}}}
+    Bandit:
+      predictors:
+        - {bot: frequency, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: longest_match  # what the opponent, then we, played after the match
+          arms: 2
+          space: {MAX_LEN: $MAX_LEN, CTX: JOINT, OF: [OPP, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

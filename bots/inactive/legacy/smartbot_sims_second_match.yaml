@@ -15,12 +15,44 @@ blueprint:
   core:
     Bandit:
       predictors:
-        - {metabot_signals: {table_decay: $TABLE_DECAY, max_match: $MAX_MATCH}}
-        - {sims: {n: 10}}
-        - {SecondMatch: {max_len: $MAX_MATCH, ctx: OPP}}
-        - {SecondMatch: {max_len: $MAX_MATCH, ctx: JOINT}}
-        - {SecondMatch: {max_len: $MAX_MATCH, ctx: MY}}
-      rotations: ALL_ROTATIONS
+        # smartbot's 18 opponent models, each played 3 ways
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        # 10 models of us: zoo bots played from the opponent's side
+        - {bot: word2janken_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: pattern_memory_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: markov2_joint_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: iocaine_lite_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: ngram  # transition_matrix, its most likely move
+          side: OPP
+          space: {ORDER: 1, CTX: OPP, DECAY: 0.95}
+          rotations: [BEAT, BEAT_BEAT, COPY]
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: word2janken_scoreboard_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: geometry  # geometry, its most likely move
+          side: OPP
+          space: {ALPHA: 0.05, MAX_LEN: 20, SAMPLE: 0}
+          rotations: [BEAT, BEAT_BEAT, COPY]
+        - {bot: smartbot_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: second_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
       scorer: {Dirichlet: {decay: $ARM_DECAY}}
       random_arm: RA_SCORED
       selector: Thompson

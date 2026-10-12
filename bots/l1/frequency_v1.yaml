@@ -9,6 +9,4 @@ blueprint:
     - {Opening: {rounds: 1, move: RANDOM_MOVE}}
     - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
   core:
-    Bandit:
-      predictors: [{Frequency: {of: OPP, decay: $DECAY}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {Frequency: {of: OPP, decay: $DECAY}}, rotation: BEAT}

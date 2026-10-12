@@ -1,6 +1,8 @@
-"""Bot levels, computed from the core predictor tree."""
+"""Bot levels, computed from the core predictor tree: L1 heuristics, then one level
+per aggregator (Bandit, Gate, NaiveBayes) above its highest arm."""
 
-from janken.kit import bot, levels, presets
+from janken import library
+from janken.kit import bot, levels
 
 ROCKY = bot.Constant(bot.ROCK)
 LAST = bot.LastMove(bot.OPP)
@@ -18,16 +20,17 @@ def level(core: bot.Predictor) -> int:
 
 class TestLevel:
     def test_heuristics_are_level_one(self) -> None:
-        assert level(bot.Bandit((LAST,))) == 1
-        sim = bot.Bandit((bot.Sim(LAST), ROCKY), rotations=(bot.BEAT,))
-        assert level(sim) == 1  # no scorer: no bandit
+        assert level(bot.Heuristic(LAST, bot.BEAT)) == 1
+        assert level(bot.Heuristic(bot.Sim(LAST), bot.COPY)) == 1
+        assert level(bot.Heuristic()) == 1  # silent: random play
+        assert levels.level(bot.Blueprint()) == 1
 
-    def test_a_bandit_over_heuristics_is_level_two(self) -> None:
+    def test_every_aggregator_adds_a_level(self) -> None:
         assert level(bandit(LAST)) == 2
-
-    def test_a_single_scored_arm_is_no_bandit(self) -> None:
         one = bot.Bandit((LAST,), scorer=bot.DecayedNet(0.9), selector=bot.Greedy())
-        assert level(one) == 1
+        assert level(one) == 2  # one scored arm: still an aggregator
+        priority = bot.Bandit((bot.Sim(LAST), ROCKY), rotations=(bot.BEAT,))
+        assert level(priority) == 2  # no scorer: still an aggregator
 
     def test_a_replay_counts_at_its_own_level(self) -> None:
         l2 = bandit(LAST, ROCKY)
@@ -36,14 +39,22 @@ class TestLevel:
         assert l3.level() == 3
         l4 = bandit(LAST, bot.Replay(l3))
         assert l4.level() == 4
-        lone = bot.Bandit(
-            (bot.Replay(l3),), scorer=bot.DecayedNet(0.9), selector=bot.Greedy()
-        )
-        assert level(lone) == 3  # one replay arm: no extra layer
+        mine = bandit(LAST, bot.Replay(l3, side=bot.MY))
+        assert mine.level() == 4  # from our side too
 
-    def test_advanced_bots_core_is_level_three(self) -> None:
-        assert presets.smartbot_sims(10, 0.95, 0.9, 12).level() == 3
-        assert presets.metabot(0.95, 0.9, 12).level() == 2
+    def test_a_heuristic_over_a_replay_is_the_replayed_bots_level(self) -> None:
+        l3 = bandit(LAST, bot.Replay(bandit(LAST, ROCKY)))
+        assert level(bot.Heuristic(bot.Replay(l3), bot.BEAT)) == 3
+
+    def test_the_fields_cores(self) -> None:
+        for path, expected in [
+            ("bots/l1/frequency_v1.yaml", 1),
+            ("bots/l2/smartbot_v1.yaml", 2),
+            ("bots/l3/smartbot_sims_v1.yaml", 3),
+            ("bots/l3/anti_smartbot_sims_v1.yaml", 3),
+            ("bots/l4/gate_edge_v1.yaml", 4),
+        ]:
+            assert levels.level(library.read_blueprint(path)) == expected, path
 
     def test_a_naive_bayes_combiner_is_one_above_its_inputs(self) -> None:
         combiner = bot.NaiveBayes((LAST,))
@@ -60,6 +71,7 @@ class TestLevel:
         assert level(bandit(LAST, bot.Oracle())) == levels.ORACLE
         gated = bot.Gate(bandit(LAST), (bot.Rotated(bot.Oracle(), (bot.BEAT,)),))
         assert level(gated) == levels.ORACLE
+        assert level(bot.Heuristic(bot.Oracle(), bot.BEAT)) == levels.ORACLE
         assert levels.name(levels.ORACLE) == "Oracle"
         assert levels.name(3) == "L3"
 
@@ -80,6 +92,7 @@ class TestTree:
     def test_decorators_have_one_child_and_leaves_none(self) -> None:
         assert LAST.children() == ()
         assert bot.Rotated(LAST, (bot.COPY,)).children() == (LAST,)
+        assert bot.Heuristic(LAST, bot.BEAT).children() == (LAST,)
         assert bot.Sim(LAST).level() == 1
 
     def test_a_bandit_counts_its_predictors_arms(self) -> None:

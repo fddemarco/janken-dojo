@@ -8,6 +8,4 @@ blueprint:
     - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
     - {Opening: {rounds: 2, move: RANDOM_MOVE}}
   core:
-    Bandit:
-      predictors: [{NGram: {order: 1, ctx: OPP, decay: $DECAY, sample: true}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {NGram: {order: 1, ctx: OPP, decay: $DECAY, sample: true}}, rotation: BEAT}

@@ -3,9 +3,20 @@
 One YAML file per bot (grammar: [docs/writing-bots.md](../docs/writing-bots.md)); its
 tuning space, when it has one, is `spaces/<name>.yaml`. The field is the level folders:
 each bot sits in the folder of its level, computed from the blueprint
-(`janken/kit/levels.py`; `janken bot check` refuses a bot in the wrong one), and stems
-are unique across them. Pools, tournaments and `janken bot list` read the level folders
-only, never `inactive/`.
+(`janken/kit/levels.py`; `janken bot check` refuses a bot in the wrong one). Stems are
+unique across every folder here. Pools, tournaments and `janken bot list` read the level
+folders only, never `blocks/` or `inactive/`.
+
+## Levels
+
+- **L1**, a heuristic: one signal played with one rotation, no Bandit and no Gate.
+- **L2**, a meta-heuristic: a Bandit or a Gate over L1s.
+- **L3**: a Bandit or a Gate over L2s (and L1s).
+- **L4**: a Bandit or a Gate over L3s (and L2s and L1s), and so on.
+
+An aggregator's arms are bots, named (`{bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}}`),
+so every bot above L1 is built from the bots below it. A bot can name any bot here: a
+field version, a block, a retired bot of `inactive/`.
 
 ## Species and versions
 
@@ -29,10 +40,13 @@ their old stems and the notes that decided them) is
 ```
 bots/
   l1/                the zoo's heuristics
-  l2/                bandits over L1 arms: smartbot and its variants, iocaine, rps4
-  l3/                smartbot_sims and its specialist
-  l4/                the gatekeepers
+  l2/                bandits over L1s: smartbot and its variants, iocaine, rps4
+  l3/                smartbot_sims (over L1s and replays of L2s) and its specialist
+  l4/                the gatekeepers (over smartbot_sims and its replay)
   oracle/            the research-only Oracles
+  blocks/            L1 heuristics that exist to be named as arms, every field a parameter
+                     (frequency, ngram, backoff, longest_match, second_match, relative,
+                     geometry; oracle_expert, research only): never in a pool
   inactive/          bots out of the field
     fleets/iliad_v3/ the Iliad v3 fleet: a champion and four supports (Team overlay)
     legacy/          retired bots, kept for the research record
@@ -74,6 +88,11 @@ bots/
 | Oracle | `oracle_smartbot_sims`, `oracle_anti_smartbot_sims`, `oracle_gate_edge`, `oracle_gate_anti_first` | pure Oracles: calibrated win chances per level, drawn with `pool.mocks` |
 | Oracle | `oracle_arm_gate_edge`, `oracle_arm_gate_anti_first` | gatekeepers whose anti expert is an Oracle arm |
 
+On 2026-10-12 the hierarchy was redefined (L1: heuristics only; each aggregator one level
+above the bots it combines) and every aggregator was rewritten to name its arms as bots.
+Each rewrite plays exactly as before (same moves, every bot vs four opponents, two seeds),
+and every field bot kept its level.
+
 Oracles cheat: they never enter a pool (unless `pool.mocks`), a tournament or an export.
 
 ## Renames
@@ -90,7 +109,7 @@ the versions:
 | `anti_smartbot_sims` | `anti_advanced_bots`, before that `mirror_sims3` |
 | `smartbot_fast` | `meta_smartbot` |
 | `smartbot_staller` | `smart_staller` |
-| `word2janken_scoreboard` | `staller` (the kit preset is still `staller`) |
+| `word2janken_scoreboard` | `staller` |
 | `gate_edge` | `replay_gate` |
 | `oracle_smartbot_sims` | `oracle_advanced_bot` |
 | `oracle_anti_smartbot_sims` | `oracle_anti_advanced` |

@@ -50,6 +50,8 @@ extend-immutable-calls = [
     "janken.kit.blueprint.scorers.NoScore",
     "janken.kit.blueprint.selectors.First",
     "janken.kit.blueprint.composites.Bandit",
+    "janken.kit.blueprint.heuristic.Heuristic",
+    "janken.kit.blueprint.heuristic.Silent",
 ]
 
 [tool.pytest.ini_options]

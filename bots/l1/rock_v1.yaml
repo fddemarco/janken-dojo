@@ -5,6 +5,4 @@ defaults:
 blueprint:
   guards: [{Noise: {p: $NOISE}}]
   core:
-    Bandit:
-      predictors: [{Constant: {move: ROCK}}]
-      rotations: [COPY]
+    Heuristic: {signal: {Constant: {move: ROCK}}, rotation: COPY}

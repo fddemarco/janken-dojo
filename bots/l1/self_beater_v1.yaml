@@ -5,6 +5,4 @@ defaults:
 blueprint:
   guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: PAPER}}]
   core:
-    Bandit:
-      predictors: [{LastMove: {of: MY}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {LastMove: {of: MY}}, rotation: BEAT}

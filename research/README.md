@@ -72,6 +72,17 @@ Manifests now record the kit/engine hash (`library`); older runs show as `pre-bl
 in `analyze --history`. The insights below still describe the old code until idea #21
 re-baselines them.
 
+### 2026-10-12: levels by aggregation, arms named as bots
+
+The levels were redefined: L1 is a heuristic (no Bandit, no Gate), L2 a Bandit or Gate
+over L1s, L3 over L2s (and L1s), and so on, one level per aggregator. Every aggregator now
+names its arms as bots (`{bot: ngram, arms: 4, space: {...}}`); smartbot's 18 models and
+the other shared arms became the L1 blocks of `bots/blocks/`, and the kit presets were
+removed. Every rewritten bot plays the same moves as before and kept its level, so past
+results stand. Their source hashes changed, though: an interrupted run started before
+this can't be resumed (start a new one), and a tuning study started before warns that
+its bot changed.
+
 ### 2026-10-11: the field renamed and reorganised
 
 The bots were renamed for clarity (for example `advanced_bot` → `smartbot_sims`,

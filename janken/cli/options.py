@@ -392,18 +392,23 @@ def _domain_errors() -> tuple[type[Exception], ...]:
 
 
 def bot_path(lab: Lab, name: str) -> str:
-    """A bot by path, or by stem (found in the bots dir's level folders).
+    """A bot by path, or by stem (found in the bots dir's level folders, else
+    anywhere in its library: blocks/, inactive/).
 
     Raises:
         typer.Exit: no bot, or more than one, has that stem.
     """
     if name.endswith(".yaml") or os.sep in name:
         return name
+    from .. import library
     from ..engine import registry
 
     try:
         return registry.find(lab.bots_dir, name)
     except FileNotFoundError as error:
+        found = library.Library(lab.bots_dir).paths(name)
+        if len(found) == 1:
+            return found[0]
         raise fail(str(error)) from error
 
 

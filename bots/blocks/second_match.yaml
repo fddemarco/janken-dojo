@@ -1,0 +1,10 @@
+description: |
+  Block: beats OF's move after the second-longest earlier repeat (up to MAX_LEN
+  rounds) of the recent CTX history.
+defaults:
+  MAX_LEN: 12
+  CTX: JOINT
+  OF: OPP
+blueprint:
+  core:
+    Heuristic: {signal: {SecondMatch: {max_len: $MAX_LEN, ctx: $CTX, of: $OF}}, rotation: BEAT}

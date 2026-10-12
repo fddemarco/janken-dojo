@@ -15,10 +15,13 @@ Every bot has the same anatomy (janken/kit/pipeline.py runs it, in this order):
 6. select     a scorer keeps each arm's record and a selector picks the arm to play.
 
 Signals, rotations, scorer and selector make the bot's core: a tree of predictors
-(predictor.py). Its leaves are signals; composites combine predictors into a
-higher-order one, all the same way: a Bandit (scorer + selector over its
-predictors' arms), a Gate (a gatekeeper between a main bandit and gated experts),
-a NaiveBayes (a posterior over its inputs). The bot's level is the tree's.
+(predictor.py). An L1 bot's core is a Heuristic: one signal played with one
+rotation, no aggregator. Every other core is an aggregator, which combines
+predictors into a higher-order one, all the same way: a Bandit (scorer + selector
+over its predictors' arms), a Gate (a gatekeeper between a main bandit and gated
+experts), a NaiveBayes (a posterior over its inputs). In a bot file an
+aggregator's arms are other bots, named (refs.py). Each aggregator adds a level
+above its highest arm: the bot's level is the tree's.
 7. overlays   transform the chosen move: stalling, a team handshake, spending the
               invalid moves the rules allow.
 
@@ -29,7 +32,7 @@ variants work on any stage:
 
     blueprint = Blueprint(
         guards=(Noise(Knob("NOISE")), Opening(1, ROCK), OnInvalid(CRASH_ACTION, LAST, OPP)),
-        core=Bandit(predictors=(LastMove(OPP),), rotations=(BEAT,)),
+        core=Heuristic(LastMove(OPP), BEAT),
     )
     state, spec, knobs = blueprint.compile({"NOISE": 0.05})
 
@@ -50,6 +53,9 @@ compiled half lives in janken/kit):
     scorers     6. the arms' records
     selectors   6. the arm to play
     overlays    7. Stall, Team, EmitInvalid
+    heuristic   Heuristic, an L1 bot's core: one signal played with one rotation
+    refs        bot references: an aggregator's arms, named as bots
+    binding     knobs bound to values; structural parameters
     anatomy     Blueprint, the whole bot
     lowering    the predictor tree as the flat bandit the pipeline plays
     encoder     the compiler: state layout and the spec
@@ -87,6 +93,10 @@ from .guards import (
     Noise,
     OnInvalid,
     Opening,
+)
+from .heuristic import (
+    Heuristic,
+    Silent,
 )
 from .overlays import (
     EmitInvalid,
@@ -164,6 +174,7 @@ __all__ = [
     "Geometry",
     "Greedy",
     "Guard",
+    "Heuristic",
     "Knob",
     "LastMove",
     "Leaf",
@@ -187,6 +198,7 @@ __all__ = [
     "Selector",
     "Signal",
     "SignalLike",
+    "Silent",
     "Sim",
     "Stage",
     "Stall",

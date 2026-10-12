@@ -4,7 +4,8 @@
     bot: bots/l3/smartbot_sims_v1.yaml
     weight: 1.0     # its share of a multi-bot study's objective (0: tuned only
                     # for what it does to the others, e.g. a fleet's support)
-    params:         # a subset of the bot's defaults; the rest stay at their defaults
+    params:         # a subset of the bot's defaults (never a structural one, which
+                    # shapes the compiled bot); the rest stay at their defaults
       ARM_DECAY: {type: float, low: 0.5, high: 0.99, grid: [0.6, 0.8, 0.9, 0.95]}
       MAX_MATCH: {type: int, low: 2, high: 20, step: 2}
       SELECT: {type: categorical, choices: [0, 1]}
@@ -21,7 +22,7 @@ from collections.abc import Mapping, Sequence
 
 import yaml
 
-from .. import botfile, settings
+from .. import botfile, library, settings
 from ..match import bot_name
 
 PARAM_TYPES = ("float", "int", "categorical")
@@ -133,10 +134,16 @@ def from_data(data: Mapping[object, object], where: str) -> Space:
     _check(weight >= 0, f"{where}: weight must be >= 0")
     raw = _mapping(data.get("params") or {}, f"{where}: params")
     known = botfile.defaults(bot)
+    fixed = library.structural_parameters(bot) if raw else set()
     params: dict[str, Param] = {}
     for name, spec in raw.items():
         at = f"{where}: params[{name!r}]"
         _check(name in known, f"{at} is not a parameter of {bot}")
+        _check(
+            name not in fixed,
+            f"{at} shapes the compiled bot (a structural parameter): it can't be"
+            " tuned; give its values to the arms that name the bot instead",
+        )
         params[name] = _param(_mapping(spec, at), at)
         _check(
             params[name].contains(known[name]),
@@ -182,8 +189,9 @@ def scaffold(bot: str, weight: float, config: settings.SpaceConfig) -> Space:
     Raises:
         SpaceError: the bot has no parameters to tune.
     """
-    known = botfile.defaults(bot)
-    _check(bool(known), f"{bot} declares no defaults; nothing to tune")
+    fixed = library.structural_parameters(bot)
+    known = {k: v for k, v in botfile.defaults(bot).items() if k not in fixed}
+    _check(bool(known), f"{bot} declares no tunable defaults; nothing to tune")
     return Space(
         bot=os.path.normpath(bot),
         weight=weight,

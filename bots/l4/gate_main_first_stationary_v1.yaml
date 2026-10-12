@@ -15,28 +15,10 @@ defaults:
 blueprint:
   core:
     Gate:
-      main:
-        Bandit:
-          predictors:
-            - {metabot_signals: {table_decay: 0.9, max_match: 12}}
-            - {sims: [10]}
-          rotations: ALL_ROTATIONS
-          scorer: {Dirichlet: {decay: 0.95}}
-          random_arm: RA_SCORED
-          selector: Thompson
+      main: {bot: smartbot_sims_v1}
       experts:
-        - Rotated: {signal: {Frequency: {of: OPP, decay: 1.0}}, rotations: [BEAT]}
-        - Rotated:
-            signal:
-              Replay:
-                bandit:
-                  smartbot_sims:
-                    n: 10
-                    arm_decay: 0.95
-                    table_decay: 0.9
-                    max_match: 12
-                draws: 256
-            rotations: [BEAT]
+        - {bot: frequency_v1}
+        - {bot: smartbot_sims_v1, side: OPP, draws: 256, rotations: [BEAT]}
       rule: LEADER_PRIORITY
       edge: $EDGE
       decay: $GATE_DECAY

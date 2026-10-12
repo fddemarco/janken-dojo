@@ -3,14 +3,22 @@
 import dataclasses
 import itertools
 import types
+import typing
 from collections.abc import Mapping
 
 import pytest
-import yaml
 
-from janken.kit import bot, declare
+from janken import botfile, library
+from janken.kit import bot
 from janken.kit import codes as c
-from janken.kit.blueprint import BlueprintError, Gatekeeper, encoder, lowering
+from janken.kit.blueprint import (
+    BlueprintError,
+    Compiled,
+    Gatekeeper,
+    binding,
+    encoder,
+    lowering,
+)
 
 SIMPLE = bot.Blueprint(
     guards=(bot.Noise(bot.Knob("NOISE")),),
@@ -18,6 +26,14 @@ SIMPLE = bot.Blueprint(
 )
 
 NO_DEFAULTS: Mapping[str, float] = types.MappingProxyType({})
+SMARTBOT_SIMS = "bots/l3/smartbot_sims_v1.yaml"
+
+
+def smartbot_sims() -> Compiled:
+    """smartbot_sims_v1, compiled: the field's richest bandit (replays nested)."""
+    return library.read_blueprint(SMARTBOT_SIMS).compile(
+        botfile.defaults(SMARTBOT_SIMS)
+    )
 
 
 def records(spec, at: int, count: int, width: int = c.REC) -> list[list[int]]:
@@ -188,19 +204,13 @@ class TestLowering:
         bot.Blueprint(core=bot.Gate(MAIN, two, rule=bot.LEADER)).compile({})
 
     def test_a_gate_compiles_only_as_the_core(self) -> None:
-        replayed_gate = declare.blueprint_from_data(
-            yaml.safe_load("""
-                core:
-                  Bandit:
-                    predictors:
-                      - Replay:
-                          bandit:
-                            Gate:
-                              main: {metabot: [0.9, 0.9, 12]}
-                              experts: [{Rotated: {signal: React, rotations: [BEAT]}}]
-                    scorer: {DecayedNet: {decay: 0.9}}
-                    selector: Greedy
-            """)
+        gate = bot.Gate(MAIN, (EXPERT,))
+        replayed_gate = bot.Blueprint(
+            core=bot.Bandit(
+                (bot.Replay(typing.cast(bot.Bandit, gate)),),  # what lowering refuses
+                scorer=bot.DecayedNet(0.9),
+                selector=bot.Greedy(),
+            )
         )
         with pytest.raises(BlueprintError, match="only as the bot's core"):
             replayed_gate.compile({})
@@ -224,8 +234,7 @@ class TestLowering:
 
 class TestLayout:
     def test_state_blocks_do_not_overlap(self) -> None:
-        core = bot.presets.smartbot_sims(10, 0.95, 0.9, 12)
-        compiled = bot.Blueprint(core=core).compile({})
+        compiled = smartbot_sims()
         spec = compiled.spec
         f_size, i_size, _ = compiled.state
         f_blocks = []
@@ -246,9 +255,7 @@ class TestLayout:
         assert spec[c.H_CURSOR_I] < i_size
 
     def test_matchers_share_one_index_per_stream(self) -> None:
-        compiled = bot.Blueprint(
-            core=bot.presets.smartbot_sims(10, 0.95, 0.9, 12)
-        ).compile({})
+        compiled = smartbot_sims()
         spec = compiled.spec
         assert spec[c.H_NIDX] == 3  # OPP, MY, JOINT, whoever reads them
         streams = sorted(
@@ -277,6 +284,18 @@ class TestLayout:
         ).compile({})
         assert no_matcher.spec[c.H_NIDX] == 0
         assert no_matcher.state[2] == 2  # the valid history only
+
+    def test_a_replay_reads_the_history_from_its_side(self) -> None:
+        def stream_of(side: int) -> int:
+            inner = bot.Bandit(
+                (bot.LongestMatch(4, ctx=bot.OPP),), scorer=bot.DecayedNet(0.9)
+            )
+            core = bot.Heuristic(bot.Replay(inner, side=side), bot.COPY)
+            spec = bot.Blueprint(core=core).compile({}).spec
+            return spec[spec[c.H_IDX_AT] + c.X_STREAM]
+
+        assert stream_of(bot.MY) == c.STREAM_OPP
+        assert stream_of(bot.OPP) == c.STREAM_MY
 
     def test_new_state_sizes_the_workspace_by_rounds(self) -> None:
         compiled = bot.Blueprint(
@@ -319,3 +338,30 @@ class TestLayout:
         spec = blueprint.compile({"SELECT": 1}).spec
         assert spec[c.H_NSEL] == 2
         assert spec[c.H_SEL_K] >= 0
+
+
+class TestBinding:
+    GRAM = bot.Heuristic(
+        bot.NGram(typing.cast(int, bot.Knob("ORDER")), decay=bot.Knob("DECAY")),
+        bot.BEAT,
+    )
+
+    def test_knobs_where_only_a_literal_fits_are_structural(self) -> None:
+        assert binding.knob_names(self.GRAM) == {"ORDER", "DECAY"}
+        assert binding.structural_names(self.GRAM) == {"ORDER"}
+
+    def test_bind_replaces_the_knobs_it_names(self) -> None:
+        bound = binding.bind(self.GRAM, {"ORDER": 3, "DECAY": bot.Knob("TABLE")})
+        assert bound == bot.Heuristic(bot.NGram(3, decay=bot.Knob("TABLE")), bot.BEAT)
+
+    def test_compile_binds_the_structural_knobs_to_the_defaults(self) -> None:
+        def state(order: int) -> tuple[int, int, int]:
+            core = bot.Heuristic(bot.NGram(order, decay=bot.Knob("DECAY")), bot.BEAT)
+            return bot.Blueprint(core=core).compile({"DECAY": 0.9}).state
+
+        blueprint = bot.Blueprint(core=self.GRAM)
+        for order in (1, 3):  # the order sizes the n-gram's table
+            assert blueprint.compile({"ORDER": order, "DECAY": 0.9}).state == state(
+                order
+            )
+        assert state(1) != state(3)

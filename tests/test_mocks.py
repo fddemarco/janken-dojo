@@ -23,14 +23,13 @@ R, P, S = ROCK, PAPER, SCISSORS
 ROCK_BOT = """description: always rock (L1).
 blueprint:
   core:
-    Bandit: {predictors: [{Constant: [ROCK]}], rotations: [COPY]}
+    Heuristic: {signal: {Constant: [ROCK]}, rotation: COPY}
 """
-SCORED_BOT = """description: a bandit over two arms (L2).
+SCORED_BOT = """description: a bandit over two arms of an L1 (L2).
 blueprint:
   core:
     Bandit:
-      predictors: [{LastMove: {of: OPP}}]
-      rotations: [BEAT, COPY]
+      predictors: [{bot: copy_last, rotations: [BEAT, COPY]}]
       scorer: {DecayedNet: {decay: 0.9}}
       selector: Greedy
 """
@@ -38,15 +37,25 @@ PURE = """description: a pure Oracle.
 mocks: {mocked}
 blueprint:
   core:
-    Bandit: {{predictors: [{{Oracle: {{wins: {wins}}}}}]}}
+    Heuristic: {{signal: {{Oracle: {{wins: {wins}}}}}, rotation: BEAT}}
 """
 ARM = """description: an Oracle arm before a rock arm.
 blueprint:
   core:
     Bandit:
-      predictors: [{Oracle: {wins: [1.0]}}, {Constant: [ROCK]}]
-      rotations: [BEAT]
+      predictors: [{bot: sure_win}, {bot: rock, rotations: [BEAT]}]
 """
+# The L1 blocks the bots above name as arms (blocks/: never in a pool).
+BLOCKS = {
+    "copy_last": """blueprint:
+  core:
+    Heuristic: {signal: {LastMove: {of: OPP}}, rotation: COPY}
+""",
+    "sure_win": """blueprint:
+  core:
+    Heuristic: {signal: {Oracle: {wins: [1.0]}}, rotation: BEAT}
+""",
+}
 
 
 def arm_symbol(stage: bot.Oracle, opp: int, opp_level: int) -> int:
@@ -116,6 +125,9 @@ class BotsDir:
     @pytest.fixture(autouse=True)
     def _bots_dir(self, tmp_path: pathlib.Path) -> None:
         self.tmp = str(tmp_path)
+        os.makedirs(os.path.join(self.tmp, "blocks"))
+        for stem, text in BLOCKS.items():
+            self.write(os.path.join("blocks", stem), text)
         self.write("rock", ROCK_BOT)
         self.write("scored", SCORED_BOT)
         self.pure = self.write("pure", PURE.format(mocked="rock", wins="[1.0]"))

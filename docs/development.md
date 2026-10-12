@@ -55,14 +55,15 @@ janken/
 ├── spec.py        # a bot file + parameter overrides + result label
 ├── report.py      # standings table, match lines, JSON dump
 ├── botfile.py     # a bot's YAML file: description, defaults, blueprint section
+├── library.py     # bots read by stem: the arms an aggregator names, transitive hashes
 ├── glicko.py      # Glicko-2
 ├── rating.py      # titles, and rating one run in memory
 ├── engine/        # compiling bots and refereeing matches (numba)
-├── kit/           # the bot anatomy: blueprint stages, YAML grammar, pipeline, presets
+├── kit/           # the bot anatomy: blueprint stages, YAML grammar, levels, pipeline
 └── lab/           # experiments, the runs database (runs_db.py, DuckDB), analysis,
                    # space files, tuning, workflows.py (the lifecycle steps); the move
                    # dataset (DuckDB), predictors, their metrics and tuning
-bots/              # the bots, one YAML file each (incl. the baseline zoo)
+bots/              # the bots, one YAML file each (incl. the baseline zoo; blocks/: arms)
 spaces/            # one space file per tunable bot
 docs/              # this documentation (cli-reference.md is generated)
 research/          # the lab notebook: protocol, ideas, insights, experiment notes

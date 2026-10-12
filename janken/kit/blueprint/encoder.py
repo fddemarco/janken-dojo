@@ -1,7 +1,7 @@
 """The blueprint compiler: lays out every stage's state and writes the spec."""
 
 import math
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 import numpy as np
 
@@ -51,10 +51,13 @@ def _selector_options(selector: Selector | ChooseSelector) -> tuple[Selector, ..
 class Encoder:
     """Lays out state and writes the spec, one stage at a time."""
 
-    def __init__(self, defaults: Mapping[str, float | int]) -> None:
+    def __init__(
+        self, defaults: Mapping[str, float | int], fixed: Iterable[str] = ()
+    ) -> None:
+        """`fixed`: the structural parameters, already bound (binding.py)."""
         self.names = list(defaults)
         self.defaults = dict(defaults)
-        self.used: set[str] = set()
+        self.used: set[str] = set(fixed)
         self.spec: list[int] = [0] * c.HEADER
         self.knob_values: list[float] = []
         self.knob_binds: list[int] = []
@@ -137,7 +140,7 @@ class Encoder:
             else -1
         )
         selectors = [self.record(s) for s in options]
-        core_records, core_header, replays = self.bandit(core, depth=0)
+        core_records, core_header, replays = self.bandit(core, 0, swapped=False)
 
         header = self.spec
         header[c.H_CURSOR_I] = cursor_i
@@ -150,7 +153,7 @@ class Encoder:
         header[c.H_SEL_AT] = self.append(selectors)
         header[c.H_SEL_K] = choice
         header[c.H_CORE], sig_at = self.place(core_records, core_header)
-        self.place_replays(sig_at, replays, depth=1)
+        self.place_replays(sig_at, replays, depth=1, swapped=False)
 
         header[c.H_NIDX] = len(self.streams)
         header[c.H_IDX_AT] = len(self.spec)
@@ -195,25 +198,28 @@ class Encoder:
                 )
 
     def place_replays(
-        self, sig_at: int, replays: list[tuple[int, Bandit]], depth: int
+        self, sig_at: int, replays: list[tuple[int, Replay]], depth: int, swapped: bool
     ) -> None:
         """Encode each replayed bandit (at `depth`, 1: replayed from the top
-        bandit) and its own replays, and point its record at it."""
-        for k, sub in replays:
-            sub_records, sub_header, inner = self.bandit(sub, depth)
+        bandit; `swapped`: whether the bandit holding it sees the history swapped)
+        and its own replays, and point its record at it."""
+        for k, replay in replays:
+            inside = swapped != (replay.side == c.OPP)
+            sub_records, sub_header, inner = self.bandit(replay.bandit, depth, inside)
             at, sub_sig_at = self.place(sub_records, sub_header)
             self.spec[sig_at + k * c.REC + c.R_SUB] = at
-            self.place_replays(sub_sig_at, inner, depth + 1)
+            self.place_replays(sub_sig_at, inner, depth + 1, inside)
 
     def bandit(
-        self, ens: Bandit, depth: int
-    ) -> tuple[list[list[int]], list[int], list[tuple[int, Bandit]]]:
+        self, ens: Bandit, depth: int, swapped: bool
+    ) -> tuple[list[list[int]], list[int], list[tuple[int, Replay]]]:
         """A bandit's signal records, its header, and its replays as (index of
-        the replay's record, the replayed bandit). `depth` counts the replays
-        it is nested in: an odd depth sees the history swapped."""
+        the replay's record, the replay). `depth` counts the replays it is nested
+        in; `swapped`: whether it sees the history swapped (an odd number of them
+        replays it from the opponent's side)."""
         self._check_rotations(ens.rotations)
         records: list[list[int]] = []
-        replays: list[tuple[int, Bandit]] = []
+        replays: list[tuple[int, Replay]] = []
         bayes: list[list[int]] = []
         oracles = 0
         arm = 0
@@ -223,7 +229,7 @@ class Encoder:
             self._check_rotations(rotations)
             rec = self.record(signal)
             rec[c.R_SWAP] = int(swap)
-            stream = _stream(signal, swap != (depth % 2 == 1))
+            stream = _stream(signal, swap != swapped)
             if stream >= 0:
                 rec[c.R_IDX] = self.index_for(stream)
             rec[c.R_ARM] = arm
@@ -246,14 +252,16 @@ class Encoder:
             if isinstance(signal, Replay):
                 check(
                     depth < MAX_REPLAY_DEPTH,
-                    f"replays nest at most {MAX_REPLAY_DEPTH} deep",
+                    f"replays (bots of level 2+ as arms) nest at most"
+                    f" {MAX_REPLAY_DEPTH} deep",
                 )
-                check(not swap, "a Replay already plays from the opponent's side")
+                check(not swap, "a Replay picks its side itself: no Sim of it")
                 check(
                     not isinstance(signal.bandit.scorer, NoScore),
                     "a Replay's bandit needs a scorer to pick its best arm",
                 )
-                replays.append((len(records), signal.bandit))
+                rec[c.R_SWAP] = int(signal.side == c.OPP)
+                replays.append((len(records), signal))
             records.append(rec)
         for rec in bayes:
             rec[c.R_F] = self.alloc(bayes_size(len(records)), 0)[0]

@@ -11,12 +11,5 @@ description: |
   against the rest of the field it is only as good as a replay of smartbot_sims is.
 blueprint:
   core:
-    Bandit:
-      predictors:
-        - Replay:
-            bandit:
-              smartbot_sims: {n: 10, arm_decay: 0.95, table_decay: 0.9, max_match: 12}
-            draws: 256
-      rotations: [BEAT]
-      scorer: {DecayedNet: {decay: 0.0}}
-      selector: Greedy
+    Heuristic:
+      signal: {bot: smartbot_sims_v1, side: OPP, draws: 256}

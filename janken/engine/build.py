@@ -34,9 +34,9 @@ import tempfile
 import types
 from collections.abc import Callable, Iterable
 
-from .. import _numba_cache, botfile, mocks, settings
+from .. import _numba_cache, botfile, library, mocks, settings
 from ..kit import codes as c
-from ..kit import declare, levels
+from ..kit import levels
 from ..kit.blueprint import Blueprint, Compiled
 from ..match import bot_name
 from . import kernel
@@ -59,7 +59,7 @@ class BlueprintBot:
 
     @property
     def key(self) -> str:
-        return f"{bot_name(self.path)}:{botfile.source_hash(self.path)}"
+        return f"{bot_name(self.path)}:{library.source_hash(self.path)}"
 
     def new_state_source(self) -> list[str]:
         """The body of its `new_state(code, rounds)` branch: Compiled.new_state."""
@@ -175,7 +175,7 @@ def load_bot(path: str) -> EngineBot:
     """
     if botfile.is_kernel_module(path):
         return _load_kernel_module(path)
-    return _load_blueprint_bot(path, botfile.source_hash(path))
+    return _load_blueprint_bot(path, library.source_hash(path))
 
 
 @functools.cache
@@ -184,7 +184,7 @@ def _load_blueprint_bot(path: str, sha256: str) -> BlueprintBot:
     try:
         param_names(path)
         bot = botfile.read(path)
-        blueprint = declare.blueprint_from_data(bot.blueprint)
+        blueprint = library.read_blueprint(path)
         compiled = blueprint.compile(bot.defaults)
     except (ValueError, TypeError) as exc:
         raise BotContractError(f"{path}: {exc}") from exc

@@ -27,7 +27,7 @@ import sys
 import time
 from collections.abc import Callable, Sequence
 
-from .. import _numba_cache, botfile, progress, settings
+from .. import _numba_cache, library, progress, settings
 from ..engine import play_pairs
 from ..match import MatchResult, bot_name
 from ..spec import BotSpec, make_spec, to_dict
@@ -302,4 +302,4 @@ def resume_experiment(
 def used_bots(schedule: Sequence[dict]) -> dict[str, str]:
     """{bot name: source hash} of every bot file the schedule plays."""
     paths = {s.path for rr in schedule for pair in rr["pairs"] for s in pair}
-    return {bot_name(p): botfile.source_hash(p) for p in sorted(paths)}
+    return {bot_name(p): library.source_hash(p) for p in sorted(paths)}

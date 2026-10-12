@@ -16,12 +16,8 @@ defaults:
   LOCK_Z: 4.0
 blueprint:
   core:
-    smartbot_sims:
-      n: 10
-      arm_decay: $ARM_DECAY
-      table_decay: $TABLE_DECAY
-      max_match: $MAX_MATCH
-      selector: Thompson
+    bot: smartbot_sims_v1
+    space: {ARM_DECAY: $ARM_DECAY, TABLE_DECAY: $TABLE_DECAY, MAX_MATCH: $MAX_MATCH}
   overlays:
     - Stall:
         dd_window: $DD_WINDOW

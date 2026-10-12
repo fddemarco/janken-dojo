@@ -9,6 +9,4 @@ blueprint:
     - {Noise: {p: $NOISE}}
     - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: BOTH}}
   core:
-    Bandit:
-      predictors: [{LongestMatch: {max_len: $MAX_LEN, ctx: JOINT}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {LongestMatch: {max_len: $MAX_LEN, ctx: JOINT}}, rotation: BEAT}

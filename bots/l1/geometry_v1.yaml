@@ -14,6 +14,4 @@ defaults:
 blueprint:
   guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
   core:
-    Bandit:
-      predictors: [{Geometry: {alpha: $ALPHA, max_len: $MAX_LEN}}]
-      rotations: [BEAT]
+    Heuristic: {signal: {Geometry: {alpha: $ALPHA, max_len: $MAX_LEN}}, rotation: BEAT}

@@ -1,0 +1,10 @@
+description: |
+  Block: beats the opponent's move as a model of their rotation relative to REF's
+  last move predicts it (BY_OUTCOME 1: given how the last round went; decayed by DECAY).
+defaults:
+  REF: OPP
+  BY_OUTCOME: 0
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {Relative: {ref: $REF, by_outcome: $BY_OUTCOME, decay: $DECAY}}, rotation: BEAT}

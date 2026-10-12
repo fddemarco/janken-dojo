@@ -1,0 +1,11 @@
+description: |
+  Block (research only): an Oracle arm that wins with chance WIN_Lk vs a level-k
+  opponent, standing in for an expensive expert (janken/mocks.py).
+defaults:
+  WIN_L1: 0.3333
+  WIN_L2: 0.3333
+  WIN_L3: 0.3333
+  WIN_L4: 0.3333
+blueprint:
+  core:
+    Heuristic: {signal: {Oracle: {wins: [$WIN_L1, $WIN_L2, $WIN_L3, $WIN_L4]}}, rotation: BEAT}

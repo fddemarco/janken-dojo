@@ -32,3 +32,4 @@ Removed as duplicates (in git history before the clean-up commit):
   the calibrated mocks of [0017](../../../research/experiments/0017-mock-replay-gate-vs-replay-gate-mock-validation.md)-[0020](../../../research/experiments/0020-tuning-of-mock-gate-anti-first.md),
   which no longer loaded (the Oracle stage changed) and were replaced by the per-level
   Oracles (`oracle_*`).
+  | counter_anti_sims | counter_anti_sims | L3 | a pure specialist vs anti_smartbot_sims_v2 (71.7% of rounds, 10/10 at 250 rounds) but -38.5 pts [-45.7, -31.2] vs smartbot_sims_v2 over the field; its idea lives on gated in gate_counter_sims, [0031](../../../research/experiments/0031-counter-anti-sims-vs-smartbot-sims.md) |

@@ -121,6 +121,7 @@ bots/
 | L4 | `gate_edge_v2` | smartbot_sims's arms + anti expert, gated by EDGE |
 | L4 | `gate_main_first_v2` | same experts, the main arms first (MAIN_FIRST) - the fleet's core |
 | L4 | `gate_main_first_stationary_v2` | gate_main_first plus a stationary (frequency) expert |
+| L4 | `double_bluff_gate_v1` | smartbot_sims's arms + a replay of itself from our side played BEAT_BEAT (beats anti_smartbot_sims), gated by EDGE |
 | Oracle | `oracle_smartbot_sims`, `oracle_anti_smartbot_sims`, `oracle_gate_edge`, `oracle_gate_anti_first` | pure Oracles: calibrated win chances per level, drawn with `pool.mocks` |
 | Oracle | `oracle_arm_gate_edge`, `oracle_arm_gate_anti_first` | gatekeepers whose anti expert is an Oracle arm |
 

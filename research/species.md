@@ -73,3 +73,4 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `gate_edge` | L4 | `gate_edge_v2` | `gate_edge` (2026-10-11 rename) --> v1; `gate_edge_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
 | `gate_main_first_stationary` | L4 | `gate_main_first_stationary_v2` | `gate_main_first_stationary` (2026-10-11 rename) --> v1; `gate_main_first_stationary_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
 | `gate_main_first` | L4 | `gate_main_first_v2` | `gate_main_first` (2026-10-11 rename) --> v1; `gate_main_first_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | `gate_anti_first_v1` (2026-10-12 fused: 93.1% core agreement, -0.6 pts [-4.6, +3.4] vs gate_main_first_v1, 40 pools) |
+| `double_bluff_gate` | L4 | `double_bluff_gate_v1` | `gate_counter_sims` ([0031](experiments/0031-counter-anti-sims-vs-smartbot-sims.md)) --> v1 | |

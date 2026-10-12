@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l3/smartbot_sims_v2.yaml`
 - **Run:** `20261012-144707_0031-counter-anti-sims-vs-smartbot-sims`
 - **Verdict:** keep
+- **Species:** `double_bluff_gate_v1` (new species)
 
 ## Hypothesis
 
@@ -48,3 +49,15 @@ Mechanism: anti_smartbot_sims_v2 plays the beat of the mode of 256 Thompson draw
 ## Verdict
 
 **keep**. gate_counter_sims beats smartbot_sims_v2 over the whole field, +9.0 pts [+2.3, +15.7] over 300 paired matches (5 round robins of the 60-bot field, 250 rounds, mode candidates; the round-robin ladder was inconclusive at 1 and 3, conclusive at 5), and beats anti_smartbot_sims_v2 head to head in every match: 68.4% of rounds [66.9%, 69.8%] over seeds 1-10 (worst match 66.0%, 10/10 matches; the seed ladder was conclusive vs the 36% goal at its first step), where smartbot_sims_v2 wins 28.9% [27.7%, 30.0%] and 0/10. The bare counter_anti_sims wins 71.7% [69.1%, 74.3%] of rounds vs anti_smartbot_sims_v2 (10/10) but is a pure specialist: -38.5 pts [-45.7, -31.2] vs smartbot_sims_v2 over the field.
+
+## Species
+
+**new**: its core agrees with gate_main_first_stationary_v2 on 66% of the moves, below 80%.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `gate_main_first_stationary_v2` | L4 | 65.7% |
+| `gate_main_first_v2` | L4 | 65.5% |
+| `gate_edge_v2` | L4 | 60.2% |

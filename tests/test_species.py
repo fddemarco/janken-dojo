@@ -274,3 +274,13 @@ class TestFiles:
         bot.write_text("description: y\n")
         with pytest.raises(workflows.WorkflowError):
             workflows._retire(str(bot), str(legacy), str(spaces))
+
+
+class TestClassifiable:
+    def test_only_unversioned_bots_of_the_field_are_left_to_classify(self) -> None:
+        field = {"gate_new", "retired_peer_v1", "smartbot_v2"}
+        stems = ["gate_new", "smartbot_v2", "gone"]  # gone: retired to legacy
+        assert workflows.classifiable(stems, field) == ["gate_new"]
+
+    def test_nothing_is_left_when_every_candidate_left_the_field(self) -> None:
+        assert workflows.classifiable(["a", "b"], set()) == []

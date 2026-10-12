@@ -21,7 +21,7 @@ import math
 import os
 import re
 import typing
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 import numpy as np
 import polars as pl
@@ -507,23 +507,28 @@ def _candidate(note: notes.Note, bots_dir: str) -> BotSpec:
         )
     if note.species:
         raise WorkflowError(f"note {note.number:04d} is classified: {note.species}")
-    if len(note.candidates) != 1:
+    stems = [bot_name(c.split(":")[0]) for c in note.candidates]
+    field = {bot_name(p) for p in _discover(bots_dir)}
+    open_stems = classifiable(stems, field)
+    if len(open_stems) != 1:
         raise WorkflowError(
-            f"note {note.number:04d} has {len(note.candidates)} candidates; classify"
-            " one bot at a time (make each a note of its own)"
+            f"note {note.number:04d} has {len(open_stems)} candidate(s) in the field"
+            f" ({bots_dir}) without a version, {open_stems}: classify one bot at a"
+            " time (retire the others to bots/inactive/legacy/, or make each a note"
+            " of its own)"
         )
-    spec = specs(note.candidates)[0]
+    (spec,) = specs([note.candidates[stems.index(open_stems[0])]])
     if spec.params:
         raise WorkflowError(
             f"{spec.label} is a variant with parameters: make it a bot first"
             " (`janken bot new`), evaluate it, then classify it"
         )
-    if registry.is_versioned(spec.stem):
-        raise WorkflowError(f"{spec.stem} is a version already")
-    field = {bot_name(p) for p in _discover(bots_dir)}
-    if spec.stem not in field:
-        raise WorkflowError(f"{spec.stem} is not in the field ({bots_dir})")
     return spec
+
+
+def classifiable(stems: Sequence[str], field: Collection[str]) -> list[str]:
+    """The stems still to classify: in the field, without a version."""
+    return [s for s in stems if s in field and not registry.is_versioned(s)]
 
 
 def _discover(bots_dir: str) -> list[str]:

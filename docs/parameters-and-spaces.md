@@ -57,6 +57,6 @@ point, not a design: before tuning, make the bounds sensible, use `log: true` wh
 fits, and drop params not worth searching.
 
 ```bash
-uv run janken lab space bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml                     # weight 1
-uv run janken lab space bots/inactive/fleets/iliad_v3/achilles_v3.yaml bots/inactive/fleets/iliad_v3/ajax_v3.yaml --weight 0
+uv run janken lab space bots/l4/champion.yaml                                   # weight 1
+uv run janken lab space bots/l2/helper_a.yaml bots/l2/helper_b.yaml --weight 0
 ```

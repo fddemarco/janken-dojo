@@ -51,7 +51,8 @@ status --> idea --> bot new / check --> evaluate --> verdict --> species classif
 | `janken idea add / list / show / start / drop` | the backlog |
 | `janken bot new NAME --from BOT` | scaffold a bot (and its space file); then edit its blueprint |
 | `janken bot check / list / show` | verify a bot (contract, compile, smoke run); inspect bots |
-| `janken bot export NAME` | a bot (a champion: with its fleet's supports) as tournament submission scripts: stdlib-only `play(my_moves, opp_moves)` files in `exports/NAME/` |
+| `janken bot export NAME` | a bot (a champion: with its fleet's supports) as tournament submission scripts: stdlib-only `play(my_moves, opp_moves)` files in `exports/NAME/`, one per fleet bot |
+| `janken bot fleet BASE CHAMPION` | a fleet on a bot: `bots/inactive/fleets/CHAMPION.yaml` (`--folder`, under the bots dir) (core BASE, a `fleet` section with `--size`, `--support` names and a random handshake of `--handshake-length` moves), then exported (`--no-export`: not) |
 | `janken evaluate CANDIDATE... --baseline BOT --hypothesis ...` | a new note, the experiment, its results written into the note |
 | `janken tune BOT... [--support BOT...] --hypothesis ...` | a new note, the study, its validation written into the note |
 | `janken species classify NOTE [--name NAME]` | a kept bot: a new species (`<name>_v1`), the next version of its level's closest species (the old one retires), or a variant (it retires) |

@@ -441,6 +441,7 @@ $ uv run janken bot [OPTIONS] COMMAND [ARGS]...
 * `new`: Scaffold bots/<level>/NAME.yaml from...
 * `check`: Check bots: the file's contract, that it...
 * `export`: Export a bot, and its fleet's supports, as...
+* `fleet`: Scaffold a fleet on a bot: <bots...
 * `list`: Every bot: its level, one-line...
 * `audit`: Check the whole field agrees with itself:...
 * `show`: A bot's level and file, and its space file...
@@ -529,8 +530,9 @@ Export a bot, and its fleet's supports, as tournament submission scripts.
 
 Each bot becomes one self-contained OUT/NAME/<bot>.py: `play(my_moves, opp_moves)`
 over the kit's runtime as plain stdlib Python (no numpy, numba or `global`). A
-fleet's champion brings every support of its fleet in the bots dir; a support's
-script is the champion's plus a comment naming it and its role line. Every
+fleet's champion (a bot file with a `fleet` section) brings its supports: a
+fleet of N bots is N scripts, a support's the champion's plus a comment naming
+it and its role line. Every
 script passes the tournament's screening (export.allowed_modules /
 export.banned_names) before anything is written.
 
@@ -542,10 +544,60 @@ $ uv run janken bot export [OPTIONS] {name}
 
 **Arguments**:
 
-* `name`: the bot to export (a stem or a path); a champion brings its fleet  [required]
+* `name`: the bot to export (a stem or a path); a fleet's champion brings its supports  [required]
 
 **Options**:
 
+* `--out <str>`: where exported scripts go (a folder per exported bot) (config: export.dir)  [default: exports]
+* `--max-rounds <int>`: the longest match an exported bot can play (config: export.max_rounds)  [default: 1000]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+### `uv run janken bot fleet`
+
+Scaffold a fleet on a bot: <bots dir>/FOLDER/CHAMPION.yaml, whose core is BASE (its
+defaults bound through) and whose `fleet` section names the supports, the
+handshake and vigilance; then export its SIZE scripts (--no-export: don't).
+
+The handshake is HANDSHAKE_LENGTH moves drawn at random with --seed (-1: a
+fresh one). The file is checked by compiling it, and lives outside the field: a fleet
+never enters a pool.
+
+**Usage**:
+
+```console
+$ uv run janken bot fleet [OPTIONS] {base} {champion}
+```
+
+**Arguments**:
+
+* `base`: the bot the fleet plays (a stem or a path)  [required]
+* `champion`: the champion's stem: the fleet's file and name  [required]
+
+**Options**:
+
+* `--support <str>`: a support's name, in order; repeatable, size - 1 of them (none: <champion>_support_K)
+* `--size <int>`: bots in a new fleet, the champion included (config: fleet.size)  [default: 5]
+* `--handshake-length <int>`: moves in a new fleet's random handshake (config: fleet.handshake_length)  [default: 8]
+* `--vigilant / --no-vigilant`: a new fleet's bots stop throwing at a teammate's first non-throw (config: fleet.vigilant)  [default: vigilant]
+* `--description <str>`: the fleet's description (\n separated); empty: one written from the base bot's
+* `--folder <str>`: where a new fleet's champion file goes, under the bots dir (config: fleet.dir)  [default: inactive/fleets]
+* `--export / --no-export`: export a new fleet's scripts as soon as it is made (config: fleet.export)  [default: export]
 * `--out <str>`: where exported scripts go (a folder per exported bot) (config: export.dir)  [default: exports]
 * `--max-rounds <int>`: the longest match an exported bot can play (config: export.max_rounds)  [default: 1000]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]

@@ -46,15 +46,22 @@ def script_moves(
     return [NAMES.index(module.play(mine[:n], theirs[:n])) for n in range(len(my) + 1)]
 
 
-def bot_file(folder: str, name: str, overlay: str) -> None:
-    with open(os.path.join(folder, name + ".yaml"), "w", encoding="utf-8") as f:
+def bot_file(folder: str, name: str, overlays: str = "", fleet: str = "") -> str:
+    """A test bot playing SCISSORS, with these overlays and fleet section."""
+    path = os.path.join(folder, name + ".yaml")
+    with open(path, "w", encoding="utf-8") as f:
         f.write(
             f"description: {name}, a test fleet bot\n"
-            "blueprint:\n"
+            + (f"fleet: {fleet}\n" if fleet else "")
+            + "blueprint:\n"
             "  core:\n"
             "    Heuristic: {signal: {Constant: [SCISSORS]}, rotation: COPY}\n"
-            f"  overlays: [{overlay}]\n"
+            f"  overlays: [{overlays}]\n"
         )
+    return path
+
+
+FLEET = "{size: 3, supports: [first, second], handshake: [ROCK, PAPER], vigilant: true}"
 
 
 class TestExportedBots:
@@ -62,8 +69,8 @@ class TestExportedBots:
     def _folder(self, tmp_path: pathlib.Path) -> None:
         self.tmp = str(tmp_path)
 
-    def exported(self, path: str, bots_dir: str = data.BOTS_DIR) -> dict[str, str]:
-        return export.scripts(path, bots_dir, MAX_ROUNDS)
+    def exported(self, path: str) -> dict[str, str]:
+        return export.scripts(path, MAX_ROUNDS)
 
     @pytest.mark.parametrize(
         "stem, rounds, seed, invalid_at",
@@ -112,14 +119,7 @@ class TestExportedBots:
 
     def test_a_champion_brings_its_fleets_supports_as_replicas(self) -> None:
         folder = self.tmp
-        bot_file(
-            folder, "chief", "{Team: {role: CHAMPION, fleet: ILIAD_V2, vigilant: true}}"
-        )
-        bot_file(folder, "second", "{Team: {role: SUPPORT, fleet: ILIAD_V2}}")
-        bot_file(folder, "first", "{Team: {role: SUPPORT, fleet: ILIAD_V2}}")
-        bot_file(folder, "other_fleet", "{Team: {role: SUPPORT}}")
-        bot_file(folder, "spy", "{Team: {role: IMPOSTOR, fleet: ILIAD_V2}}")
-        made = self.exported(os.path.join(folder, "chief.yaml"), folder)
+        made = self.exported(bot_file(folder, "chief", fleet=FLEET))
         assert list(made) == ["chief", "first", "second"]
         diff = [
             line
@@ -144,17 +144,25 @@ class TestExportedBots:
         assert mine[-2:] == ["paper", "paper"]  # the support throws its match
         assert theirs[-2:] == ["rock", "rock"]
 
-    def test_only_a_champion_is_exported_with_its_fleet(self) -> None:
-        folder = self.tmp
-        bot_file(folder, "first", "{Team: {role: SUPPORT}}")
+    def test_a_fleet_of_n_bots_is_n_scripts_named_after_the_champion(self) -> None:
+        fleet = "{size: 4, handshake: [SCISSORS]}"
+        made = self.exported(bot_file(self.tmp, "chief", fleet=fleet))
+        assert list(made) == [
+            "chief",
+            "chief_support_1",
+            "chief_support_2",
+            "chief_support_3",
+        ]
+
+    def test_a_team_outside_a_fleet_section_is_not_exported(self) -> None:
+        path = bot_file(self.tmp, "spy", "{Team: {role: IMPOSTOR, handshake: [ROCK]}}")
         with pytest.raises(export.ExportError):
-            self.exported(os.path.join(folder, "first.yaml"), folder)
+            self.exported(path)
 
     def test_a_new_match_starts_from_fresh_state(self) -> None:
         folder = self.tmp
-        bot_file(folder, "chief", "{Team: {role: CHAMPION}}")
         chief = load(
-            self.exported(os.path.join(folder, "chief.yaml"), folder)["chief"],
+            self.exported(bot_file(folder, "chief", fleet=FLEET))["chief"],
             folder,
             "chief",
         )
@@ -173,7 +181,7 @@ class TestExportedBots:
             module.play(["rock"] * MAX_ROUNDS, ["rock"] * MAX_ROUNDS)
 
     def test_the_role_lives_in_the_team_overlays_record(self) -> None:
-        compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT),)).compile({})
+        compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT, (R,)),)).compile({})
         spec = [int(v) for v in compiled.spec]
         assert [spec[x] for x in export.team_role_cells(spec)] == [c.SUPPORT]
         prm = [float(v) for v in registry.param_vector(data.bot("rock_v1"))]

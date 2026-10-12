@@ -72,7 +72,6 @@ EDGE, ANTI_FIRST, BANDIT, ANTI_FIRST_HOLD, MAIN_FIRST, LEADER, LEADER_PRIORITY =
 # Overlays.
 O_STALL, O_TEAM, O_EMIT_INVALID = 0, 1, 2
 CHAMPION, SUPPORT, IMPOSTOR = 0, 1, 2  # Team roles
-ILIAD, ILIAD_V2, ILIAD_V3 = 0, 1, 2  # Team fleets: each has its own handshake
 
 # Record fields (every record is REC wide).
 REC = 16

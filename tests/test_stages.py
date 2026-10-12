@@ -20,6 +20,10 @@ NO_DEFAULTS: Mapping[str, float | int] = types.MappingProxyType({})
 RUNNER_ROUNDS = 64
 
 
+HAND = (S, S, R, R, P, S, S, P)  # a test fleet's handshake
+OTHER_HAND = (P, R, R, S, P, P, R, S)  # another fleet's
+
+
 class Runner:
     """A compiled blueprint with fresh state, played over fixed histories."""
 
@@ -702,12 +706,12 @@ class TestOverlay:
         assert len(set(moves[15:])) > 1
 
     def test_team_handshake(self) -> None:
-        hand = list(overlays.HANDSHAKE)
+        hand = list(HAND)
         champion = list(overlays.ROLE_MOVE)[c.CHAMPION]
         support = Runner(
             bot.Blueprint(
                 core=bot.Bandit(predictors=(bot.Constant(S),), rotations=(bot.COPY,)),
-                overlays=(bot.Team(bot.SUPPORT),),
+                overlays=(bot.Team(bot.SUPPORT, HAND),),
             )
         )
         my = hand + [P]
@@ -719,12 +723,12 @@ class TestOverlay:
         assert stranger == [S, S, S]  # first move matches, then it plays on
 
     def test_an_impostor_beats_the_champion_after_a_supports_handshake(self) -> None:
-        hand = list(overlays.HANDSHAKE)
+        hand = list(HAND)
         roles = list(overlays.ROLE_MOVE)
         team = (
             bot.Blueprint(
                 core=bot.Bandit(predictors=(bot.Constant(R),), rotations=(bot.COPY,)),
-                overlays=(bot.Team(role),),
+                overlays=(bot.Team(role, HAND),),
             )
             for role in (bot.CHAMPION, bot.IMPOSTOR)
         )
@@ -738,7 +742,7 @@ class TestOverlay:
     def test_a_vigilant_champion_stops_throwing_at_an_impostors_first_win(
         self,
     ) -> None:
-        hand = list(overlays.HANDSHAKES[c.ILIAD_V2])
+        hand = list(HAND)
         roles = list(overlays.ROLE_MOVE)
         champion, impostor = (
             Runner(
@@ -746,7 +750,7 @@ class TestOverlay:
                     core=bot.Bandit(
                         predictors=(bot.Constant(R),), rotations=(bot.COPY,)
                     ),
-                    overlays=(bot.Team(role, bot.ILIAD_V2, vigilant=True),),
+                    overlays=(bot.Team(role, HAND, vigilant=True),),
                 )
             )
             for role in (bot.CHAMPION, bot.IMPOSTOR)
@@ -759,7 +763,7 @@ class TestOverlay:
         assert moves[len(hand) + 2 :] == [R, R, R]  # then plays its own move
 
     def test_vigilant_teammates_keep_throwing_while_the_other_does(self) -> None:
-        hand = list(overlays.HANDSHAKES[c.ILIAD_V2])
+        hand = list(HAND)
         roles = list(overlays.ROLE_MOVE)
         champion, support = (
             Runner(
@@ -767,7 +771,7 @@ class TestOverlay:
                     core=bot.Bandit(
                         predictors=(bot.Constant(S),), rotations=(bot.COPY,)
                     ),
-                    overlays=(bot.Team(role, bot.ILIAD_V2, vigilant=True),),
+                    overlays=(bot.Team(role, HAND, vigilant=True),),
                 )
             )
             for role in (bot.CHAMPION, bot.SUPPORT)
@@ -780,20 +784,29 @@ class TestOverlay:
         assert support.moves(theirs, fake)[-4:] == [R, R, S, S]
 
     def test_fleets_do_not_recognise_each_other(self) -> None:
-        v1 = list(overlays.HANDSHAKES[c.ILIAD])
         support = Runner(
             bot.Blueprint(
                 core=bot.Bandit(predictors=(bot.Constant(S),), rotations=(bot.COPY,)),
-                overlays=(bot.Team(bot.SUPPORT, bot.ILIAD_V2),),
+                overlays=(bot.Team(bot.SUPPORT, OTHER_HAND),),
             )
         )
-        v2_opening = int(overlays.HANDSHAKES[c.ILIAD_V2][0])
-        assert support.moves([v2_opening], v1[:1]) == [v2_opening, S]
+        assert support.moves([OTHER_HAND[0]], [HAND[0]]) == [OTHER_HAND[0], S]
 
-    def test_every_fleets_handshake_opens_differently(self) -> None:
-        openings = {int(hand[0]) for hand in overlays.HANDSHAKES}
-        assert len(openings) == len(overlays.HANDSHAKES)
-        assert len(overlays.HANDSHAKES) == c.ILIAD_V3 + 1
+    def test_a_longer_handshake_is_played_to_its_end(self) -> None:
+        hand = [R, P, S, R, P, S, R, P, S, R, P, S]
+        support = Runner(
+            bot.Blueprint(
+                core=bot.Bandit(predictors=(bot.Constant(S),), rotations=(bot.COPY,)),
+                overlays=(bot.Team(bot.SUPPORT, tuple(hand)),),
+            )
+        )
+        champion = list(overlays.ROLE_MOVE)[c.CHAMPION]
+        assert support.moves(hand + [P], hand + [champion]) == [*hand, P, R]
+
+    @pytest.mark.parametrize("handshake", [(), (R, INVALID)])
+    def test_a_handshake_is_one_move_or_more(self, handshake: tuple[int, ...]) -> None:
+        with pytest.raises(blueprint.BlueprintError):
+            bot.Blueprint(overlays=(bot.Team(bot.SUPPORT, handshake),)).compile({})
 
     def test_emit_invalid_never_spends_more_than_the_budget(self) -> None:
         runner = Runner(

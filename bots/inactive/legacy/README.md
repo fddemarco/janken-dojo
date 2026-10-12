@@ -12,7 +12,6 @@ name them (by their old names, below), and any of them can be moved back to `bot
 | smartbot_sims_naive_bayes | tpi_lite | L4 | dropped, [0009](../../../research/experiments/0009-tpi-lite-vs-smartbot-sims3.md); an expensive L4 |
 | smartbot_sims_staller | sims3_staller | L3 | dropped, [0012](../../../research/experiments/0012-sims3-staller-triggers-split.md) |
 | smartbot_sims_second_match | sims3_second | L3 | dropped, [0013](../../../research/experiments/0013-sims3-second-vs-smartbot-sims3.md) |
-| smartbot_sims_impostor | sinon | L3 | the impostor of the Iliad fleet, which was removed, [0014](../../../research/experiments/0014-sinon-vs-smartbot-sims3.md) |
 | smartbot_sims_self_replay | self_sim | L4 | an L4 replay of an L3, superseded by anti_smartbot_sims, [0015](../../../research/experiments/0015-mirror-sims3-vs-smartbot-sims3.md) |
 | word2janken_v1 | word2janken | L1 | variant of pattern_memory (2026-10-12): 83.2% alike, -8.4 pts [-12.7, -4.2] in 40 paired pools, 0-40 head to head |
 | gate_anti_first_v1 | gate_anti_first | L4 | variant of gate_main_first (2026-10-12): 93.1% alike, -0.6 pts [-4.6, +3.4] in 40 paired pools |

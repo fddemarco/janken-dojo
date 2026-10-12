@@ -13,6 +13,7 @@ version stays readable by the bots that name it. Stems are unique there.
     references(path)       the stems a bot file names
 """
 
+import dataclasses
 import hashlib
 import os
 from collections.abc import Iterator
@@ -104,11 +105,30 @@ class Library:
             raise bp.BlueprintError(f"bots name each other in a cycle: {cycle}")
         self._reading.append(stem)
         try:
-            return declare.blueprint_from_data(
-                botfile.read(path).blueprint, self, f"{stem}.blueprint"
+            found = botfile.read(path)
+            blueprint = declare.blueprint_from_data(
+                found.blueprint, self, f"{stem}.blueprint"
             )
         finally:
             self._reading.pop()
+        return _with_fleet(blueprint, found.fleet, stem)
+
+
+def _with_fleet(
+    blueprint: bp.Blueprint, fleet: botfile.Fleet, stem: str
+) -> bp.Blueprint:
+    """The blueprint of a fleet's champion: its fleet's Team overlay added.
+
+    Raises:
+        BlueprintError: the champion declares a Team overlay of its own too.
+    """
+    if not fleet.declared:
+        return blueprint
+    if any(isinstance(o, bp.Team) for o in blueprint.overlays):
+        raise bp.BlueprintError(
+            f"{stem}: a fleet's champion gets its Team from the fleet section"
+        )
+    return dataclasses.replace(blueprint, overlays=(*blueprint.overlays, fleet.team()))
 
 
 def read_blueprint(path: str) -> bp.Blueprint:

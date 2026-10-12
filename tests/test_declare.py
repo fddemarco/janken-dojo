@@ -123,10 +123,13 @@ class TestGrammar:
         assert blueprint_from_data({}) == Blueprint()
         assert Blueprint().core == bot.Heuristic(bot.Silent())
 
-    def test_a_vigilant_team_of_a_named_fleet(self) -> None:
+    def test_a_vigilant_team_with_its_handshake(self) -> None:
         assert declared("""
-                overlays: [{Team: {role: CHAMPION, fleet: ILIAD_V2, vigilant: true}}]
-            """).overlays == (bot.Team(bot.CHAMPION, bot.ILIAD_V2, vigilant=True),)
+                overlays:
+                  - Team: {role: CHAMPION, handshake: [ROCK, PAPER], vigilant: true}
+            """).overlays == (
+            bot.Team(bot.CHAMPION, (bot.ROCK, bot.PAPER), vigilant=True),
+        )
 
 
 class TestReference:

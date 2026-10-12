@@ -173,6 +173,17 @@ max_rounds = 1000
 allowed_modules = ["abc", "array", "bisect", "collections", "copy", "dataclasses", "datetime", "decimal", "enum", "fractions", "functools", "heapq", "itertools", "json", "math", "numbers", "random", "re", "statistics", "string", "time", "typing"]
 banned_names = ["open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars", "getattr", "setattr", "delattr", "exit", "quit", "help"]
 
+[fleet]
+# `janken bot fleet`: a fleet scaffolded on a bot. Its champion file goes to `dir`
+# (under the bots dir, so it can name its base bot);
+# it has `size` bots (the champion and its supports) and a random handshake of
+# `handshake_length` moves; `export` writes its scripts at once.
+dir = "inactive/fleets"
+size = 5
+handshake_length = 8
+vigilant = true
+export = true
+
 [species]
 # How `janken species classify` decides what a kept bot is. Alike: its core agrees with
 # a species' current version on at least `agreement` of the predicted moves (dataset

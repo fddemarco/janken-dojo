@@ -22,7 +22,7 @@ Any other core is an aggregator, a Bandit or a Gate, whose arms are bots, named
           scorer: {Dirichlet: {decay: $ARM_DECAY}}
           random_arm: RA_SCORED
           selector: Thompson
-      overlays: [{Team: {role: CHAMPION}}]
+      overlays: [{Team: {role: IMPOSTOR, handshake: [ROCK, PAPER, PAPER]}}]
 
 The grammar:
 
@@ -88,9 +88,6 @@ SYMBOLS: Mapping[str, int | tuple[int, ...]] = {
     "COPY": c.COPY,
     "CRASH_ACTION": c.CRASH_ACTION,
     "EDGE": c.EDGE,
-    "ILIAD": c.ILIAD,
-    "ILIAD_V2": c.ILIAD_V2,
-    "ILIAD_V3": c.ILIAD_V3,
     "IMPOSTOR": c.IMPOSTOR,
     "JOINT": c.JOINT,
     "LAST": c.LAST,

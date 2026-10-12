@@ -69,8 +69,8 @@ class TestValidation:
             )
         )
 
-    def test_team_fleet_must_exist(self) -> None:
-        assert_refused(bot.Blueprint(overlays=(bot.Team(bot.SUPPORT, fleet=7),)))
+    def test_team_handshake_must_be_moves(self) -> None:
+        assert_refused(bot.Blueprint(overlays=(bot.Team(bot.SUPPORT, (7,)),)))
 
     def test_naive_bayes_combines_its_own_side_only(self) -> None:
         last = bot.LastMove()

@@ -290,6 +290,24 @@ class ExportConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class FleetConfig:
+    """`bot fleet`: a fleet scaffolded on a bot (a champion and its supports).
+
+    Its handshake is `handshake_length` moves drawn at random.
+    """
+
+    dir: str = setting("where a new fleet's champion file goes, under the bots dir")
+    size: int = setting("bots in a new fleet, the champion included", minimum=2)
+    handshake_length: int = setting(
+        "moves in a new fleet's random handshake", minimum=1
+    )
+    vigilant: bool = setting(
+        "a new fleet's bots stop throwing at a teammate's first non-throw"
+    )
+    export: bool = setting("export a new fleet's scripts as soon as it is made")
+
+
+@dataclasses.dataclass(frozen=True)
 class SpeciesConfig:
     """Species and versions: how a kept bot is classified (`janken species`).
 
@@ -422,6 +440,7 @@ class Config:
     query: QueryConfig = setting("ad hoc queries")
     status: StatusConfig = setting("the status report")
     export: ExportConfig = setting("submission scripts")
+    fleet: FleetConfig = setting("fleets")
     species: SpeciesConfig = setting("species and versions")
     telemetry: TelemetryConfig = setting("timing spans")
     profile: ProfileConfig = setting("profiling and the optimization budget")

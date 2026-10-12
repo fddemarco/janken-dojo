@@ -9,8 +9,8 @@ that validation is evidence.
 
 ```bash
 uv run janken tune bots/l3/smartbot_sims_v1.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
-uv run janken tune bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml --support bots/inactive/fleets/iliad_v3/achilles_v3.yaml \
-  --support bots/inactive/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
+uv run janken tune bots/l4/champion.yaml --support bots/l2/helper_a.yaml \
+  --support bots/l2/helper_b.yaml --hypothesis "..."          # a fleet: supports at weight 0
 uv run janken tune --note 0009              # resume the note's study, revalidate
 uv run janken verdict 0009 drop --summary "best +0.4 pts [-1.2, +2.0] vs defaults"
 ```

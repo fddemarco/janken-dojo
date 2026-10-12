@@ -5,7 +5,7 @@ import pathlib
 
 import pytest
 
-from janken import library
+from janken import botfile, library
 from janken.kit import bot, levels
 from janken.kit.blueprint import BlueprintError
 
@@ -77,3 +77,65 @@ class TestLibrary:
             library.read_blueprint(self.board)
         with pytest.raises(BlueprintError, match="0 bots named 'nobody'"):
             library.Library(self.root).path("nobody")
+
+    def test_a_fleets_champion_plays_its_fleets_team(self) -> None:
+        chief = self.write(
+            "inactive/fleets/chief",
+            "fleet: {size: 2, handshake: [ROCK, PAPER], vigilant: true}\n" + BOARD,
+        )
+        assert library.read_blueprint(chief).overlays == (
+            bot.Team(bot.CHAMPION, (bot.ROCK, bot.PAPER), vigilant=True),
+        )
+
+    def test_a_champion_declares_no_team_of_its_own(self) -> None:
+        chief = self.write(
+            "inactive/fleets/chief",
+            "fleet: {size: 2, handshake: [ROCK]}\n"
+            + BOARD
+            + "  overlays: [{Team: {role: SUPPORT, handshake: [ROCK]}}]\n",
+        )
+        with pytest.raises(BlueprintError, match="fleet section"):
+            library.read_blueprint(chief)
+
+
+class TestFleetSection:
+    @pytest.fixture(autouse=True)
+    def _folder(self, tmp_path: pathlib.Path) -> None:
+        self.folder = tmp_path
+
+    def fleet(self, section: str) -> botfile.Fleet:
+        path = self.folder / "chief.yaml"
+        path.write_text(f"fleet: {section}\n", encoding="utf-8")
+        return botfile.read(str(path)).fleet
+
+    def test_a_fleet_names_its_supports_and_its_handshake(self) -> None:
+        found = self.fleet("{size: 3, supports: [a, b], handshake: [SCISSORS, ROCK]}")
+        assert found == botfile.Fleet(("a", "b"), (bot.SCISSORS, bot.ROCK))
+        assert found.size == 3
+        assert found.declared
+
+    def test_unnamed_supports_are_numbered_after_the_champion(self) -> None:
+        found = self.fleet("{size: 3, handshake: [ROCK]}")
+        assert found.supports == ("chief_support_1", "chief_support_2")
+
+    def test_a_bot_without_a_fleet_section_leads_none(self) -> None:
+        path = self.folder / "loner.yaml"
+        path.write_text("description: alone\n", encoding="utf-8")
+        assert not botfile.read(str(path)).fleet.declared
+
+    @pytest.mark.parametrize(
+        "section",
+        [
+            "{size: 1, handshake: [ROCK]}",  # no supports
+            "{size: 3, supports: [a], handshake: [ROCK]}",  # size - 1 names
+            "{size: 3, supports: [a, a], handshake: [ROCK]}",  # one name each
+            "{size: 2, supports: [chief], handshake: [ROCK]}",  # the champion's
+            "{size: 2, handshake: []}",  # no handshake
+            "{size: 2, handshake: [BEAT]}",  # not a move
+            "{size: 2, handshake: [ROCK], vigilant: 1}",
+            "{size: 2, handshake: [ROCK], role: SUPPORT}",  # unknown key
+        ],
+    )
+    def test_a_broken_fleet_section_is_refused(self, section: str) -> None:
+        with pytest.raises(botfile.BotFileError):
+            self.fleet(section)

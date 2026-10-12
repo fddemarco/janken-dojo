@@ -220,6 +220,6 @@ class TestCalibrate:
 class TestGuard(BotsDir):
     def test_an_oracle_is_never_exported_nor_in_a_tournament(self) -> None:
         with pytest.raises(export.ExportError):
-            export.scripts(self.pure, self.tmp, 10)
+            export.scripts(self.pure, 10)
         names = {bot_name(p) for p in discover_bots(self.tmp)}
         assert names == {"rock", "scored"}

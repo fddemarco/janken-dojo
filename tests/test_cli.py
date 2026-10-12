@@ -13,7 +13,7 @@ import pytest
 import typer.main
 from typer.testing import CliRunner, Result
 
-from janken import settings
+from janken import botfile, settings
 from janken.cli import app, options
 from janken.engine import registry
 from janken.notebook import ideas, notes
@@ -420,6 +420,26 @@ class TestLifecycle:
         result = self.runner.invoke(app, [*args[:cut], *self.common(), *args[cut:]])
         assert result.exit_code == 0, f"{args}: {result.output}{result.exception!r}"
         return result.output
+
+    def test_a_fleet_is_scaffolded_on_a_bot_and_exported(self) -> None:
+        os.makedirs(os.path.join(self.bots, "blocks"))  # the library's root
+        out = os.path.join(self.root, "exports")
+        flags = ("--folder", "inactive/fleets", "--out", out, "--size", "3")
+        made = self.run_ok("bot", "fleet", "cycler_v1", "chief", *flags)
+        found = botfile.read(os.path.join(self.bots, "inactive/fleets", "chief.yaml"))
+        assert found.fleet.supports == ("chief_support_1", "chief_support_2")
+        assert len(found.fleet.handshake) == settings.config().fleet.handshake_length
+        assert sorted(os.listdir(os.path.join(out, "chief"))) == [
+            "chief.py",
+            "chief_support_1.py",
+            "chief_support_2.py",
+        ]
+        assert "created" in made
+        refused = self.runner.invoke(
+            app,
+            ["bot", "fleet", "cycler_v1", "other", *flags, "--support", "a"],
+        )
+        assert refused.exit_code == 2  # a fleet of 3 names 2 supports
 
     def test_errors_are_messages_not_tracebacks(self) -> None:
         result = self.runner.invoke(

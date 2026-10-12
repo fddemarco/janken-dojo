@@ -175,7 +175,26 @@ The grammar lives in `janken/kit/declare.py`.
 | rotations | each arm plays its bot's move turned | `COPY`, `BEAT`, `BEAT_BEAT` |
 | scorer | every arm's record, counterfactually | `Dirichlet`, `DecayedNet`, `DropSwitch` (+ a random arm: `RA_SCORED` / `RA_PINNED`) |
 | selector | a Bandit's arm to play | `First`, `Greedy`, `Thompson`, `SampledVote`, `ChooseSelector` |
-| overlays | transform the chosen move | `Stall`, `Team` (`fleet`: `ILIAD` / `ILIAD_V2` / `ILIAD_V3`; `vigilant`: stop throwing at a teammate's first non-throw), `EmitInvalid` |
+| overlays | transform the chosen move | `Stall`, `Team` (`handshake`: the fleet's opening moves; `vigilant`: stop throwing at a teammate's first non-throw; a fleet's champion gets it from its file's `fleet` section, below), `EmitInvalid` |
+
+## Fleets
+
+A fleet is one file, its champion's. Its `fleet` section adds the champion's `Team`
+overlay; each support is the same bot with role SUPPORT and has no file of its own.
+`janken bot export CHAMPION` writes one script per bot of the fleet.
+
+```yaml
+fleet:
+  size: 5                                      # bots, the champion included
+  supports: [achilles_v4, ajax_v4, hector_v4, odysseus_v4]   # optional: <champion>_support_K
+  handshake: [PAPER, PAPER, SCISSORS, ROCK, PAPER, SCISSORS, PAPER, PAPER]
+  vigilant: true
+blueprint:
+  core: {bot: replay_hunter_wide_v1, space: {EDGE: $EDGE, ...}}
+```
+
+`janken bot fleet BASE CHAMPION` writes such a file on any bot (with a random
+handshake of `fleet.handshake_length` moves) and exports it.
 
 ## Rules
 

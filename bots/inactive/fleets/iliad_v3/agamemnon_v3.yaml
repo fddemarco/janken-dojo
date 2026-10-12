@@ -1,18 +1,23 @@
 description: |
-  Iliad heroes v3 fleet, the champion: the supports throw their matches to it.
+  Iliad heroes v3 fleet: agamemnon_v3, the champion, and four supports (achilles_v3,
+  ajax_v3, hector_v3, odysseus_v3) that throw their matches to it.
 
-  Opens with the v3 fleet's own handshake (Team fleet ILIAD_V3: the V1 and V2
-  fleets and their impostors don't share it), then plays gate_main_first (the L4:
-  smartbot_sims's arms first, anti_smartbot_sims' replay once its record leads)
-  against anyone outside the fleet, and support vs support. Vigilant: after the
-  role move it keeps checking its teammate, and at the first round the other
-  doesn't throw it plays on, so an impostor wins one round, not the match.
+  Opens with the v3 fleet's own handshake (the V1 and V2 fleets and their
+  impostors don't share it), then plays gate_main_first (the L4: smartbot_sims's
+  arms first, anti_smartbot_sims' replay once its record leads) against anyone
+  outside the fleet, and support vs support. Vigilant: after the role move it
+  keeps checking its teammate, and at the first round the other doesn't throw it
+  plays on, so an impostor wins one round, not the match.
 defaults:
   EDGE: 0.0
   GATE_DECAY: 1.0
   WARMUP: 10
+fleet:
+  size: 5
+  supports: [achilles_v3, ajax_v3, hector_v3, odysseus_v3]
+  handshake: [ROCK, SCISSORS, PAPER, PAPER, ROCK, SCISSORS, ROCK, PAPER]
+  vigilant: true
 blueprint:
   core:
     bot: gate_main_first_v1
     space: {EDGE: $EDGE, GATE_DECAY: $GATE_DECAY, WARMUP: $WARMUP}
-  overlays: [{Team: {role: CHAMPION, fleet: ILIAD_V3, vigilant: true}}]

@@ -57,7 +57,7 @@ uv run janken config show                    # every default (janken.toml)
 | --- | --- |
 | `bots/` | the field: one YAML file per bot, in its level's folder (`l1/` ... `l4/`, `oracle/`; `blocks/`: L1 arms for aggregators), indexed in [bots/README.md](bots/README.md) (levels, what each does, old names) |
 | `bots/inactive/` | bots out of the field (never in a pool): |
-| `bots/inactive/fleets/iliad_v3/` | the Iliad v3 fleet: a champion and four supports |
+| `bots/inactive/fleets/` | the fleets (`janken bot fleet`): one champion file each, its `fleet` section naming the supports and the handshake |
 | `bots/inactive/legacy/` | retired bots, kept for the research record ([README](bots/inactive/legacy/README.md)) |
 | `spaces/` | one tuning space per tunable bot of the field |
 | `janken/engine/` | compiles bots (numba) and referees matches |

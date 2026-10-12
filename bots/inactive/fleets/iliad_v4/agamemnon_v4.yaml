@@ -1,0 +1,23 @@
+description: |
+  Iliad heroes v4 fleet: agamemnon_v4, the champion, and four supports (achilles_v4,
+  ajax_v4, hector_v4, odysseus_v4) that throw their matches to it.
+
+  Opens with the v4 fleet's own random handshake, then plays replay_hunter_wide (the
+  L4: smartbot_sims's main bandit, replays of smartbot_sims from both seats and of
+  twelve learners, LEADER-gated) against anyone outside the fleet, and support vs
+  support. Vigilant: after the role move it keeps checking its teammate, and at the
+  first round the other doesn't throw it plays on, so an impostor wins one round, not
+  the match.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+fleet:
+  size: 5
+  supports: [achilles_v4, ajax_v4, hector_v4, odysseus_v4]
+  handshake: [PAPER, PAPER, SCISSORS, ROCK, PAPER, SCISSORS, PAPER, PAPER]
+  vigilant: true
+blueprint:
+  core:
+    bot: replay_hunter_wide_v1
+    space: {EDGE: $EDGE, GATE_DECAY: $GATE_DECAY, WARMUP: $WARMUP}

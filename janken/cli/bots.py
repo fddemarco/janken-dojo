@@ -200,7 +200,8 @@ def export(
     name: Annotated[
         str,
         typer.Argument(
-            help="the bot to export (a stem or a path); a champion brings its fleet"
+            help="the bot to export (a stem or a path); a fleet's champion brings its"
+            " supports"
         ),
     ],
     out: Annotated[str, typer.Option(help=about("export.dir"))] = CFG.export.dir,
@@ -212,20 +213,34 @@ def export(
 
     Each bot becomes one self-contained OUT/NAME/<bot>.py: `play(my_moves, opp_moves)`
     over the kit's runtime as plain stdlib Python (no numpy, numba or `global`). A
-    fleet's champion brings every support of its fleet in the bots dir; a support's
-    script is the champion's plus a comment naming it and its role line. Every
+    fleet's champion (a bot file with a `fleet` section) brings its supports: a
+    fleet of N bots is N scripts, a support's the champion's plus a comment naming
+    it and its role line. Every
     script passes the tournament's screening (export.allowed_modules /
     export.banned_names) before anything is written.
+    """
+    path = bot_path(lab, name)
+    if not os.path.isfile(path):
+        raise fail(f"no bot {path}")
+    written = _export(path, out, max_rounds)
+    lab.emit({"exported": written}, "exported " + ", ".join(written))
+
+
+def _export(path: str, out: str, max_rounds: int) -> list[str]:
+    """Write the scripts of the bot at `path` (and its fleet's), screened first.
+
+    Returns:
+        The scripts written, as shown paths.
+
+    Raises:
+        typer.Exit: the bot can't be exported, or a script fails the screening.
     """
     from .. import export as exporter
     from .. import sandbox
     from ..match import bot_name
 
-    path = bot_path(lab, name)
-    if not os.path.isfile(path):
-        raise fail(f"no bot {path}")
     try:
-        made = exporter.scripts(path, lab.bots_dir, max_rounds)
+        made = exporter.scripts(path, max_rounds)
     except exporter.ExportError as exc:
         raise fail(str(exc)) from exc
     rules = sandbox.Rules(CFG.export.allowed_modules, CFG.export.banned_names)
@@ -241,7 +256,119 @@ def export(
         with open(target, "w", encoding="utf-8") as f:
             f.write(source)
         written.append(shown(target))
-    lab.emit({"exported": written}, "exported " + ", ".join(written))
+    return written
+
+
+@app.command()
+@lab_command("bot fleet")
+def fleet(
+    lab: Lab,
+    base: Annotated[
+        str, typer.Argument(help="the bot the fleet plays (a stem or a path)")
+    ],
+    champion: Annotated[
+        str, typer.Argument(help="the champion's stem: the fleet's file and name")
+    ],
+    support: Annotated[
+        list[str],
+        typer.Option(
+            help="a support's name, in order; repeatable, size - 1 of them"
+            " (none: <champion>_support_K)",
+            default_factory=list,
+            show_default=False,
+        ),
+    ],
+    size: Annotated[int, typer.Option(help=about("fleet.size"))] = CFG.fleet.size,
+    handshake_length: Annotated[
+        int, typer.Option(help=about("fleet.handshake_length"))
+    ] = CFG.fleet.handshake_length,
+    vigilant: Annotated[
+        bool, typer.Option(help=about("fleet.vigilant"))
+    ] = CFG.fleet.vigilant,
+    description: Annotated[
+        str,
+        typer.Option(
+            help="the fleet's description (\\n separated); empty: one written from"
+            " the base bot's"
+        ),
+    ] = "",
+    folder: Annotated[str, typer.Option(help=about("fleet.dir"))] = CFG.fleet.dir,
+    export_scripts: Annotated[
+        bool, typer.Option("--export/--no-export", help=about("fleet.export"))
+    ] = CFG.fleet.export,
+    out: Annotated[str, typer.Option(help=about("export.dir"))] = CFG.export.dir,
+    max_rounds: Annotated[
+        int, typer.Option(help=about("export.max_rounds"))
+    ] = CFG.export.max_rounds,
+) -> None:
+    """Scaffold a fleet on a bot: <bots dir>/FOLDER/CHAMPION.yaml, whose core is BASE (its
+    defaults bound through) and whose `fleet` section names the supports, the
+    handshake and vigilance; then export its SIZE scripts (--no-export: don't).
+
+    The handshake is HANDSHAKE_LENGTH moves drawn at random with --seed (-1: a
+    fresh one). The file is checked by compiling it, and lives outside the field: a fleet
+    never enters a pool.
+    """
+    from .. import botfile, library
+    from .. import fleet as fleets
+    from ..kit import blueprint as bp
+    from ..match import bot_name
+
+    if not champion.isidentifier():
+        raise fail(f"a bot's stem is an identifier, got {champion!r}")
+    taken = library.Library(lab.bots_dir).paths(champion)
+    if taken:
+        raise fail(f"{taken[0]} exists: a stem's logic never changes; pick a new name")
+    source = bot_path(lab, base)
+    if not os.path.isfile(source):
+        raise fail(f"no bot {source}")
+    if size < 2:
+        raise fail(f"a fleet has 2 bots or more, got {size}")
+    supports = tuple(support) or botfile.support_names(champion, size)
+    if len(supports) != size - 1:
+        raise fail(f"a fleet of {size} names {size - 1} supports, got {len(supports)}")
+    seed = (
+        random.SystemRandom().getrandbits(32)
+        if lab.seed == settings.RANDOM_SEED
+        else lab.seed
+    )
+    try:
+        moves = fleets.draw_handshake(random.Random(seed), handshake_length)
+    except fleets.FleetError as exc:
+        raise fail(str(exc)) from exc
+    found = botfile.read(source)
+    crew = botfile.Fleet(supports, moves, vigilant)
+    try:
+        text = fleets.champion_file(
+            bot_name(source),
+            found,
+            crew,
+            description.replace("\\n", "\n")
+            or fleets.default_description(
+                bot_name(source), champion, crew, found.description
+            ),
+        )
+    except fleets.FleetError as exc:
+        raise fail(str(exc)) from exc
+    target = os.path.join(lab.bots_dir, folder, champion + ".yaml")
+    if os.path.exists(target):
+        raise fail(f"{shown(target)} exists")
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(text)
+    try:
+        library.read_blueprint(target).compile(botfile.defaults(target))
+    except (bp.BlueprintError, botfile.BotFileError) as exc:
+        os.remove(target)
+        raise fail(f"the fleet doesn't compile: {exc}") from exc
+    written = _export(target, out, max_rounds) if export_scripts else []
+    lab.emit(
+        {"created": shown(target), "handshake": moves, "exported": written},
+        f"created {shown(target)} (handshake "
+        + ",".join(fleets.MOVE_WORDS[m] for m in moves)
+        + ")"
+        + (f"; exported {', '.join(written)}" if written else ""),
+    )
 
 
 @app.command("list")

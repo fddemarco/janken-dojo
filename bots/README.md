@@ -51,7 +51,9 @@ bots/
                      geometry, rarest, period, score_state; oracle_expert,
                      research only): never in a pool
   inactive/          bots out of the field
-    fleets/iliad_v3/ the Iliad v3 fleet: a champion and four supports (Team overlay)
+    fleets/iliad_v3/ the Iliad v3 fleet: agamemnon_v3, a champion file whose
+                     `fleet` section names four supports (janken bot fleet)
+    fleets/iliad_v4/ the Iliad v4 fleet: agamemnon_v4 on replay_hunter_wide_v1
     legacy/          retired bots, kept for the research record
 ```
 

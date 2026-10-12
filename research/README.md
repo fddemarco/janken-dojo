@@ -57,7 +57,7 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
   `janken bot new` / `janken tune`)
   makes them tunable; it is not part of the bot.
 - **Randomness**: only `random.random()`, `random.randrange(n)` and
-  `random.gammavariate(a, 1.0)` inside compiled stages. The engine seeds them per match.
+  `random.gammavariate(a, 1.0)` inside compiled stages. The engine seeds them per match, one stream per side.
 - **A stem's logic never changes** under its filename once it has results; a new idea gets
   a new file. The same goes for a stage kind: add a kind or an option, never change one.
 
@@ -71,6 +71,16 @@ stages' shared rules. Runs from before it are **not comparable** with runs after
 Manifests now record the kit/engine hash (`library`); older runs show as `pre-blueprint`
 in `analyze --history`. The insights below still describe the old code until idea #21
 re-baselines them.
+
+### 2026-10-12: one random stream per side
+
+Both bots of a match used to draw from one generator, seeded once per match, so a bot's
+draws depended on how many its opponent had made, and a bot could in principle replay its
+opponent's randomness. Now the kernel reseeds before each side moves, from (match seed,
+side, round), so each side has its own stream. Same seed, different moves: seeded runs from
+before this don't replay, and a run started before it can't be resumed (start a new one).
+Spot checks show no measurable change in strength (anti_smartbot_sims_v2 still wins ~42%
+of rounds vs smartbot_sims_v2 at 250 rounds), so past results stand as evidence.
 
 ### 2026-10-12: levels by aggregation, arms named as bots
 

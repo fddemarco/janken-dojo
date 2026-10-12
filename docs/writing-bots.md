@@ -189,8 +189,9 @@ The grammar lives in `janken/kit/declare.py`.
   `INVALID`: that loses the round, and the opponent sees `INVALID` in its history. **Three
   in one match forfeit it.** `CRASH` forfeits at once. `EmitInvalid` spends at most two.
 - **Randomness**: only `random.random()`, `random.randrange(n)` and
-  `random.gammavariate(a, 1.0)` inside compiled stages. The engine seeds them per match,
-  so a seeded match is reproducible.
+  `random.gammavariate(a, 1.0)` inside compiled stages. The engine gives each side of a
+  match its own stream of the match seed, so a seeded match is reproducible and a bot can't
+  see its opponent's draws.
 - **A bot's logic never changes under its filename** once it has results: a new idea gets
   a new file (see `research/README.md`). That holds for the bots it names too, so
   references name exact stems, and a bot's identity (its source hash) covers the bots it

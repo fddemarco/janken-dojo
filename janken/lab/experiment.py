@@ -11,8 +11,9 @@ Each round robin `rr` draws a fresh pool of `pool_size` bots (from
 Pools and match seeds depend only on (seed, rr, the candidates' stems), never
 on their parameters, so two variants of one bot run on identical schedules.
 Within a round robin, every candidate meets a given pool bot with the *same*
-match seed. Both bots draw from the match's one random stream, so two
-candidates that behave identically get identical matches, and a real
+match seed. Each side draws from its own stream of that seed (engine/kernel.py),
+so the pool bot draws the same whoever it meets, two candidates that behave
+identically get identical matches, and a real
 difference between them isn't drowned in seed noise: common random numbers,
 which is what makes paired comparisons and tuning sharp.
 

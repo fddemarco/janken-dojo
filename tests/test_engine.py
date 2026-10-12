@@ -180,6 +180,16 @@ class TestReferee(FixtureBots):
         assert one.moves == two.moves
         assert one.moves != other.moves
 
+    def test_a_bots_draws_dont_depend_on_its_opponents(self) -> None:
+        # rock draws nothing and randy draws every round: randy's moves are the same.
+        vs_rock = self.play("randy", "rock", rounds=40, seed=5)
+        vs_randy = self.play("randy", "randy", rounds=40, seed=5)
+        assert vs_rock.moves[0::2] == vs_randy.moves[0::2]
+
+    def test_the_two_sides_draw_from_different_streams(self) -> None:
+        m = self.play("randy", "randy", rounds=40, seed=5)
+        assert m.moves[0::2] != m.moves[1::2]
+
     def test_a_yaml_bot_plays_kernel_modules(self) -> None:
         m = self.play("stone", "paper", rounds=5)
         assert m.moves == "rp" * 5

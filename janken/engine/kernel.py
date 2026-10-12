@@ -1,8 +1,10 @@
 """The referee, compiled: whole matches inside one numba kernel.
 
-`play_batch` spreads a schedule across cores with `prange`. Each match seeds
-numba's generator itself, so its moves depend only on its seed, never on the
-thread that played it.
+`play_batch` spreads a schedule across cores with `prange`. Each bot draws from
+its own stream: before a side moves, the kernel reseeds numba's generator from
+(match seed, side, round), so a match depends only on its seed, never on the
+thread that played it, and neither bot's draws depend on how many the other
+made (one shared stream would let a bot replay its opponent's randomness).
 
 The kernel reaches the bots through `new_state(code, rounds)` (fresh state for
 every match, sized for its rounds) and
@@ -25,6 +27,28 @@ from janken.match import INVALID_MOVE_LIMIT
 # Why a bot forfeited, per side, in a match's status row.
 FF_NONE, FF_CRASHED, FF_INVALID = 0, 1, 2
 
+# The sides, as they name their random streams.
+SIDE_A, SIDE_B = 0, 1
+MASK32 = 0xFFFFFFFF
+HASH_MUL = 0x45D9F3B  # a 32-bit integer hash's multiplier (products fit int64)
+
+
+@kernel
+def _mix32(x):
+    """A bijective 32-bit integer hash of x's low 32 bits."""
+    x &= MASK32
+    x = (((x >> 16) ^ x) * HASH_MUL) & MASK32
+    x = (((x >> 16) ^ x) * HASH_MUL) & MASK32
+    return (x >> 16) ^ x
+
+
+@kernel
+def _seed_side(seed, side, r):
+    """Seed the generator with side's stream for round r of the match `seed`:
+    distinct for every (side, round) of a match."""
+    match = _mix32(seed ^ _mix32(seed >> 32))
+    random.seed(_mix32(match ^ (2 * r + side)))
+
 
 @kernel
 def _crashed(move):
@@ -46,7 +70,7 @@ def _reveal(i, at, r, move, opp_level):
 
 
 @kernel
-def play_into(code_a, code_b, prm_a, prm_b, rounds, out):
+def play_into(code_a, code_b, prm_a, prm_b, rounds, seed, out):
     """Play one match into out[rounds, 2] (bot a's move, bot b's move).
     Returns (rounds played, forfeit a, forfeit b), forfeits as FF_* codes.
 
@@ -56,7 +80,8 @@ def play_into(code_a, code_b, prm_a, prm_b, rounds, out):
     is told the other's move and level before it moves; two arms both play PAPER.
     A crash forfeits at once, and its round
     is not played. An invalid move loses its round; the one that reaches
-    INVALID_MOVE_LIMIT forfeits after its round is scored."""
+    INVALID_MOVE_LIMIT forfeits after its round is scored. Each side draws from
+    its own stream of the match `seed` (_seed_side)."""
     fa, ia = new_state(code_a, rounds)
     fb, ib = new_state(code_b, rounds)
     ha = np.empty(rounds, np.int64)
@@ -71,27 +96,39 @@ def play_into(code_a, code_b, prm_a, prm_b, rounds, out):
     invalid_b = 0
     for r in range(rounds):
         if kind_a == ORACLE_PURE and kind_b == ORACLE_PURE:
+            _seed_side(seed, SIDE_B, r)
             mb = random.randrange(3)
+            _seed_side(seed, SIDE_A, r)
             ma = oracle_move(code_a, fa, prm_a, mb, level_b)
         elif kind_a == ORACLE_PURE:  # b moves first (an ARM untold), a plays it
+            _seed_side(seed, SIDE_B, r)
             mb = step(code_b, fb, ib, prm_b, hb, ha, r)
+            _seed_side(seed, SIDE_A, r)
             ma = oracle_move(code_a, fa, prm_a, mb, level_b)
         elif kind_b == ORACLE_PURE:
+            _seed_side(seed, SIDE_A, r)
             ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+            _seed_side(seed, SIDE_B, r)
             mb = oracle_move(code_b, fb, prm_b, ma, level_a)
         elif kind_a == ORACLE_ARM and kind_b == ORACLE_ARM:  # neither can be told
             ma = PAPER
             mb = PAPER
         elif kind_a == ORACLE_ARM:
+            _seed_side(seed, SIDE_B, r)
             mb = step(code_b, fb, ib, prm_b, hb, ha, r)
             _reveal(ia, cell_a, r, mb, level_b)
+            _seed_side(seed, SIDE_A, r)
             ma = step(code_a, fa, ia, prm_a, ha, hb, r)
         elif kind_b == ORACLE_ARM:
+            _seed_side(seed, SIDE_A, r)
             ma = step(code_a, fa, ia, prm_a, ha, hb, r)
             _reveal(ib, cell_b, r, ma, level_a)
+            _seed_side(seed, SIDE_B, r)
             mb = step(code_b, fb, ib, prm_b, hb, ha, r)
         else:
+            _seed_side(seed, SIDE_A, r)
             ma = step(code_a, fa, ia, prm_a, ha, hb, r)
+            _seed_side(seed, SIDE_B, r)
             mb = step(code_b, fb, ib, prm_b, hb, ha, r)
         if ma == CRASH or mb == CRASH:
             return r, _crashed(ma), _crashed(mb)
@@ -116,9 +153,8 @@ def play_batch(codes_a, codes_b, prm_a, prm_b, rounds, seeds):
     out = np.empty((codes_a.size, rounds, 2), np.int8)
     status = np.zeros((codes_a.size, 3), np.int64)
     for k in prange(codes_a.size):
-        random.seed(int(seeds[k]))
         played, ff_a, ff_b = play_into(
-            codes_a[k], codes_b[k], prm_a[k], prm_b[k], rounds, out[k]
+            codes_a[k], codes_b[k], prm_a[k], prm_b[k], rounds, int(seeds[k]), out[k]
         )
         status[k, 0] = played
         status[k, 1] = ff_a

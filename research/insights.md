@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-12: Replays of the field's metabot from both seats, each played at every rotation, cover every level of a replay chain at once: no one-rotation specialist (anti, double-bluff counter) beats the bot that carries them, but against adaptive learners the round share still converges near 1/3
+
+- **Evidence:** experiments/0032-level-k-vs-double-bluff-gate.md (run 20261012-164842_0032-level-k-vs-double-bluff-gate): `level_k_gate - double_bluff_gate_v1 = +9.0 pts [+2.8, +15.2]` over 305 shared matches: level_k_gate better; `level_k_bandit - double_bluff_gate_v1 = +7.5 pts [+1.6, +13.6]` over 305 shared matches: level_k_bandit better
+- **Mechanism:** MY BEAT_BEAT beats an anti specialist, OPP BEAT the metabot itself and the gates' anti experts, OPP COPY a double-bluff counter; the gate or bandit picks the level that is winning. Against a learner that adapts as well (councils, gates, sampled_markov) neither side keeps an edge: 31-35% won, 30-35% lost per round
+- **Implication:** a per-round bar of >= 36% holds only vs replayable bots; vs flip-flopping gated counters the next gain is modelling the opponent's gate state (idea #42), not more rotations or tuning (a 9-cell decay x sharpness screen stayed within 35-38%)
+
 ## 2026-10-12: A replay specialist that plays the mode of many Thompson draws is itself near-deterministic, so one more level of replay (the replayed bot from our side, played BEAT_BEAT) beats it in ~68% of rounds; gated by EDGE over the replayed bot's own arms it costs nothing against the rest of the field
 
 - **Evidence:** experiments/0031-counter-anti-sims-vs-smartbot-sims.md (run 20261012-144707_0031-counter-anti-sims-vs-smartbot-sims): `gate_counter_sims - counter_anti_sims = +47.5 pts [+41.2, +53.7]` over 300 shared matches: gate_counter_sims better; `gate_counter_sims - smartbot_sims_v2 = +9.0 pts [+2.3, +15.7]` over 300 shared matches: gate_counter_sims better; `counter_anti_sims - smartbot_sims_v2 = -38.5 pts [-45.7, -31.2]` over 300 shared matches: smartbot_sims_v2 better

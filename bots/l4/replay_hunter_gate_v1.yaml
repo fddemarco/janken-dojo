@@ -1,0 +1,33 @@
+description: |
+  level_k_gate, plus replays of the field's adaptive learners from their seat.
+
+  The main bandit is smartbot_sims_v2's. The gated experts: smartbot_sims_v2
+  replayed from both seats (level_k_gate's six arms), and eight L2/L3 learners
+  that split the rounds near 1/3 with it (sampled_markov, backoff_family,
+  smartbot_fast, period_bandit, l2_council, counter_council, dropswitch_council,
+  vote_council) replayed from their seat: their likeliest move, played all three
+  ways (BEAT beats it, the rest the levels above). A LEADER gatekeeper hands play
+  to whichever arm leads the current one by more than EDGE (from round WARMUP on).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, draws: 256, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: backoff_family_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

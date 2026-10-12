@@ -123,6 +123,7 @@ bots/
 | L4 | `gate_main_first_stationary_v2` | gate_main_first plus a stationary (frequency) expert |
 | L4 | `double_bluff_gate_v1` | smartbot_sims's arms + a replay of itself from our side played BEAT_BEAT (beats anti_smartbot_sims), gated by EDGE |
 | L4 | `level_k_gate_v1` | smartbot_sims's arms + replays of smartbot_sims from both seats at every rotation, LEADER-gated: no fixed level for a specialist to exploit |
+| L4 | `replay_hunter_gate_v1` | level_k_gate plus replays of eight adaptive L2/L3 learners from their seat, every rotation, LEADER-gated |
 | Oracle | `oracle_smartbot_sims`, `oracle_anti_smartbot_sims`, `oracle_gate_edge`, `oracle_gate_anti_first` | pure Oracles: calibrated win chances per level, drawn with `pool.mocks` |
 | Oracle | `oracle_arm_gate_edge`, `oracle_arm_gate_anti_first` | gatekeepers whose anti expert is an Oracle arm |
 

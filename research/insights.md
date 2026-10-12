@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-12: An adaptive learner that splits the rounds with a metabot (31-34%) is beaten by its own replay from its seat: Thompson and greedy learners commit to a move a replay can name, lifting them to 38-49% of rounds; a learner that samples its moves (sampled_markov, transition_matrix, geometry, nash) has no fixed move to replay
+
+- **Evidence:** experiments/0033-replay-hunter-vs-level-k-gate.md (run 20261012-171926_0033-replay-hunter-vs-level-k-gate): `replay_hunter_gate - level_k_gate_v1 = +16.1 pts [+4.8, +28.2]` over 62 shared matches: replay_hunter_gate better
+- **Mechanism:** a 256-draw replay names a Thompson learner's posterior mode, a draws-0 replay a greedy learner's best arm; played BEAT inside a LEADER gate the arm takes over once it leads. Samplers draw fresh randomness each round, so nothing is predictable beyond what our main bandit already reads
+- **Implication:** replay every replayable (L2/L3) learner of the field that splits the rounds with us, at every rotation; accept ~1/3 vs samplers; the cost grows ~linearly with the replays (2x level_k_gate for eight)
+
 ## 2026-10-12: Replays of the field's metabot from both seats, each played at every rotation, cover every level of a replay chain at once: no one-rotation specialist (anti, double-bluff counter) beats the bot that carries them, but against adaptive learners the round share still converges near 1/3
 
 - **Evidence:** experiments/0032-level-k-vs-double-bluff-gate.md (run 20261012-164842_0032-level-k-vs-double-bluff-gate): `level_k_gate - double_bluff_gate_v1 = +9.0 pts [+2.8, +15.2]` over 305 shared matches: level_k_gate better; `level_k_bandit - double_bluff_gate_v1 = +7.5 pts [+1.6, +13.6]` over 305 shared matches: level_k_bandit better

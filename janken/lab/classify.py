@@ -55,7 +55,7 @@ class Matchup:
 
     `lo`/`hi` is the 95% CI (the "worse" test); `strict_lo` is the lower bound at the
     Bonferroni level (the "better" test). For the head-to-head, `mean` is the
-    challenger's score minus ½.
+    challenger's score minus 1/2.
     """
 
     opponent: str
@@ -267,13 +267,13 @@ def decide(
         if speedup > config.speed_factor:
             return Decision(
                 PROMOTE,
-                (alike, f"{tie}, worse on none, and {speedup:.1f}× faster"),
+                (alike, f"{tie}, worse on none, and {speedup:.1f}x faster"),
             )
         return Decision(
             VARIANT,
             (
                 alike,
-                f"{tie}; {speedup:.1f}× the speed, below {config.speed_factor:.1f}×",
+                f"{tie}; {speedup:.1f}x the speed, below {config.speed_factor:.1f}x",
             ),
         )
     return Decision(

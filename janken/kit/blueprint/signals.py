@@ -132,7 +132,7 @@ class LongestMatch(Signal):
 
 @dataclasses.dataclass(frozen=True)
 class SecondMatch(LongestMatch):
-    """Second-order history matching (rps_kaggle §4.2): find the longest earlier
+    """Second-order history matching (rps_kaggle section 4.2): find the longest earlier
     repeat of `ctx`'s suffix, as LongestMatch does, then that matched point's own
     longest earlier repeat, and read the move of `of` that followed it: an older
     witness of the same pattern. Keeps each round's match end (one per-round slot)."""

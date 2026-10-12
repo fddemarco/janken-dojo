@@ -17,12 +17,12 @@ is created by `janken evaluate` / `janken tune` (status planned), gets its resul
 ## Hypothesis
 
 What we expect, and the size of effect that would matter, written before the run. For
-example: "geometry+stall beats geometry by ≥ 3 points in the paired comparison, mostly
+example: "geometry+stall beats geometry by >= 3 points in the paired comparison, mostly
 against the metabots."
 
 ## Command
 
-The reproducible low-level command (`janken lab experiment …` / `janken lab study run …`),
+The reproducible low-level command (`janken lab experiment ...` / `janken lab study run ...`),
 written by the CLI.
 
 ## Results

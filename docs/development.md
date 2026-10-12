@@ -44,24 +44,24 @@ fixtures, `pytest.mark.parametrize`.
 ```
 janken.toml        # every default (janken.local.toml: per-machine overrides)
 janken/
-├── __main__.py    # `python -m janken`: runs the CLI (`janken` is its pyproject.toml script)
-├── cli/           # the typer CLI: options.py (common flags, Lab), lifecycle.py,
-│                  #   notebook.py (idea, insight), bots.py, config.py, lab.py, reference.py
-├── notebook/      # the research notebook as data: ideas, notes, insights, next step
-├── settings.py    # janken.toml's schema and loader; the process-wide switches
-├── config_file.py # line-preserving edits of janken.toml (config set / unset)
-├── progress.py    # progress bars (tqdm) and Ctrl-C detection
-├── match.py       # a match's rules and its MatchResult
-├── tournament.py  # round-robin / balanced schedules, per-run standings
-├── spec.py        # a bot file + parameter overrides + result label
-├── report.py      # standings table, match lines, JSON dump
-├── botfile.py     # a bot's YAML file: description, defaults, blueprint section
-├── library.py     # bots read by stem: the arms an aggregator names, transitive hashes
-├── glicko.py      # Glicko-2
-├── rating.py      # titles, and rating one run in memory
-├── engine/        # compiling bots and refereeing matches (numba)
-├── kit/           # the bot anatomy: blueprint stages, YAML grammar, levels, pipeline
-└── lab/           # experiments, the runs database (runs_db.py, DuckDB), analysis,
++-- __main__.py    # `python -m janken`: runs the CLI (`janken` is its pyproject.toml script)
++-- cli/           # the typer CLI: options.py (common flags, Lab), lifecycle.py,
+|                  #   notebook.py (idea, insight), bots.py, config.py, lab.py, reference.py
++-- notebook/      # the research notebook as data: ideas, notes, insights, next step
++-- settings.py    # janken.toml's schema and loader; the process-wide switches
++-- config_file.py # line-preserving edits of janken.toml (config set / unset)
++-- progress.py    # progress bars (tqdm) and Ctrl-C detection
++-- match.py       # a match's rules and its MatchResult
++-- tournament.py  # round-robin / balanced schedules, per-run standings
++-- spec.py        # a bot file + parameter overrides + result label
++-- report.py      # standings table, match lines, JSON dump
++-- botfile.py     # a bot's YAML file: description, defaults, blueprint section
++-- library.py     # bots read by stem: the arms an aggregator names, transitive hashes
++-- glicko.py      # Glicko-2
++-- rating.py      # titles, and rating one run in memory
++-- engine/        # compiling bots and refereeing matches (numba)
++-- kit/           # the bot anatomy: blueprint stages, YAML grammar, levels, pipeline
++-- lab/           # experiments, the runs database (runs_db.py, DuckDB), analysis,
                    # space files, tuning, workflows.py (the lifecycle steps); the move
                    # dataset (DuckDB), predictors, their metrics and tuning
 bots/              # the bots, one YAML file each (incl. the baseline zoo; blocks/: arms)

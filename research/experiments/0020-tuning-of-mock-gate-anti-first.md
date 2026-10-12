@@ -5,7 +5,7 @@
 - **Kind:** tuning
 - **Idea:** #32
 - **Candidates:** `bots/mock_gate_anti_first.yaml`
-- **Baselines:** —
+- **Baselines:** -
 - **Study:** `0020-tuning-of-mock-gate-anti-first`
 - **Verdict:** drop
 

@@ -424,7 +424,7 @@ def lab_command(command: str) -> Callable[[F], F]:
     """Declare a lab command: add the common flags to `fn`'s own, and call it with a
     `Lab` (its first parameter, `lab`) built from them.
 
-    `command` names it for `engine.cache_commands` ("evaluate", "lab experiment", …).
+    `command` names it for `engine.cache_commands` ("evaluate", "lab experiment", ...).
     """
 
     def wrap(fn: F) -> F:

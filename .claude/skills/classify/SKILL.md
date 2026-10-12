@@ -12,9 +12,9 @@ kept bot is classified before anything else is built on it. Run every command as
 `docs/experiments.md` (Species).
 
 ```
-kept note ─► species compare ─► species classify NNNN ─┬─► new species   → <name>_v1
-                                                       ├─► next version  → <species>_v{N+1}, old one retires
-                                                       └─► variant       → retires to bots/inactive/legacy/
+kept note --> species compare --> species classify NNNN -+--> new species   --> <name>_v1
+                                                         +--> next version  --> <species>_v{N+1}, old one retires
+                                                         +--> variant       --> retires to bots/inactive/legacy/
 ```
 
 ## 1. Look first
@@ -46,7 +46,7 @@ uv run janken species classify NNNN
     all (alike moves, different results);
   - worse on no matchup and better on at least one (Bonferroni over the matchups): the
     **next version**;
-  - worse on none and better on none, but **more than `species.speed_factor` (2×) faster**
+  - worse on none and better on none, but **more than `species.speed_factor` (2x) faster**
     in self-play: the **next version**;
   - otherwise a **variant**.
 
@@ -71,9 +71,19 @@ not taken in `species.md`, with no level, version or `new`/`better` in it. Good:
   has no row).
 - A retired version or a variant: a row in `bots/inactive/legacy/README.md` (bot, level,
   why it left, the note).
+- **Superseded bots leave their dependents too.** When a bot retires (an old version
+  or a variant), no field bot may keep naming it: find them with
+  `grep -rln "<stem>" bots/l*/`, transitively (a bot naming one that changes changes
+  too). Drop the arm, or point it at the species' current version when that arm is the
+  bot's whole idea. A dependent with no results yet is edited in place; one with
+  results keeps its stem (a stem's logic never changes) and gets its next version,
+  `<species>_v{N+1}` (its lineage entry names the removed arm and the date; the old version goes to
+  `inactive/legacy/`). Re-check each edited bot with `janken bot check` and
+  `species compare`. `inactive/` and the Oracles (calibrated on what they mock) are left
+  as they are.
 - A new species that `census` shows thinning a level, or a variant that nearly won: say
   so in the note's `--analysis` next time, or as an idea (`/ideate`).
 
 Under `/lab-loop`, commit as
-`species: <old stem> → <new stem> (new|promoted|variant)`, staging `bots/`, `spaces/` and
+`species: <old stem> --> <new stem> (new|promoted|variant)`, staging `bots/`, `spaces/` and
 `research/`.

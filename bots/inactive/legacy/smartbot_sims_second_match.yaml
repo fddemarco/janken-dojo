@@ -4,7 +4,7 @@ description: |
   Three SecondMatch signals (opponent, joint and our history, at MAX_MATCH): for the
   longest earlier repeat of the history's suffix, they look up that matched point's
   own earlier repeat and predict what followed it, an older witness of the same
-  pattern (rps_kaggle §4.2, Testing Please Ignore). Each gets the three rotations
+  pattern (rps_kaggle section 4.2, Testing Please Ignore). Each gets the three rotations
   and joins smartbot_sims's arms under the same Dirichlet scores and Thompson
   sampling.
 defaults:

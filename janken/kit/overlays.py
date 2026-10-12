@@ -1,7 +1,7 @@
 """Overlays, compiled: transform the chosen move, after the core has run.
 
     Stall        random play while being read (drawdown) or while the lead is safe
-                 (lead lock): any margin wins a match here (rps_kaggle §5)
+                 (lead lock): any margin wins a match here (rps_kaggle section 5)
     Team         an Iliad fleet's handshake; supports throw matches to the champion,
                  and an impostor fakes a support's to beat the champion's throw move;
                  a vigilant teammate stops throwing once the other one doesn't

@@ -15,11 +15,11 @@ in the note. You bring the hypothesis and the judgement. Run every command as
   improves on). Only candidates in one run get a paired comparison, which is far sharper
   than comparing two runs.
 - **Hypothesis**, written before the run: what you expect, and the effect size that would
-  matter. For example: "bayes_combiner beats smartbot_sims by ≥ 2 pts, mostly against the
+  matter. For example: "bayes_combiner beats smartbot_sims by >= 2 pts, mostly against the
   metabots".
 - **Effort:**
-  - `standard`: 10 round robins, a score CI of about ±6 pts;
-  - `thorough`: 40 round robins, about ±3 pts, for effects of 1–3 pts;
+  - `standard`: 10 round robins, a score CI of about +/-6 pts;
+  - `thorough`: 40 round robins, about +/-3 pts, for effects of 1-3 pts;
   - `quick`: a smoke check, proves nothing.
 
 ## 2. Run it

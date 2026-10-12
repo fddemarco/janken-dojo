@@ -28,7 +28,7 @@ FIELD = {"a_v1": "bots/l1/a_v1.yaml", "b": "bots/l2/b.yaml"}
 
 
 def row(name: str, level: str, current: str) -> species.Species:
-    return species.Species(name, level, current, f"v1 ← `{name}`", "")
+    return species.Species(name, level, current, f"`{name}` --> v1", "")
 
 
 class TestContract:
@@ -139,7 +139,7 @@ blueprint:
             folder.mkdir(parents=True)
         (self.notebook / species.FILE).write_text(
             "# Species\n\n| species | level | current | versions | variants |\n"
-            "|---|---|---|---|---|\n| `copy` | L1 | `copy_v1` | v1 ← `copy` | |\n"
+            "|---|---|---|---|---|\n| `copy` | L1 | `copy_v1` | `copy` --> v1 | |\n"
         )
 
     def write(self, rel: str, text: str) -> str:

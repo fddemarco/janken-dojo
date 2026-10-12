@@ -17,7 +17,7 @@ uv run janken bot list               # candidates to start from
 uv run janken bot show <bot>         # a starting point's blueprint and space
 ```
 
-Name the bot after its idea (`bayes_combiner`, `geometry_stall`, …). The stem is its identity
+Name the bot after its idea (`bayes_combiner`, `geometry_stall`, ...). The stem is its identity
 and is never reused with different logic. Never give it a version (`_vN`): field bots are
 `<species>_vN`, and versions are given only by `janken species classify` (`/classify`)
 after a keep. Start from the current version of a species (`--from smartbot_v1`).

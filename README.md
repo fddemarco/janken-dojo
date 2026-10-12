@@ -37,7 +37,7 @@ uv run janken config show                    # every default (janken.toml)
 
 ## Documentation
 
-| page | read it to… |
+| page | read it to... |
 | --- | --- |
 | [The command line](docs/cli.md) | learn the two levels, the lab's language, the common flags, and one iteration end to end |
 | [CLI reference](docs/cli-reference.md) | look up any command or parameter (generated) |
@@ -55,7 +55,7 @@ uv run janken config show                    # every default (janken.toml)
 
 | path | what |
 | --- | --- |
-| `bots/` | the field: one YAML file per bot, in its level's folder (`l1/` … `l4/`, `oracle/`; `blocks/`: L1 arms for aggregators), indexed in [bots/README.md](bots/README.md) (levels, what each does, old names) |
+| `bots/` | the field: one YAML file per bot, in its level's folder (`l1/` ... `l4/`, `oracle/`; `blocks/`: L1 arms for aggregators), indexed in [bots/README.md](bots/README.md) (levels, what each does, old names) |
 | `bots/inactive/` | bots out of the field (never in a pool): |
 | `bots/inactive/fleets/iliad_v3/` | the Iliad v3 fleet: a champion and four supports |
 | `bots/inactive/legacy/` | retired bots, kept for the research record ([README](bots/inactive/legacy/README.md)) |

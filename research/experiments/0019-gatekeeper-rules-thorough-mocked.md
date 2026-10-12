@@ -21,19 +21,19 @@ uv run janken lab experiment bots/mock_gate_anti_first.yaml bots/mock_gate_bandi
 
 ## Results
 
-40 of 40 round robin(s) · pool 20 · 200 rounds/match · seed 2144222104 · mode full
+40 of 40 round robin(s), pool 20, 200 rounds/match, seed 2144222104, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| mock_gate_anti_first | 800 | 708-30-62 | 90.4% [88.1%, 92.2%] | +70.6 | 0 | 1847 ± 54 |
-| mock_gate_bandit | 800 | 700-31-69 | 89.4% [87.1%, 91.4%] | +69.9 | 0 | 1838 ± 58 |
-| mock_replay_gate | 800 | 676-40-84 | 87.0% [84.5%, 89.2%] | +56.3 | 0 | 1818 ± 52 |
+| mock_gate_anti_first | 800 | 708-30-62 | 90.4% [88.1%, 92.2%] | +70.6 | 0 | 1847 +/- 54 |
+| mock_gate_bandit | 800 | 700-31-69 | 89.4% [87.1%, 91.4%] | +69.9 | 0 | 1838 +/- 58 |
+| mock_replay_gate | 800 | 676-40-84 | 87.0% [84.5%, 89.2%] | +56.3 | 0 | 1818 +/- 52 |
 
 Paired comparisons:
 
-- `mock_gate_anti_first − mock_gate_bandit = +0.9 pts [-1.6, +3.4]` over 800 shared matches: no significant difference
-- `mock_gate_anti_first − mock_replay_gate = +3.4 pts [+0.8, +6.0]` over 800 shared matches: mock_gate_anti_first better
-- `mock_gate_bandit − mock_replay_gate = +2.4 pts [-0.1, +5.1]` over 800 shared matches: no significant difference
+- `mock_gate_anti_first - mock_gate_bandit = +0.9 pts [-1.6, +3.4]` over 800 shared matches: no significant difference
+- `mock_gate_anti_first - mock_replay_gate = +3.4 pts [+0.8, +6.0]` over 800 shared matches: mock_gate_anti_first better
+- `mock_gate_bandit - mock_replay_gate = +2.4 pts [-0.1, +5.1]` over 800 shared matches: no significant difference
 
 Weakest matchups of mock_gate_anti_first: nash 36.4%, transition_matrix 47.9%, mock_anti_advanced 50.0%, geometry 60.0%, smart_staller 71.4%, biased 80.0%.
 

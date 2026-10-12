@@ -15,7 +15,7 @@ bot's parameters.
 
 A bot's level is how many layers of aggregation it stacks (`janken/kit/levels.py`). It is
 computed from the blueprint, never written down, and the bot lives in its level's folder
-(`bots/l1/`, `bots/l2/`, …):
+(`bots/l1/`, `bots/l2/`, ...):
 
 | level | what it is | may hold |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ computed from the blueprint, never written down, and the bot lives in its level'
 | **L2** | a **meta-heuristic**: a Bandit or a Gate over L1s | L1s |
 | **L3** | a meta-meta-heuristic: a Bandit or a Gate over L2s | L2s, and L1s |
 | **L4** | a Bandit or a Gate over L3s | L3s, and L2s and L1s |
-| L*n* | … one level above the highest bot it aggregates | any lower level |
+| L*n* | ... one level above the highest bot it aggregates | any lower level |
 
 Every aggregator (`Bandit`, `Gate`, `NaiveBayes`) adds one level above its highest arm,
 whatever its scorer or its number of arms. A bot that plays another bot straight, with no
@@ -85,7 +85,7 @@ A reference is a mapping with a `bot` key (`janken/kit/blueprint/refs.py`):
 | `rotations` | the arms each instance makes, relative to that bot's own move: `COPY` plays it, `BEAT` beats it, `BEAT_BEAT` beats the move that beats it (`[COPY]`; from the opponent's side `[BEAT]`) |
 | `side` | `MY`: the bot plays for us (`MY`); `OPP`: the bot as the opponent would play it, a model of us |
 | `draws` | a bot of level 2+: its move by that many Thompson draws (0: its best-scored arm) |
-| `random_arm` | a bot of level 2+: its random arm replaced (`RA_NONE`, …) |
+| `random_arm` | a bot of level 2+: its random arm replaced (`RA_NONE`, ...) |
 
 An arm is the referenced bot's **core**, its knobs bound to the arm's values; its guards
 and overlays are left out, since they are about playing the game, not about predicting. An
@@ -134,7 +134,8 @@ The aggregators:
 
 `bots/blocks/` holds L1 heuristics that exist to be named as arms, with every field of
 their signal exposed as a parameter: `frequency`, `ngram`, `backoff`, `longest_match`,
-`second_match`, `relative`, `geometry`, and `oracle_expert` (research only). They are
+`second_match`, `relative`, `geometry`, `rarest`, `period`, `score_state`, and
+`oracle_expert` (research only). They are
 never in a pool, a tournament or the species book. Any bot can be named, though: the
 field's versions, the blocks, and the retired bots of `bots/inactive/`. Stems are unique
 across all of them.
@@ -157,7 +158,7 @@ The grammar lives in `janken/kit/declare.py`.
   else, but a `NaiveBayes`.
 - `$NAME` is a knob read from the bot's `defaults`; an UPPER_CASE word is a constant
   (`OPP`, `MY`, `JOINT`, `BEAT`, `ROCK`, `TIES_FIRST`, `RA_SCORED`, `CHAMPION`,
-  `ALL_ROTATIONS`, …). A default may be a constant too (`CTX: OPP`).
+  `ALL_ROTATIONS`, ...). A default may be a constant too (`CTX: OPP`).
 
 ## The stages
 
@@ -165,7 +166,7 @@ The grammar lives in `janken/kit/declare.py`.
 | --- | --- | --- |
 | guards | answer the round first, in order | `Opening`, `Noise`, `OnInvalid` |
 | view | models see only rounds where both moves are valid | (always) |
-| signals | each proposes a symbol, or none (an L1's `Heuristic` plays one) | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `Constant`, `Cycle`, `Biased`, `WinStay` |
+| signals | each proposes a symbol, or none (an L1's `Heuristic` plays one) | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `Rarest`, `Period`, `ScoreState`, `Constant`, `Cycle`, `Biased`, `WinStay` |
 | aggregators | bots made of bots, named | `Bandit` (scorer + selector over arms), `Gate` (main bandit vs gated experts), `NaiveBayes` (over the other arms) |
 | rotations | each arm plays its bot's move turned | `COPY`, `BEAT`, `BEAT_BEAT` |
 | scorer | every arm's record, counterfactually | `Dirichlet`, `DecayedNet`, `DropSwitch` (+ a random arm: `RA_SCORED` / `RA_PINNED`) |

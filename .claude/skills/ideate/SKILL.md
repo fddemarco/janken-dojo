@@ -21,13 +21,13 @@ uv run janken species census               # species per level, and alike pairs
 uv run janken species list                 # every species and its lineage
 ```
 
-Then the background: `research/rps_kaggle.md` (techniques, §4–7) and `research/sources/`
+Then the background: `research/rps_kaggle.md` (techniques, section 4-7) and `research/sources/`
 (one card per external resource: claims vs evidence, ideas spawned).
 
 ## 2. Look for leverage
 
 - **Weakest matchups** of the best bot, against the strong opponents (metabots, the
-  staller family, geometry, iocaine, rps4). Headline scores saturate near 85–95%, so the
+  staller family, geometry, iocaine, rps4). Headline scores saturate near 85-95%, so the
   decisive information is there. Dig in:
   `janken lab query "SELECT ... FROM matches WHERE ..."` and `janken lab match A B` for
   transcripts.

@@ -33,7 +33,7 @@ def idea_add(
         str, typer.Argument(help="the idea, one line (markdown allowed, no '|')")
     ],
     priority: Annotated[
-        Priority, typer.Option(help="P1 (likely big win) … P3 (curiosity)")
+        Priority, typer.Option(help="P1 (likely big win) ... P3 (curiosity)")
     ],
     motivation: Annotated[
         str,

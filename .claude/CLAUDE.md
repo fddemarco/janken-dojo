@@ -1,8 +1,8 @@
 # Janken bot lab
 
 A rock-paper-scissors bot tournament (see `README.md`, an index of `docs/`) plus a
-self-improving research loop: ideas → bots → evaluation and tuning against random pools →
-verdicts → insights → ideas.
+self-improving research loop: ideas --> bots --> evaluation and tuning against random pools -->
+verdicts --> insights --> ideas.
 
 ## These instructions: progressive disclosure
 
@@ -14,13 +14,25 @@ verdicts → insights → ideas.
   catalogues, examples), `scripts/` (code the skill runs), `assets/` (templates, data).
   `SKILL.md` names each file and when to read it.
 
+## Writing style
+
+Everything written for people (docs, notes, descriptions, commit messages, replies) reads
+like a person typed it:
+
+- Only characters a standard laptop keyboard types: no emojis, no typographic symbols
+  (curly quotes, long dashes, a minus sign other than `-`, unicode arrows, a times
+  sign other than `x`, a `>=` drawn as one character).
+- Arrows are written `-->`.
+- Backticks are for code, commands, paths and bot stems; don't wrap ordinary words or
+  numbers in them.
+
 ## The CLI and the skills
 
 `uv run janken ...` (typer, `janken/cli/`; docs/cli.md). It has two levels:
 
 - **High level:** one command per lifecycle step, each keeping the notebook's books.
   - `status` (the next step), `idea`, `bot new | check | list | show | export`;
-  - `evaluate` (note → run → results), `tune` (note → study → validation);
+  - `evaluate` (note --> run --> results), `tune` (note --> study --> validation);
   - `verdict`, `species classify | compare | census | list`, `insight`, `tournament`,
     `config`.
 - **Low level:** `janken lab ...`, ad hoc and without the notebook.
@@ -59,8 +71,8 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 
 ## Bot rules (enforced by review, the engine and the tests)
 
-- Every bot has the same anatomy (`janken/kit/blueprint/`): guards → valid-only view →
-  track → signals → move choice (rotations) → select (scorer + selector) → overlays.
+- Every bot has the same anatomy (`janken/kit/blueprint/`): guards --> valid-only view -->
+  track --> signals --> move choice (rotations) --> select (scorer + selector) --> overlays.
 - A blueprint is `guards`, a `core` and `overlays`. The core is a predictor tree
   (composite pattern, `janken/kit/blueprint/predictor.py`): signals are leaves;
   `Heuristic`, `Sim`, `Rotated`, `Replay` decorate one predictor; the aggregators
@@ -114,7 +126,7 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   object, or raising an exception. Use `None` only where a third-party API forces it, and
   keep it at that boundary.
 - The `global` keyword is not allowed. Pass state explicitly or hold it in an object.
-- Defaults (paths, rounds, round robins, seeds, tuning budgets…) live in **`janken.toml`**,
+- Defaults (paths, rounds, round robins, seeds, tuning budgets...) live in **`janken.toml`**,
   read in one place (`janken/settings.py`: a typed schema whose fields carry their help),
   and are changed with `janken config set` (`--local`: `janken.local.toml`, gitignored).
   No magic numbers in the code. Every CLI option takes its default from the config,
@@ -181,7 +193,7 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
 - `experiments/` (the workspace) holds the runs, the move dataset and the tuning studies.
   It's gitignored, local data.
 - `bots/` holds the field (YAML, indexed in `bots/README.md`, with the map of old names),
-  one folder per level: `bots/l1/`, `bots/l2/`, …, `bots/oracle/`. A bot sits in the
+  one folder per level: `bots/l1/`, `bots/l2/`, ..., `bots/oracle/`. A bot sits in the
   folder of its computed level (`janken bot check`, and `janken bot audit` in pre-commit, enforce it).
   `bots/blocks/` holds L1 heuristics that exist to be named as arms, and
   `bots/inactive/` the bots out of the field: `fleets/` and `legacy/` (discovery reads

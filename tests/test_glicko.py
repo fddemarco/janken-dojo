@@ -109,7 +109,7 @@ class TestWiden:
     def test_the_ceiling_follows_the_scale_it_was_given(self) -> None:
         """`scale` and the deviation are both in display units, so clamping a
         scaled deviation against the unscaled default silently truncates every
-        rating above it — which is invisible in the numbers and fatal to a fit."""
+        rating above it - which is invisible in the numbers and fatal to a fit."""
         wide = glicko.Rating(1500.0, 800.0, 0.06)
         kept = glicko.widen(wide, days=1.0, scale=444.0, max_rd=895.0)
         assert kept.rd > glicko.START_RD
@@ -230,7 +230,7 @@ class TestLadder:
     def test_the_starting_deviation_is_glickman_s_converted(self) -> None:
         """Not a free constant: it is "this bot is unknown" on each scale. Fitting
         it instead buys a tidier newcomer penalty and costs eight tournaments of
-        convergence — see scripts/fit_glicko.py."""
+        convergence - see scripts/fit_glicko.py."""
         assert glicko.START_RD == pytest.approx(
             glicko.START_PHI * glicko.MATCH.scale, rel=0, abs=0.5e-7
         )
@@ -246,7 +246,7 @@ class TestRandomBotIsInert:
 
     This is the property that makes it safe to leave `randy` in the field: it
     anchors the scale instead of injecting noise. It is also the ceiling on
-    everyone else — every bot plays it, so a perfect bot in a field of N tops out
+    everyone else - every bot plays it, so a perfect bot in a field of N tops out
     at `(N - 1.5)/(N - 1)`.
     """
 
@@ -261,7 +261,7 @@ class TestRandomBotIsInert:
 
     def test_the_field_size_ceiling_clears_the_top_title(self) -> None:
         """What a flawless bot can actually reach, held back by the one match it
-        can never win more than half of — and it has to clear `gm`, or the top
+        can never win more than half of - and it has to clear `gm`, or the top
         rung is a decoration rather than a target.
 
         Asserted as an inequality against the floor rather than as the numbers

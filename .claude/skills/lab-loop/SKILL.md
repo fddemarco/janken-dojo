@@ -6,9 +6,9 @@ description: The janken bot lab's autonomous self-improvement loop - ask `janken
 # The lab loop (/lab-loop)
 
 ```
-janken status ─► next step ─► /ideate | /build | /evaluate | /tune | /classify | /learn ─► commit ─┐
-      ▲                                                                                             │
-      └─────────────────────────────────────────────────────────────────────────────────────────────┘
+janken status --> next step --> /ideate | /build | /evaluate | /tune | /classify | /learn --> commit -+
+      ^                                                                                               |
+      +-----------------------------------------------------------------------------------------------+
 ```
 
 `janken status` holds the loop's decision list, in code (`janken/notebook/state.py`). It
@@ -30,7 +30,7 @@ protocol. Read it once per session.
 - **Branch.** On `main`, switch to `bot-lab/auto` (create it if missing). All lab commits
   go there, and the user merges them. Never push, force or rewrite history.
 - **Clean tree.** Uncommitted work from a finished step (a note now `analyzed`): commit it
-  (§2). Any other change you didn't make: stop and ask.
+  (section 2). Any other change you didn't make: stop and ask.
 
 ## 1. Ask and act
 
@@ -40,8 +40,8 @@ uv run janken status            # add --format json to parse it
 
 | next step | do |
 | --- | --- |
-| `resume` | `janken evaluate --note NNNN` (or `janken tune --note NNNN`): it finishes the cut run, then `/evaluate` §3 |
-| `verdict` | `/evaluate` §3 (or `/tune` §3): read the results, decide, `janken verdict` |
+| `resume` | `janken evaluate --note NNNN` (or `janken tune --note NNNN`): it finishes the cut run, then `/evaluate` section 3 |
+| `verdict` | `/evaluate` section 3 (or `/tune` section 3): read the results, decide, `janken verdict` |
 | `run` | the note is planned: `janken evaluate --note NNNN` / `janken tune --note NNNN`, then decide |
 | `classify` | `/classify` that note's bot: a new species, the next version, or a variant |
 | `learn` | `/learn` on that note |
@@ -91,19 +91,19 @@ Write what you find into the verdict's `--analysis`.
    ```
    NNNN <slug>: <verdict> (<key number>)
 
-   <2–4 lines: what was tested, the paired result with its CI, what's next>
+   <2-4 lines: what was tested, the paired result with its CI, what's next>
 
    <attribution line(s) from the system reminder>
    ```
 
    For example: `0007 tpi-lite: keep (+3.1 pts [+0.8, +5.4] vs smartbot)`. For an insight
    or ideas-only commit, use `insight: <finding>` or `ideas: <what changed>`; for a
-   classification, `species: <old stem> → <new stem> (new|promoted|variant)`.
+   classification, `species: <old stem> --> <new stem> (new|promoted|variant)`.
 
 ## 3. Loop or stop
 
 After each commit, print one status line: the step, the note, the verdict, the next
-step. Then go back to §1.
+step. Then go back to section 1.
 
 Stop, and summarize every iteration (notes, verdicts, commits, the current best bot),
 when:

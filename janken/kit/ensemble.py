@@ -4,7 +4,7 @@ Each round, `predictions` asks every signal for its symbol (a sim is asked with
 the histories swapped, and its symbol is the move that beats its prediction of
 us), and `set_arms` turns each symbol into one pending move per rotation, plus
 the random arm. When the round is folded in, `fold` scores every pending arm
-counterfactually against the opponent's real move (rps_kaggle §4.5: unchosen arms
+counterfactually against the opponent's real move (rps_kaggle section 4.5: unchosen arms
 must learn too) and lets the signals observe it.
 
 Replay signals are filled in by the caller (janken/kit/replay.py), which is how a

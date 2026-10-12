@@ -62,7 +62,7 @@ $ uv run janken status [OPTIONS]
 
 ## `uv run janken evaluate`
 
-Test candidates against random pools, with a note: hypothesis → results.
+Test candidates against random pools, with a note: hypothesis --> results.
 
 Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
 it, and writes its results in (status run). Close it with `janken verdict`.
@@ -264,7 +264,7 @@ $ uv run janken idea add [OPTIONS] {text}
 
 **Options**:
 
-* `--priority <P1|P2|P3>`: P1 (likely big win) … P3 (curiosity)  [required]
+* `--priority <P1|P2|P3>`: P1 (likely big win) ... P3 (curiosity)  [required]
 * `--motivation <str>`: the evidence or source behind it (a note, insight, card)  [required]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]

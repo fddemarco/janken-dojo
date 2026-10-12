@@ -177,7 +177,7 @@ def ticked(text: str) -> list[str]:
 
 
 def ticks(names: list[str]) -> str:
-    return ", ".join(f"`{n}`" for n in names) or "—"
+    return ", ".join(f"`{n}`" for n in names) or "-"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -203,16 +203,16 @@ def render_new(number: int, draft: Draft, today: datetime.date) -> str:
         ("Date", today.isoformat()),
         ("Status", PLANNED),
         ("Kind", draft.kind),
-        ("Idea", f"#{draft.idea}" if draft.idea else "—"),
+        ("Idea", f"#{draft.idea}" if draft.idea else "-"),
         ("Candidates", ticks(draft.candidates)),
         ("Baselines", ticks(draft.baselines)),
-        ("Run" if draft.kind == EVALUATION else "Study", "—"),
-        ("Verdict", "—"),
+        ("Run" if draft.kind == EVALUATION else "Study", "-"),
+        ("Verdict", "-"),
     ]
     out = [f"# {number:04d}: {draft.title}", ""]
     out += [f"- **{k}:** {v}" for k, v in fields]
     for heading in SECTIONS:
-        body = draft.hypothesis.strip() if heading == "Hypothesis" else "—"
+        body = draft.hypothesis.strip() if heading == "Hypothesis" else "-"
         out += ["", f"## {heading}", "", body]
     return "\n".join(out) + "\n"
 

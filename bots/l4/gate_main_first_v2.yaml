@@ -1,0 +1,28 @@
+description: |
+  The MAIN_FIRST gatekeeper: smartbot_sims's arms first, the anti expert once it leads.
+
+  v2 (2026-10-12): v1 over smartbot_sims_v2 (no word2janken sims); the figures
+  below were measured on v1.
+
+  smartbot_sims's arms (L3) plus anti_smartbot_sims' Replay of smartbot_sims (256
+  Thompson draws, played BEAT) as the gated last arm: an L4. Its Gatekeeper starts
+  on the advanced arms and, from round WARMUP on, moves to the anti expert as soon
+  as the anti expert's counterfactual record leads theirs (EDGE 0), keeping it
+  until the advanced arms lead by EDGE (hysteresis). Built for the level targets:
+  as good as the best L2 vs L1 (it plays like smartbot_sims there) and better than
+  the best L3 vs L2 (it switches to the anti expert vs the metabots). Screened with
+  an Oracle arm vs ANTI_FIRST, ANTI_FIRST_HOLD, BANDIT and EDGE (32 paired seeds).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

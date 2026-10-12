@@ -8,7 +8,7 @@ The CLI speaks the lab's language and comes in two levels:
 
 - **High level:** one command per step of the self-improvement lifecycle. These commands
   keep the research notebook's books, so a step is one command.
-- **Low level** (`janken lab …`): ad hoc runs, queries and reports that never touch the
+- **Low level** (`janken lab ...`): ad hoc runs, queries and reports that never touch the
   notebook.
 
 Every parameter is listed in the [CLI reference](cli-reference.md), and every default
@@ -30,7 +30,7 @@ lives in [`janken.toml`](configuration.md).
 | **fleet** | a champion and its supports, tuned together (supports at weight 0) |
 | **study** | a tuning search, made of **trials** |
 | **validation** | replaying a study's best trials on fresh pools: the only evidence a study gives |
-| **note** | an experiment's or a study's record: hypothesis → results → verdict |
+| **note** | an experiment's or a study's record: hypothesis --> results --> verdict |
 | **verdict** | `keep`, `drop` or `iterate` |
 | **idea** | a backlog item (`research/ideas.md`) |
 | **insight** | a confirmed, general finding (`research/insights.md`) |
@@ -40,9 +40,9 @@ lives in [`janken.toml`](configuration.md).
 ## The lifecycle (high level)
 
 ```
-status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► species classify ─► insight
-   ▲                                    └─► tune ─┘                                  │
-   └─────────────────────────────────────────────────────────────────────────────────┘
+status --> idea --> bot new / check --> evaluate --> verdict --> species classify --> insight
+   ^                                    +--> tune -+                                     |
+   +-------------------------------------------------------------------------------------+
 ```
 
 | command | does |
@@ -52,12 +52,12 @@ status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► 
 | `janken bot new NAME --from BOT` | scaffold a bot (and its space file); then edit its blueprint |
 | `janken bot check / list / show` | verify a bot (contract, compile, smoke run); inspect bots |
 | `janken bot export NAME` | a bot (a champion: with its fleet's supports) as tournament submission scripts: stdlib-only `play(my_moves, opp_moves)` files in `exports/NAME/` |
-| `janken evaluate CANDIDATE… --baseline BOT --hypothesis …` | a new note, the experiment, its results written into the note |
-| `janken tune BOT… [--support BOT…] --hypothesis …` | a new note, the study, its validation written into the note |
+| `janken evaluate CANDIDATE... --baseline BOT --hypothesis ...` | a new note, the experiment, its results written into the note |
+| `janken tune BOT... [--support BOT...] --hypothesis ...` | a new note, the study, its validation written into the note |
 | `janken species classify NOTE [--name NAME]` | a kept bot: a new species (`<name>_v1`), the next version of its level's closest species (the old one retires), or a variant (it retires) |
 | `janken species compare BOT / census / list` | how alike a bot's core is to each species; the field's alike pairs and species per level; the lineage (`research/species.md`) |
-| `janken verdict NOTE keep\|drop\|iterate --summary …` | close the note; its idea becomes done, dropped or stays open |
-| `janken insight add --note NOTE …` | record an insight, **only** if the note's evidence meets the bar |
+| `janken verdict NOTE keep\|drop\|iterate --summary ...` | close the note; its idea becomes done, dropped or stays open |
+| `janken insight add --note NOTE ...` | record an insight, **only** if the note's evidence meets the bar |
 | `janken insight list / supersede` | read, or strike a contradicted insight |
 | `janken tournament` | the whole field: standings, Glicko-2 ratings, titles |
 | `janken config show / get / set / unset / path / check` | every default ([Configuration](configuration.md)) |
@@ -67,7 +67,7 @@ status ─► idea ─► bot new / check ─► evaluate ─► verdict ─► 
 ```bash
 uv run janken status
 uv run janken idea add "**TPI-lite**: one naive-Bayes arm over every predictor" \
-  --priority P1 --motivation "rps_kaggle §4.2"
+  --priority P1 --motivation "rps_kaggle section 4.2"
 uv run janken bot new bayes_combiner --from smartbot_sims_v1 --idea 22 \
   --description "TPI-lite: a naive-Bayes combiner arm.\nMultiplies every predictor's evidence."
 # ... edit bots/l2/bayes_combiner.yaml ...
@@ -116,22 +116,22 @@ Where flags apply differently:
 - **`--format json`** prints machine-readable results, for scripts and agents. Use it
   with `status`, `idea list`, `lab runs`, `lab query`, and so on.
 
-## The low level: `janken lab …`
+## The low level: `janken lab ...`
 
 | command | does |
 | --- | --- |
-| `lab experiment CANDIDATE…` | candidates vs fresh random pools, stored as a run (no note) |
+| `lab experiment CANDIDATE...` | candidates vs fresh random pools, stored as a run (no note) |
 | `lab resume RUN` | play the round robins an interrupted run is missing |
-| `lab report RUN…` | a run's full report: scores, ratings, paired comparisons, every matchup |
+| `lab report RUN...` | a run's full report: scores, ratings, paired comparisons, every matchup |
 | `lab runs` | every stored run, with its status |
 | `lab history STEM` / `lab leaderboard` | a bot across runs, or every candidate pooled |
 | `lab match A B` | one match and its transcript (nothing stored) |
-| `lab query "SELECT …" [--db runs\|dataset]` | read-only SQL over the runs database or the move dataset |
-| `lab space BOT…` | scaffold space files |
-| `lab study run SPACE… --study NAME` / `lab study show NAME` / `lab study list` | Optuna studies without a note |
-| `lab dataset add BOTS…` / `lab dataset info` | grow or summarise the move dataset |
-| `lab predict BOT…` / `lab predict-tune SPACE… --study NAME` | bots as next-move predictors |
-| `lab profile run -- COMMAND…` / `lab profile bench -- COMMAND…` | a command's hotspots and whether fixing them pays; its wall time, vs a `--baseline` |
+| `lab query "SELECT ..." [--db runs\|dataset]` | read-only SQL over the runs database or the move dataset |
+| `lab space BOT...` | scaffold space files |
+| `lab study run SPACE... --study NAME` / `lab study show NAME` / `lab study list` | Optuna studies without a note |
+| `lab dataset add BOTS...` / `lab dataset info` | grow or summarise the move dataset |
+| `lab predict BOT...` / `lab predict-tune SPACE... --study NAME` | bots as next-move predictors |
+| `lab profile run -- COMMAND...` / `lab profile bench -- COMMAND...` | a command's hotspots and whether fixing them pays; its wall time, vs a `--baseline` |
 | `lab profile list` / `lab profile show ID` / `lab profile spans` | stored profiles; the timing spans every command logs, slow ones flagged |
 
 ```bash
@@ -142,6 +142,6 @@ uv run janken lab match bots/l2/bayes_combiner.yaml bots/l1/geometry_v1.yaml --r
 
 ## Errors and exit status
 
-- **A refused step** prints `error: …` and exits with status 2. Examples: a missing note,
+- **A refused step** prints `error: ...` and exits with status 2. Examples: a missing note,
   a reused bot stem, an insight below the bar, a bad config value.
 - **Ctrl-C** exits with status 130; whatever was already committed stays stored.

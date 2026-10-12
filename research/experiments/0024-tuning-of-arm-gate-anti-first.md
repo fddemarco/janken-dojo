@@ -3,9 +3,9 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** tuning
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/arm_gate_anti_first.yaml`
-- **Baselines:** —
+- **Baselines:** -
 - **Study:** `0024-tuning-of-arm-gate-anti-first`
 - **Verdict:** drop
 

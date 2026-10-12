@@ -3,14 +3,14 @@
 `next_step` is the loop's decision list, as pure logic over what the notebook and the
 workspace hold: finish what's started before starting something new.
 
-1. A note whose run was interrupted → finish it (`janken evaluate --note`).
-1. A note with results but no verdict → decide (`janken verdict`).
-1. A planned note → run it (`janken evaluate --note` / `janken tune --note`).
-1. A `keep` note whose candidate is still in the field without a version → classify
+1. A note whose run was interrupted --> finish it (`janken evaluate --note`).
+1. A note with results but no verdict --> decide (`janken verdict`).
+1. A planned note --> run it (`janken evaluate --note` / `janken tune --note`).
+1. A `keep` note whose candidate is still in the field without a version --> classify
    it (`janken species classify`): a new species, the next version, or a variant.
-1. A `keep` note no insight cites yet → consider an insight (`janken insight add`).
-1. Otherwise → build the top open idea (in-progress first, then by priority).
-1. No open idea → ideate.
+1. A `keep` note no insight cites yet --> consider an insight (`janken insight add`).
+1. Otherwise --> build the top open idea (in-progress first, then by priority).
+1. No open idea --> ideate.
 """
 
 import dataclasses

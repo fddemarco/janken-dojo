@@ -3,7 +3,7 @@ description: |
 
   Every arm is a learning L1 of the field played from the opponent's side
   (frequency, markov2_joint, pattern_memory, transition_matrix's most likely move,
-  word2janken, rotation_outcome, balancer_hunter, period_detector, score_reader),
+  rotation_outcome, balancer_hunter, period_detector, score_reader),
   three rotations each: we beat the opponent if it models us like that bot, or
   if it models our model. Dirichlet scores, Thompson sampling at SHARP.
 defaults:
@@ -20,7 +20,6 @@ blueprint:
           side: OPP
           space: {ORDER: 1, CTX: OPP, DECAY: 0.95}
           rotations: [BEAT, BEAT_BEAT, COPY]
-        - {bot: word2janken_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: rotation_outcome_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: balancer_hunter_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: period_detector_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}

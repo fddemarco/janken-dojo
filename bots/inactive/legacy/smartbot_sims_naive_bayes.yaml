@@ -1,7 +1,7 @@
 description: |
   smartbot_sims plus a TPI-lite naive-Bayes combiner arm (idea #2).
 
-  Testing Please Ignore's design (rps_kaggle §6) as one extra signal: NaiveBayes
+  Testing Please Ignore's design (rps_kaggle section 6) as one extra signal: NaiveBayes
   learns, per signal, how its symbol relates to the opponent's real move, multiplies
   that evidence from all 28 other signals (the metabot's 18 predictors and the 10
   sims, replays included) into one posterior, and names the move with the best

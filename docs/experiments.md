@@ -18,7 +18,7 @@ too noisy to decide anything.
 - **Seeds.** `--seed` reproduces a run. `-1` (the default) draws a fresh seed and records
   it.
 - **Effort.** `--effort` sets how many round robins: `quick` 2, `standard` 10 (a score CI
-  of about ±6 pts), `thorough` 40 (about ±3 pts). `--round-robins` overrides it.
+  of about +/-6 pts), `thorough` 40 (about +/-3 pts). `--round-robins` overrides it.
 
 ## With a note: `janken evaluate`
 
@@ -40,7 +40,7 @@ uv run janken verdict 0007 keep --summary "+3.1 pts [+0.8, +5.4] vs old ..."
 The results are the candidates vs the pool, the paired comparisons and the weakest
 matchups. `verdict` closes the note.
 
-## Without a note: `janken lab …`
+## Without a note: `janken lab ...`
 
 ```bash
 uv run janken lab experiment bots/l1/a.yaml bots/l1/a.yaml:DECAY=0.8 --effort thorough

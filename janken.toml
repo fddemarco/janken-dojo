@@ -65,7 +65,7 @@ validate_round_robins = 2
 predict_trials = 10
 
 [effort.standard]
-# 10 round robins give each candidate 200 matches vs the pool: a score CI of ~±6 pts.
+# 10 round robins give each candidate 200 matches vs the pool: a score CI of ~+/-6 pts.
 round_robins = 10
 tune_round_robins = 5
 trials = 100
@@ -74,7 +74,7 @@ validate_round_robins = 10
 predict_trials = 100
 
 [effort.thorough]
-# For small effects: 40 round robins give a score CI of ~±3 pts.
+# For small effects: 40 round robins give a score CI of ~+/-3 pts.
 round_robins = 40
 tune_round_robins = 10
 trials = 300

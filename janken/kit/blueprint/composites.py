@@ -61,7 +61,7 @@ class Replay(Decorator, Signal):
 
 @dataclasses.dataclass(frozen=True)
 class NaiveBayes(Composite, Signal):
-    """TPI-lite (rps_kaggle §6): a naive-Bayes combiner of `inputs`, which are its
+    """TPI-lite (rps_kaggle section 6): a naive-Bayes combiner of `inputs`, which are its
     bandit's other predictors (the one shape the pipeline combines: lowering.py
     checks it). Per input it keeps counts, decayed by `decay`, of its symbol
     (NO_MOVE included) against the opponent's real move; the posterior over the

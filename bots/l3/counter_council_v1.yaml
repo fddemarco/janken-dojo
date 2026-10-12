@@ -1,7 +1,7 @@
 description: |
-  Only models of us, at L2: eight metabots played from the opponent's side.
+  Only models of us, at L2: seven metabots played from the opponent's side.
 
-  smartbot, smartbot_fast, iocaine_lite, rps4_lite, word2janken_scoreboard,
+  smartbot, smartbot_fast, iocaine_lite, rps4_lite,
   mirror_bandit, backoff_family and multiscale, each replayed as the opponent
   would play it against us (its likely move), and beaten, beaten twice, or
   copied. No direct opponent models at all. Dirichlet scores, Thompson sampling.
@@ -15,7 +15,6 @@ blueprint:
         - {bot: smartbot_fast_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: iocaine_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
-        - {bot: word2janken_scoreboard_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: mirror_bandit_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: backoff_family_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
         - {bot: multiscale_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}

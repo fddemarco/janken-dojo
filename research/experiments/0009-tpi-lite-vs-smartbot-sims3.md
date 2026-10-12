@@ -21,16 +21,16 @@ uv run janken lab experiment bots/tpi_lite.yaml bots/smartbot_sims3.yaml --round
 
 ## Results
 
-40 of 40 round robin(s) · pool 20 · 200 rounds/match · seed 2533817567 · mode full
+40 of 40 round robin(s), pool 20, 200 rounds/match, seed 2533817567, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| smartbot_sims3 | 800 | 635-16-149 | 80.4% [77.5%, 83.0%] | +69.3 | 0 | 1763 ± 80 |
-| tpi_lite | 800 | 632-11-157 | 79.7% [76.8%, 82.3%] | +70.3 | 0 | 1775 ± 82 |
+| smartbot_sims3 | 800 | 635-16-149 | 80.4% [77.5%, 83.0%] | +69.3 | 0 | 1763 +/- 80 |
+| tpi_lite | 800 | 632-11-157 | 79.7% [76.8%, 82.3%] | +70.3 | 0 | 1775 +/- 82 |
 
 Paired comparisons:
 
-- `tpi_lite − smartbot_sims3 = -0.7 pts [-3.9, +2.5]` over 800 shared matches: no significant difference
+- `tpi_lite - smartbot_sims3 = -0.7 pts [-3.9, +2.5]` over 800 shared matches: no significant difference
 
 Weakest matchups of tpi_lite: hector 35.7%, smartbot_bandit 45.7%, smartbot_sims 45.8%, geometry 50.0%, odysseus 52.4%, nash 55.0%.
 

@@ -51,7 +51,7 @@ The dataset is **append-only**: nothing updates or deletes a row.
 
 ## Commands
 
-All of them are low level (`janken lab …`) and take the [common flags](cli.md#the-common-flags).
+All of them are low level (`janken lab ...`) and take the [common flags](cli.md#the-common-flags).
 `--workspace` picks the dataset.
 
 ```bash
@@ -93,5 +93,5 @@ How a study runs:
 - **Storage.** Studies live in `experiments/tuning/predict/`.
 - **Recorded validation.** The scores on the test split of the best trials and of every
   predictor's defaults go to the `predict_validations` table of `experiments/runs.duckdb`:
-  study, predictor, trial (−1: defaults), training value, split and the four metrics.
+  study, predictor, trial (-1: defaults), training value, split and the four metrics.
   `janken lab study show NAME` lists them.

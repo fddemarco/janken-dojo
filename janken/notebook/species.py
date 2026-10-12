@@ -3,7 +3,7 @@
     | species | level | current | versions | variants |
 
 A field bot's stem is `<species>_vN`: version N of its species. `versions` is the
-lineage, `v1 ← `old_stem` (link); v2 ← ...`, and `variants` the bots that behaved like
+lineage, `` `old_stem` (link) --> v1; ... --> v2 ``, and `variants` the bots that behaved like
 the species without beating it. Rows are parsed from and rendered back to the table;
 every other line of the file, and every row nobody changed, is kept byte for byte.
 """
@@ -72,7 +72,7 @@ class Species:
     name: str
     level: str  # "L1", "L2", ...
     current: str  # the current version's stem
-    versions: str  # "v1 ← `old` (link); v2 ← `old` (link)"
+    versions: str  # "`old` (link) --> v1; `old` (link) --> v2"
     variants: str  # "`stem` (link); ..." or ""
 
     def row(self) -> str:
@@ -163,7 +163,7 @@ class Registry:
         if not rows and not header:
             raise SpeciesError(f"{FILE} has no table to add to")
         species = Species(
-            name, level, Version(name, 1).stem, f"v1 ← {_entry(origin, link)}", ""
+            name, level, Version(name, 1).stem, f"{_entry(origin, link)} --> v1", ""
         )
         lines = list(self.lines)
         lines.insert((rows or header)[-1] + 1, species.row())
@@ -173,7 +173,9 @@ class Registry:
         """The registry with the species' next version, and that version's stem."""
         species = self.get(name)
         nxt = Version(name, species.number + 1)
-        versions = _joined(species.versions, f"v{nxt.number} ← {_entry(origin, link)}")
+        versions = _joined(
+            species.versions, f"{_entry(origin, link)} --> v{nxt.number}"
+        )
         promoted = dataclasses.replace(species, current=nxt.stem, versions=versions)
         return self._replace(promoted), nxt.stem
 

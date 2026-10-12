@@ -6,7 +6,7 @@ Design (see research/README.md, "Tuning"):
   tuned together in one study (a fleet: a champion and its supports), each trial
   choosing every bot's parameters at once. Optuna names a parameter
   `<stem>.<NAME>`.
-* Objective: each tuned bot's match score, (W + ½D) / N, over its matches against
+* Objective: each tuned bot's match score, (W + D/2) / N, over its matches against
   the pool and against the other tuned bots, combined as a weighted mean with the
   space files' weights. A fleet's supports take weight 0: they are tuned only for
   what they do to the champion.
@@ -420,7 +420,7 @@ class TrialProgress:
         self.finished += 1
         done = [t for t in study.trials if t.value is not None]
         best = study.best_trial if done else None
-        best_text = self.show(best.value) if best and best.value is not None else "—"
+        best_text = self.show(best.value) if best and best.value is not None else "-"
         if trial.state == optuna.trial.TrialState.PRUNED:
             self.pruned += 1
             state = "pruned"
@@ -603,7 +603,7 @@ def validate(
                 [
                     r.champion,
                     r.trial,
-                    "—" if math.isnan(r.train_value) else _pct(r.train_value),
+                    "-" if math.isnan(r.train_value) else _pct(r.train_value),
                     f"{_pct(r.score)} [{_pct(r.ci_lo)}, {_pct(r.ci_hi)}]",
                     f"{100 * r.vs_defaults:+.1f} pts [{100 * r.vs_defaults_lo:+.1f}, {100 * r.vs_defaults_hi:+.1f}]",
                 ]

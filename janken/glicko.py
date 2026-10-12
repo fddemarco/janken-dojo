@@ -8,16 +8,16 @@ has played four hundred games from a 1700 that has played four.
 **Two scores, and which one carries the ladder matters.** A match is hundreds of
 rounds, so two different numbers are available from it:
 
-  * `round_score` — the share of rounds won. The low-variance estimate of one bot's
+  * `round_score` - the share of rounds won. The low-variance estimate of one bot's
     edge, and the one that makes a uniform-random bot inert: nobody can beat
     uniform play above half the rounds, so `randy` scores 0.499 over 30,701 real
     matches and injects no noise.
-  * `match_score` — who won. One bit against eight, and coarse.
+  * `match_score` - who won. One bit against eight, and coarse.
 
 The obvious choice is the first one, and it is wrong. Rock-paper-scissors has a
 trivially available Nash equilibrium: any bot can guarantee itself half the rounds
 by playing at random. So a round fraction above 0.5 does not measure how good a bot
-is, it measures **how exploitable its opponents are** — and that falls as the field
+is, it measures **how exploitable its opponents are** - and that falls as the field
 improves. Replaying the real log, the top bot beats the weak bots 95-99% of rounds
 but the other strong bots only 51-52%; restricted to a field of competent bots its
 rating collapses from 1726 to 1532, and every title above `cm` becomes unreachable
@@ -35,7 +35,7 @@ The brake on the amplifier is `randy` itself: every bot plays it, no bot can bea
 it, so a perfect bot in a field of N tops out at `(N - 1.5)/(N - 1)`.
 
 **The deviation widens by elapsed time, not by periods played.** A rating period
-here is a tournament, and tournaments run every half hour — a cadence the operator
+here is a tournament, and tournaments run every half hour - a cadence the operator
 can change. Standard Glicko-2 widens once per period, so doubling the tournament
 frequency would double how fast an idle bot's rating decays into uncertainty, which
 is a strange thing for a scheduling choice to control. Volatility is therefore
@@ -54,7 +54,7 @@ from collections.abc import Callable, Sequence
 # Internal units -> familiar rating points: Glickman's own constant, and not a
 # fitted one. Fitting it against this match log to land the top bot on a chosen
 # number gave 158.9, which is close enough to be tempting and worse on every count
-# that matters — `expected()` stopped being Elo's familiar 400-points-is-10-to-1
+# that matters - `expected()` stopped being Elo's familiar 400-points-is-10-to-1
 # curve, the best possible showing in a 19-bot field fell to 2065 and put `gm` out
 # of reach entirely, and the strongest bots rated below the `im` floor two of them
 # already hold. The published constant is better than a number chosen to make a
@@ -84,7 +84,7 @@ ALT_START_RD = START_PHI * ALT_SCALE
 RANK_K = 1.0
 
 # How much the volatility itself may move. Small means "this bot's form is
-# steady"; Glickman suggests 0.3-1.2. The field here is stable by construction —
+# steady"; Glickman suggests 0.3-1.2. The field here is stable by construction -
 # an improved bot is a new file and therefore a new identity, so a rating never has
 # to chase a bot that got better overnight.
 TAU = 0.5
@@ -106,7 +106,7 @@ class Rating:
 
         One deviation below the estimate, so a bot that has played four games sits
         below an equally-rated bot that has played four hundred. It is not a
-        handicap — it is the same rating read at its pessimistic end, and it rises
+        handicap - it is the same rating read at its pessimistic end, and it rises
         on its own as the bot keeps playing.
 
         A ranking choice, never a rating one: `k` changes who is shown on top and
@@ -168,7 +168,7 @@ def _expected(mu: float, mu_j: float, phi_j: float) -> float:
 
 
 def expected_score(player: Rating, opponent: Rating, scale: float = SCALE) -> float:
-    """The score this rating gap predicts, in [0, 1] — for display and for norms."""
+    """The score this rating gap predicts, in [0, 1] - for display and for norms."""
     mu = (player.rating - START_RATING) / scale
     mu_j = (opponent.rating - START_RATING) / scale
     return _expected(mu, mu_j, opponent.rd / scale)
@@ -217,14 +217,14 @@ def widen(
     """Grow the deviation for time passed without playing.
 
     Standard Glicko-2 does this once per rating period. Here it is per day, so the
-    ladder behaves the same whether tournaments run hourly or every half hour — see
+    ladder behaves the same whether tournaments run hourly or every half hour - see
     the module docstring. Days below zero are treated as zero rather than allowed to
     *shrink* the deviation, which a clock skew could otherwise do.
 
     `max_rd` is the ceiling uncertainty grows to, and defaults to the starting
     deviation: a bot nobody has seen for a year is not less known than one that has
     never played. It must be passed whenever `scale` is, since both are in display
-    units — clamping a scaled deviation against the unscaled default silently
+    units - clamping a scaled deviation against the unscaled default silently
     truncates every rating above the default, which is exactly the fit this
     constant is being tuned by.
     """
@@ -247,7 +247,7 @@ def update(
     """One rating period: every result a bot got, applied at once.
 
     `results` pairs each opponent's rating *as it stood entering the period* with
-    the score against it, in [0, 1]. Batching is the point of a rating period —
+    the score against it, in [0, 1]. Batching is the point of a rating period -
     scoring results one after another would make the answer depend on the order
     matches happened to finish in.
 
@@ -297,7 +297,7 @@ class Ladder:
 
     The two travel together or not at all. They are both in display units, so
     scoring on one scale while clamping the deviation against another silently
-    truncates every rating above the clamp — a bug that is invisible in the numbers
+    truncates every rating above the clamp - a bug that is invisible in the numbers
     and fatal to the fit. Pairing them here means a caller picks a ladder rather
     than two loose floats.
     """

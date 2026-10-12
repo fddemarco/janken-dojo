@@ -21,16 +21,16 @@ uv run janken lab experiment bots/mock_replay_gate.yaml bots/replay_gate.yaml --
 
 ## Results
 
-10 of 10 round robin(s) · pool 20 · 200 rounds/match · seed 326188217 · mode full
+10 of 10 round robin(s), pool 20, 200 rounds/match, seed 326188217, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| mock_replay_gate | 200 | 178-3-19 | 89.8% [84.8%, 93.2%] | +54.3 | 0 | 1856 ± 71 |
-| replay_gate | 200 | 174-1-25 | 87.2% [81.9%, 91.2%] | +68.0 | 0 | 1833 ± 75 |
+| mock_replay_gate | 200 | 178-3-19 | 89.8% [84.8%, 93.2%] | +54.3 | 0 | 1856 +/- 71 |
+| replay_gate | 200 | 174-1-25 | 87.2% [81.9%, 91.2%] | +68.0 | 0 | 1833 +/- 75 |
 
 Paired comparisons:
 
-- `mock_replay_gate − replay_gate = +2.5 pts [-2.5, +7.8]` over 200 shared matches: no significant difference
+- `mock_replay_gate - replay_gate = +2.5 pts [-2.5, +7.8]` over 200 shared matches: no significant difference
 
 Weakest matchups of mock_replay_gate: meta_smartbot 37.5%, smart_staller 60.0%, nash 62.5%, anti_advanced_bots 62.5%, tpi_lite 66.7%, biased 66.7%.
 

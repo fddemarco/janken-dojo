@@ -3,7 +3,7 @@
 Each round robin `rr` draws a fresh pool of `pool_size` bots (from
 `seed` and `rr`, so a run is reproducible), then plays one match per pair:
 
-  mode "full"        every pair of pool ∪ candidates (a true round robin)
+  mode "full"        every pair of pool + candidates (a true round robin)
   mode "candidates"  only the pairs with a candidate in them (the tuner's
                      cheap mode: every bot enters fresh, so pool-vs-pool
                      matches can't change a candidate's rating)

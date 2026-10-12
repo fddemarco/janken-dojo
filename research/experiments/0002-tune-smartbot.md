@@ -11,13 +11,13 @@
 smartbot is the best candidate so far (81.2% pooled) and its constants were never tuned.
 `meta_smartbot` is the same program at 0.6 / 0.6 / 8, and the two are a coin flip head to
 head, so the score surface is probably flat. Expectation: the best validated config beats
-the defaults by **≥ +2 pts** in the paired validation comparison. More likely, given the
+the defaults by **>= +2 pts** in the paired validation comparison. More likely, given the
 flat surface, no config clears the noise, which would tell us that the metabot's ceiling
 is in its structure (arms, bandit, output), not its constants.
 
 Tuning: TPE, 120 trials (40 per parameter), 10 round robins per trial (common random
 numbers), median pruning. Only the validation run (defaults + top 5 on fresh pools,
-40 round robins for paired CIs of about ±2 pts) is evidence.
+40 round robins for paired CIs of about +/-2 pts) is evidence.
 
 ## Command
 
@@ -31,8 +31,8 @@ Run id: `20261009-235502_validate-smartbot-v1` (validation; seed 1607579654, 40 
 ## Results
 
 Tuning trials (fixed pools, not evidence): defaults (trial 0) 81.3%, best trial 84.8%,
-mean of completed trials 78.8%. The top trials cluster at ARM_DECAY ≈ 0.96 with short
-MAX_MATCH (2–3), which is the kind of corner a fixed pool rewards by chance.
+mean of completed trials 78.8%. The top trials cluster at ARM_DECAY ~ 0.96 with short
+MAX_MATCH (2-3), which is the kind of corner a fixed pool rewards by chance.
 
 Validation (fresh pools, 800 shared matches each):
 
@@ -45,12 +45,12 @@ Validation (fresh pools, 800 shared matches each):
 | smartbot@8aab2f | 0.964 / 0.900 / 3 | 78.3% [75.3, 81.0] |
 | smartbot@5a938a | 0.987 / 0.989 / 2 | 77.7% [74.7, 80.4] |
 
-Paired comparisons vs the defaults: every variant lies within −0.8 … +1.4 pts, with CIs
-about ±3.2 pts (best: `fba169 − defaults = +1.4 pts [−1.8, +4.6]`). No pair of the six
+Paired comparisons vs the defaults: every variant lies within -0.8 ... +1.4 pts, with CIs
+about +/-3.2 pts (best: `fba169 - defaults = +1.4 pts [-1.8, +4.6]`). No pair of the six
 differs significantly. Resolving +1.4 pts would take ~200 round robins.
 
-Per-opponent view of the defaults (duckdb over `matches.parquet`, 29–38 matches each):
-the strong bots are coin flips with round margins near 0 (geometry 40.0% / −2.3,
+Per-opponent view of the defaults (duckdb over `matches.parquet`, 29-38 matches each):
+the strong bots are coin flips with round margins near 0 (geometry 40.0% / -2.3,
 smart_staller 46.6%, nash 47.2%, transition_matrix 48.6%, meta_smartbot 51.4%, rps4_lite
 54.2%). The **mid-tier is where points leak**: iocaine_lite 61.1% (margin +4.8 rounds),
 pattern_memory 62.2% (+2.9), markov2_joint 73.5% (+5.9), staller 81.1% (+7.8),

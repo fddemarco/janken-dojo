@@ -4,7 +4,7 @@
     Greedy       the best-scored arm (ties: first, or random); deterministic play
                  is readable by opponents that replay us (experiment 0006)
     Thompson     Thompson sampling of each arm's Dirichlet (the Kaggle winner's
-                 bandit; rps_kaggle §4.5)
+                 bandit; rps_kaggle section 4.5)
     SampledVote  a move sampled from the arms' softmax vote: exploits like the
                  best arms while staying hard to predict (idea #10; a sampled arm
                  inside an argmax bandit is inert, experiment 0001)

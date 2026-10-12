@@ -1,0 +1,5 @@
+bot: bots/l2/dropswitch_matcher_v1.yaml
+weight: 1.0
+params:
+  MAX_LEN: {type: int, low: 2, high: 30, grid: [6, 10, 20, 28]}
+  P_RESET: {type: float, low: 0.1, high: 1.0, grid: [0.3, 0.5, 0.7, 1.0]}

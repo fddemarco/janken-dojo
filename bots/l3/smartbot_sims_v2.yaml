@@ -1,0 +1,58 @@
+description: |
+  Smartbot plus 8 "model of us" sims, replays of the Thompson metabots included.
+
+  v2 (2026-10-12): v1 without the word2janken and word2janken_scoreboard sims
+  (word2janken retired as a variant of pattern_memory; the scoreboard with it).
+
+  The sims (the bots named `side: OPP`) replay the zoo bots that model
+  us (pattern_memory, markov2_joint, iocaine_lite, transition_matrix, rps4_lite,
+  geometry) from the opponent's side, and each
+  becomes three arms like every other predictor. The last two are replays
+  of smartbot's own machinery from the opponent's side (its 18
+  predictors and 54 arm scores, fed the swapped history): at smartbot's constants
+  (0.95, 0.9, 12) and at smartbot_fast's (0.6, 0.6, 8). Each predicts the move of
+  the arm with the best posterior mean (w - l) / (w + t + l + 3); the real bot
+  samples its arm, so this is its most likely move, not a certainty.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        # smartbot's 18 opponent models, each played 3 ways
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        # 8 models of us: zoo bots played from the opponent's side
+        - {bot: pattern_memory_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: markov2_joint_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: iocaine_lite_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: ngram  # transition_matrix, its most likely move
+          side: OPP
+          space: {ORDER: 1, CTX: OPP, DECAY: 0.95}
+          rotations: [BEAT, BEAT_BEAT, COPY]
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: geometry  # geometry, its most likely move
+          side: OPP
+          space: {ALPHA: 0.05, MAX_LEN: 20, SAMPLE: 0}
+          rotations: [BEAT, BEAT_BEAT, COPY]
+        - {bot: smartbot_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, random_arm: RA_NONE, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

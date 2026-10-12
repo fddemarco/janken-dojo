@@ -749,7 +749,7 @@ def render_classification(found: Classification) -> str:
     ]
     if found.run_id:
         timed = (
-            f" Self-play speed: {found.speedup:.2f}× the incumbent's."
+            f" Self-play speed: {found.speedup:.2f}x the incumbent's."
             if found.speedup != 1.0
             else ""
         )

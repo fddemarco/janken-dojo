@@ -8,7 +8,7 @@ vector, in `defaults` order. Each one feeds a `$KNOB` in the blueprint (see
 
 A **variant** is the same bot file with other values: `bots/l1/x.yaml:DECAY=0.8` (several:
 `bots/l1/x.yaml:DECAY=0.8,MAX_LEN=6`). It works anywhere a bot spec is accepted
-(`evaluate`, `lab experiment`, `lab dataset add`, `lab predict`, …). In results, a variant is labelled
+(`evaluate`, `lab experiment`, `lab dataset add`, `lab predict`, ...). In results, a variant is labelled
 `x@<hash of its overrides>`.
 
 ## Space files
@@ -31,7 +31,7 @@ params:              # a subset of the defaults; the rest stay fixed
   through what it does for the others).
 - `params`: the parameters to search. A param left out stays at its default.
   - `float` / `int`: `low`, `high`, optional `step`, optional `log: true` (search on a log
-    scale: for rates, α, anything where 0.01 → 0.1 matters as much as 0.1 → 1).
+    scale: for rates, alpha, anything where 0.01 --> 0.1 matters as much as 0.1 --> 1).
   - `categorical`: `choices: [...]`.
   - `grid`: the values `--sampler grid` tries.
   - The range must contain the default.
@@ -51,7 +51,7 @@ uv run janken lab space BOT [BOT ...] [--weight W] [--force] [--spaces-dir DIR]
 | `--spaces-dir DIR` | `workspace.spaces_dir` | where to write |
 | `--force` | off | overwrite existing files (otherwise they're never overwritten) |
 
-Each range runs from default ÷ `space.spread` to default × `space.spread` (a float
+Each range runs from default / `space.spread` to default x `space.spread` (a float
 default in (0, 1\] stops at 1), with `space.grid_points` grid points. That's a starting
 point, not a design: before tuning, make the bounds sensible, use `log: true` where it
 fits, and drop params not worth searching.

@@ -15,7 +15,7 @@ the defaults. Run every command as `uv run janken ...`.
 uv run janken bot show <bot>     # its defaults and spaces/<bot>.yaml
 ```
 
-`janken tune` scaffolds a missing space file (each default ÷2 … ×2). Before a real
+`janken tune` scaffolds a missing space file (each default /2 ... x2). Before a real
 study, edit the space into sensible bounds:
 
 - `log: true` for rates;

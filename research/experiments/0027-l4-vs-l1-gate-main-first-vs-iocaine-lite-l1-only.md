@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_main_first.yaml bots/iocaine_lite.yaml --
 
 ## Results
 
-40 of 40 round robin(s) · pool 17 · 200 rounds/match · seed 3354815560 · mode candidates
+40 of 40 round robin(s), pool 17, 200 rounds/match, seed 3354815560, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_main_first | 680 | 614-7-59 | 90.8% [88.4%, 92.8%] | +110.2 | 0 | 1882 ± 50 |
-| iocaine_lite | 680 | 614-5-61 | 90.7% [88.2%, 92.6%] | +103.6 | 0 | 1830 ± 40 |
+| gate_main_first | 680 | 614-7-59 | 90.8% [88.4%, 92.8%] | +110.2 | 0 | 1882 +/- 50 |
+| iocaine_lite | 680 | 614-5-61 | 90.7% [88.2%, 92.6%] | +103.6 | 0 | 1830 +/- 40 |
 
 Paired comparisons:
 
-- `gate_main_first − iocaine_lite = +0.1 pts [-2.2, +2.5]` over 680 shared matches: no significant difference
+- `gate_main_first - iocaine_lite = +0.1 pts [-2.2, +2.5]` over 680 shared matches: no significant difference
 
 Weakest matchups of gate_main_first: nash 48.8%, geometry 58.8%, transition_matrix 63.7%, biased 75.0%, rotation_outcome 97.5%, markov2_joint 100.0%.
 

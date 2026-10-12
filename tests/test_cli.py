@@ -443,7 +443,7 @@ SPECIES_TABLE = """# Species
 | species | level | current | versions | variants |
 |---|---|---|---|---|
 """ + "".join(
-    f"| `{s[:-3]}` | L1 | `{s}` | v1 ← `{s[:-3]}` | |\n" for s in SPECIES_FIELD
+    f"| `{s[:-3]}` | L1 | `{s}` | `{s[:-3]}` --> v1 | |\n" for s in SPECIES_FIELD
 )
 
 
@@ -554,4 +554,5 @@ class TestSpeciesLifecycle:
         )
         found = {s["name"]: s for s in self.json_of("species", "list")}
         assert found["coin"]["current"] == "coin_v1"
-        assert "v1 ← `coin` ([" in found["coin"]["versions"]
+        assert found["coin"]["versions"].startswith("`coin` ([")
+        assert found["coin"]["versions"].endswith(") --> v1")

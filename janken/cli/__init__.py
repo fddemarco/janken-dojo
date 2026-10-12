@@ -8,8 +8,8 @@ Two levels, in the lab's ubiquitous language (docs/cli.md):
       status    the research state and the next step
       idea      the backlog: add, list, show, start, drop
       bot       new, check, list, show
-      evaluate  candidates vs random pools, with a note (hypothesis → results)
-      tune      a bot or fleet's space → study → validation, with a note
+      evaluate  candidates vs random pools, with a note (hypothesis --> results)
+      tune      a bot or fleet's space --> study --> validation, with a note
       verdict   close a note: keep, drop or iterate
       species   a kept bot: new species, next version or variant; compare, census
       insight   add (only with evidence that meets the bar), list, supersede

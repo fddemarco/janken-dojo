@@ -184,7 +184,7 @@ def evaluate(
     note: Annotated[str, typer.Option(help=NOTE_HELP)] = "",
     mode: Annotated[Mode, typer.Option(help=about("evaluation.mode"))] = MODE,
 ) -> None:
-    """Test candidates against random pools, with a note: hypothesis → results.
+    """Test candidates against random pools, with a note: hypothesis --> results.
 
     Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
     it, and writes its results in (status run). Close it with `janken verdict`.

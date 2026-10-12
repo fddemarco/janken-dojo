@@ -55,8 +55,8 @@ Some prose | with a pipe.
 
 | species | level | current | versions | variants |
 |---|---|---|---|---|
-| `smartbot` | L2 | `smartbot_v1` | v1 ← `smartbot` | |
-| `rock` | L1 | `rock_v1` | v1 ← `rock` | |
+| `smartbot` | L2 | `smartbot_v1` | `smartbot` --> v1 | |
+| `rock` | L1 | `rock_v1` | `rock` --> v1 | |
 
 Trailing prose.
 """
@@ -76,7 +76,7 @@ class TestRegistry:
         row = book.get("smartbot")
         assert row.current == "smartbot_v2"
         assert row.versions.endswith(
-            "; v2 ← `smartbot_decay` ([0031](experiments/0031-x.md))"
+            "; `smartbot_decay` ([0031](experiments/0031-x.md)) --> v2"
         )
         assert book.of_stem("smartbot_v2") == row
         untouched = [line for line in book.lines if "smartbot" not in line]
@@ -87,7 +87,7 @@ class TestRegistry:
     def test_add_and_variant(self) -> None:
         book = species.parse(TABLE).add("bayes", "L2", "bayes_combiner", "[0040](x)")
         assert book.species[-1] == species.Species(
-            "bayes", "L2", "bayes_v1", "v1 ← `bayes_combiner` ([0040](x))", ""
+            "bayes", "L2", "bayes_v1", "`bayes_combiner` ([0040](x)) --> v1", ""
         )
         assert book.lines[-3].startswith("| `bayes` |")  # after the last row
         book = book.add_variant("rock", "rock_noisy", "[0041](y)")

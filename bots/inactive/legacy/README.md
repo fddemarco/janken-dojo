@@ -14,6 +14,14 @@ name them (by their old names, below), and any of them can be moved back to `bot
 | smartbot_sims_second_match | sims3_second | L3 | dropped, [0013](../../../research/experiments/0013-sims3-second-vs-smartbot-sims3.md) |
 | smartbot_sims_impostor | sinon | L3 | the impostor of the Iliad fleet, which was removed, [0014](../../../research/experiments/0014-sinon-vs-smartbot-sims3.md) |
 | smartbot_sims_self_replay | self_sim | L4 | an L4 replay of an L3, superseded by anti_smartbot_sims, [0015](../../../research/experiments/0015-mirror-sims3-vs-smartbot-sims3.md) |
+| word2janken_v1 | word2janken | L1 | variant of pattern_memory (2026-10-12): 83.2% alike, -8.4 pts [-12.7, -4.2] in 40 paired pools, 0-40 head to head |
+| gate_anti_first_v1 | gate_anti_first | L4 | variant of gate_main_first (2026-10-12): 93.1% alike, -0.6 pts [-4.6, +3.4] in 40 paired pools |
+| word2janken_scoreboard_v1 | staller | L2 | retired with word2janken (2026-10-12): a scoreboard over its three rotations |
+| smartbot_sims_v1 | advanced_bot | L3 | superseded by smartbot_sims_v2 (2026-10-12): no word2janken sims |
+| anti_smartbot_sims_v1 | anti_advanced_bots | L3 | superseded by v2 over smartbot_sims_v2 (2026-10-12) |
+| gate_edge_v1 | replay_gate | L4 | superseded by v2 over smartbot_sims_v2 (2026-10-12) |
+| gate_main_first_v1 | gate_main_first | L4 | superseded by v2 over smartbot_sims_v2 (2026-10-12); the Iliad v3 fleet still names it |
+| gate_main_first_stationary_v1 | gate_main_first_stationary | L4 | superseded by v2 over smartbot_sims_v2 (2026-10-12) |
 
 Removed as duplicates (in git history before the clean-up commit):
 

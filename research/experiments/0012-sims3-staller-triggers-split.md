@@ -21,19 +21,19 @@ uv run janken lab experiment bots/sims3_staller.yaml:DD_TRIGGER=1000 bots/sims3_
 
 ## Results
 
-200 of 200 round robin(s) · pool 20 · 200 rounds/match · seed 314607615 · mode full
+200 of 200 round robin(s), pool 20, 200 rounds/match, seed 314607615, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| sims3_staller@511b62 | 4000 | 3093-71-836 | 78.2% [76.9%, 79.5%] | +19.8 | 0 | 1741 ± 75 |
-| smartbot_sims3 | 4000 | 3093-71-836 | 78.2% [76.9%, 79.5%] | +67.2 | 0 | 1740 ± 70 |
-| sims3_staller@553e5e | 4000 | 3063-89-848 | 77.7% [76.4%, 79.0%] | +65.6 | 0 | 1740 ± 81 |
+| sims3_staller@511b62 | 4000 | 3093-71-836 | 78.2% [76.9%, 79.5%] | +19.8 | 0 | 1741 +/- 75 |
+| smartbot_sims3 | 4000 | 3093-71-836 | 78.2% [76.9%, 79.5%] | +67.2 | 0 | 1740 +/- 70 |
+| sims3_staller@553e5e | 4000 | 3063-89-848 | 77.7% [76.4%, 79.0%] | +65.6 | 0 | 1740 +/- 81 |
 
 Paired comparisons:
 
-- `sims3_staller@511b62 − sims3_staller@553e5e = +0.5 pts [-0.9, +1.9]` over 4000 shared matches: no significant difference
-- `sims3_staller@511b62 − smartbot_sims3 = +0.0 pts [+0.0, +0.0]` over 4000 shared matches: no significant difference
-- `sims3_staller@553e5e − smartbot_sims3 = -0.5 pts [-1.9, +0.9]` over 4000 shared matches: no significant difference
+- `sims3_staller@511b62 - sims3_staller@553e5e = +0.5 pts [-0.9, +1.9]` over 4000 shared matches: no significant difference
+- `sims3_staller@511b62 - smartbot_sims3 = +0.0 pts [+0.0, +0.0]` over 4000 shared matches: no significant difference
+- `sims3_staller@553e5e - smartbot_sims3 = -0.5 pts [-1.9, +0.9]` over 4000 shared matches: no significant difference
 
 Weakest matchups of sims3_staller@511b62: tpi_lite 42.1%, achilles 47.0%, odysseus 49.6%, smartbot_sims2 50.0%, agamemnon 51.7%, smartbot_sims 53.7%.
 

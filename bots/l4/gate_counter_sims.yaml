@@ -1,0 +1,21 @@
+description: |
+  smartbot_sims, with a counter to anti_smartbot_sims as an EDGE-gated expert.
+
+  The main bandit is smartbot_sims_v2's. The gated expert replays smartbot_sims_v2
+  from our side (256 Thompson draws, its likeliest move X): anti_smartbot_sims
+  plays beat(X), so the expert plays beat(beat(X)). It plays while its posterior
+  mean P(win) - P(loss) is above EDGE (from round WARMUP on), so against
+  anti_smartbot_sims it switches to the counter and against the zoo it stays
+  smartbot_sims.
+defaults:
+  EDGE: 0.06
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: MY, draws: 256, rotations: [BEAT_BEAT]}
+      rule: EDGE
+      edge: $EDGE
+      warmup: $WARMUP

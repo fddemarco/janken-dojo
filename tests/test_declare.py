@@ -211,6 +211,34 @@ class TestReference:
         last, coin = core.predictors[0], core.predictors[2]
         assert core.predictors[1] == bot.NaiveBayes((last, coin), 0.9)
 
+    def test_the_same_predictor_twice_is_refused(self) -> None:
+        # The same bot, parameters and side: its rotations belong in one entry.
+        with pytest.raises(BlueprintError, match="last repeats an arm"):
+            arms("[{bot: last}, {bot: coin}, {bot: last, rotations: [BEAT]}]")
+        with pytest.raises(BlueprintError, match="gram repeats an arm"):
+            arms("[{bot: gram, arms: 2, space: {ORDER: [2, 2]}}]")
+        with pytest.raises(BlueprintError, match="board repeats an arm"):
+            declared("""
+                core:
+                  Gate:
+                    main: {bot: board}
+                    experts: [{bot: board, side: OPP}, {bot: board, side: OPP}]
+            """)
+
+    def test_a_bot_may_repeat_with_other_parameters_or_from_the_other_side(
+        self,
+    ) -> None:
+        assert len(arms("[{bot: last}, {bot: last, side: OPP}]")) == 2
+        assert len(arms("[{bot: gram}, {bot: gram, space: {ORDER: 2}}]")) == 2
+        assert len(arms("[{bot: last}, {bot: last, space: {OF: MY}}]")) == 2
+
+    def test_two_bots_sharing_a_signal_are_two_arms(self) -> None:
+        shelf = Shelf({**SHELF, "echo": SHELF["last"]})  # last, under another stem
+        text = "core: {Bandit: {predictors: [{bot: last}, {bot: echo}]}}"
+        core = blueprint_from_data(yaml.safe_load(text), shelf).core
+        assert isinstance(core, bot.Bandit)
+        assert len(core.predictors) == 2
+
     def test_choose_selector(self) -> None:
         assert bandit("""
                 core:

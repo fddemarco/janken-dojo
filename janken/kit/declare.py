@@ -317,13 +317,27 @@ class _Reader:
 
     def arms(self, value: object, where: str) -> tuple[object, ...]:
         """An aggregator's arms: its bot references' arms, spliced in order (and
-        the NaiveBayes combiners, which combine the others)."""
+        the NaiveBayes combiners, which combine the others).
+
+        No bot is named twice with the same parameters and side: it would be the
+        same predictor, computed twice; its rotations go in one entry. (Two bots
+        that happen to share a signal are different arms.)"""
         _check(isinstance(value, tuple), f"{where}: a list of bot references")
         assert isinstance(value, tuple)
         out: list[object] = []
+        named: list[tuple[str, object]] = []  # (bot, its arm's predictor)
         for k, item in enumerate(value):
             if isinstance(item, refs.Reference):
-                out.extend(refs.arms(item, self.library))
+                for arm in refs.arms(item, self.library):
+                    key = (item.bot, _unrotated(arm))
+                    _check(
+                        key not in named,
+                        f"{where}[{k}]: {item.bot} repeats an arm of this aggregator"
+                        " (the same bot, parameters and side): one entry, with all"
+                        " its rotations",
+                    )
+                    named.append(key)
+                    out.append(arm)
             elif isinstance(item, bp.NaiveBayes):
                 out.append(item)
             else:

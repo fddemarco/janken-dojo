@@ -1,0 +1,10 @@
+description: |
+  Block: beats OF's move MAX_PERIOD-or-fewer rounds back, at the period whose
+  repeats scored best (scores decayed by DECAY).
+defaults:
+  OF: OPP
+  MAX_PERIOD: 12
+  DECAY: 0.95
+blueprint:
+  core:
+    Heuristic: {signal: {Period: {of: $OF, max_period: $MAX_PERIOD, decay: $DECAY}}, rotation: BEAT}

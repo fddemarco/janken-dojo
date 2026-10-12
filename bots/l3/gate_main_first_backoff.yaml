@@ -1,0 +1,19 @@
+description: |
+  backoff_family first, iocaine_lite's counter once it leads (MAIN_FIRST).
+
+  The main bandit is backoff_family_v1's. The gated expert replays iocaine_lite
+  from the opponent's side and beats it; it takes over once it leads the main
+  bandit by more than EDGE (from round WARMUP on), and hands back once the main
+  bandit leads by EDGE.
+defaults:
+  EDGE: 0.05
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: backoff_family_v1}
+      experts:
+        - {bot: iocaine_lite_v1, side: OPP, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: $EDGE
+      warmup: $WARMUP

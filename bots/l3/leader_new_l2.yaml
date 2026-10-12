@@ -1,0 +1,21 @@
+description: |
+  mirror_bandit first, with three newer L2s as LEADER-gated experts.
+
+  The main bandit is mirror_bandit_v1's (models of us). The gated experts are
+  zoo_hunter, period_bandit and outcome_reader, each replayed from our side and
+  played as is. Whichever leads the current player by more than EDGE (from round
+  WARMUP on) takes over.
+defaults:
+  EDGE: 0.05
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: mirror_bandit_v1}
+      experts:
+        - {bot: zoo_hunter_v1}
+        - {bot: period_bandit_v1}
+        - {bot: outcome_reader_v1}
+      rule: LEADER
+      edge: $EDGE
+      warmup: $WARMUP

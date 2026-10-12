@@ -1,0 +1,9 @@
+description: |
+  A specialist against rps4_lite: replay it exactly, beat its move.
+
+  rps4_lite plays its best-scored Markov arm greedily, so the Replay of its core
+  (fed the swapped history) names its move up to its tie-breaks; we play the beat.
+blueprint:
+  core:
+    Heuristic:
+      signal: {bot: rps4_lite_v1, side: OPP}

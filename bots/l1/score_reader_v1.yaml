@@ -1,0 +1,13 @@
+description: |
+  Beats the opponent's most frequent move given the match score so far.
+  Catches opponents who change style when leading, level or trailing.
+defaults:
+  DECAY: 0.9
+  NOISE: 0.0
+blueprint:
+  guards:
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: RANDOM_MOVE}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
+  core:
+    Heuristic: {signal: {ScoreState: {of: OPP, decay: $DECAY}}, rotation: BEAT}

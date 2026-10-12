@@ -1,0 +1,24 @@
+description: |
+  The newer metabots vote, weighted by how well each has done.
+
+  second_guess, dropswitch_matcher, mirror_bandit, period_bandit,
+  geometry_ensemble, backoff_family and sampled_markov, replayed from our side,
+  three rotations each. Every arm votes for its move with weight
+  exp(score / TEMPERATURE) (decayed net scores), and the move is sampled.
+defaults:
+  DECAY: 0.9
+  TEMPERATURE: 0.3
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: second_guess_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: dropswitch_matcher_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: mirror_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: period_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: backoff_family_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_SCORED
+      selector: {SampledVote: {temperature: $TEMPERATURE}}

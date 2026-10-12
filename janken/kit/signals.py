@@ -80,6 +80,34 @@ def argmax_random(f: np.ndarray, at: int) -> int:
 
 
 @kernel
+def argmin_random(f: np.ndarray, at: int) -> int:
+    """The min of f[at:at+3] (a random one among ties), or NO_MOVE for an empty
+    row. Draws only to break a tie."""
+    if f[at] + f[at + 1] + f[at + 2] <= 0:
+        return c.NO_MOVE
+    m = min(f[at], min(f[at + 1], f[at + 2]))
+    ties = 0
+    for j in range(3):
+        if f[at + j] <= m + 1e-9:
+            ties += 1
+    skip = random.randrange(ties) if ties > 1 else 0  # the tie's rank, in order
+    for j in range(3):
+        if f[at + j] <= m + 1e-9:
+            if skip == 0:
+                return j
+            skip -= 1
+    return c.NO_MOVE
+
+
+@kernel
+def score_row(score: float) -> int:
+    """The row of a running score: 0 behind, 1 level, 2 ahead."""
+    if score < 0:
+        return 0
+    return 2 if score > 0 else 1
+
+
+@kernel
 def first_max(f: np.ndarray, at: int) -> int:
     """The first max of f[at:at+3], or NO_MOVE when max <= 0. Never draws."""
     m = max(f[at], max(f[at + 1], f[at + 2]))
@@ -167,6 +195,21 @@ def observe(
     elif kind == c.S_MATCH2:
         j = matching.query(spec, matching.record(spec, r), i, int(kn[kk]), k + 1)
         i[matching.slot_at(spec, i, order) + k + 1] = j + 1
+    elif kind == c.S_RAREST:
+        bump(f, at, seq(a, k, my, opp), kn[kk])
+    elif kind == c.S_PERIOD:
+        sym = seq(a, k, my, opp)
+        for p in range(1, b + 1):
+            f[at + p - 1] *= kn[kk]
+            if k >= p and seq(a, k - p, my, opp) == sym:
+                f[at + p - 1] += 1.0
+    elif kind == c.S_SCORE_STATE:
+        bump(f, at + 3 * score_row(f[at + 9]), seq(a, k, my, opp), kn[kk])
+        result = (my[k] - opp[k]) % 3  # 1: we won, 2: we lost
+        if result == 1:
+            f[at + 9] += 1.0
+        elif result == 2:
+            f[at + 9] -= 1.0
     elif kind == c.S_GEOMETRY:
         ia = spec[r + c.R_I]
         if i[ia] == rk + 1:
@@ -256,6 +299,16 @@ def predict(
         i[ia + 1] = opp[j]
         move = _geometry_move(f, at, opp[j], a == 1)
         return (move + 2) % 3
+    if kind == c.S_RAREST:
+        return argmin_random(f, at)
+    if kind == c.S_PERIOD:
+        best, best_p = 0.0, 0
+        for p in range(1, b + 1):
+            if n >= p and f[at + p - 1] > best:
+                best, best_p = f[at + p - 1], p
+        return seq(a, n - best_p, my, opp) if best_p > 0 else c.NO_MOVE
+    if kind == c.S_SCORE_STATE:
+        return argmax_random(f, at + 3 * score_row(f[at + 9]))
     if kind == c.S_ORACLE:
         return oracle.symbol(spec, r, i, kn, rn)
     return c.NO_MOVE

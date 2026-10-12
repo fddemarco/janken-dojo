@@ -1,0 +1,23 @@
+description: |
+  Superant's RPS Geometry at four learning rates, with two history matchers.
+
+  Geometry arms at alpha 0.02, 0.05, 0.15 and 0.3 (their most likely move),
+  plus longest-match on the opponent's and the joint history, three rotations
+  each. Dirichlet scores and a sharpened Thompson sampling (SHARP 2): it commits
+  harder to the arm that leads.
+defaults:
+  ARM_DECAY: 0.95
+  MAX_LEN: 20
+  SHARP: 2.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: geometry
+          arms: 4
+          space: {ALPHA: [0.02, 0.05, 0.15, 0.3], MAX_LEN: $MAX_LEN, SAMPLE: 0}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: longest_match, arms: 2, space: {MAX_LEN: $MAX_LEN, CTX: [OPP, JOINT]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

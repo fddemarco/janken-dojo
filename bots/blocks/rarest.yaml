@@ -1,0 +1,8 @@
+description: |
+  Block: beats the least frequent move of OF (decayed counts by DECAY).
+defaults:
+  OF: OPP
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {Rarest: {of: $OF, decay: $DECAY}}, rotation: BEAT}

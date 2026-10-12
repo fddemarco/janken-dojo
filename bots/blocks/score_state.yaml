@@ -1,0 +1,9 @@
+description: |
+  Block: beats OF's most frequent move given the match score so far (behind,
+  level or ahead; counts decayed by DECAY).
+defaults:
+  OF: OPP
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {ScoreState: {of: $OF, decay: $DECAY}}, rotation: BEAT}

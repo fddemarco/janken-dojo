@@ -176,6 +176,26 @@ class TestSignal:
         assert win_stay.last([R], [S]) == R  # won: stay
         assert win_stay.last([R], [P]) == P  # lost: shift by 1
 
+    def test_rarest_predicts_the_least_frequent_move(self) -> None:
+        assert signal_bot(bot.Rarest(bot.OPP)).last([R] * 3, [R, R, P]) == S
+        assert signal_bot(bot.Rarest(bot.MY)).last([P, P, S], [R] * 3) == R
+
+    def test_period_finds_a_cycle_longer_than_one(self) -> None:
+        runner = signal_bot(bot.Period(bot.OPP, max_period=8, decay=1.0))
+        # period 4 beats period 1 (P P) and repeats the move 4 rounds back
+        assert runner.last([R] * 12, [R, P, P, S] * 3) == R
+
+    def test_period_bounds(self) -> None:
+        for bad in (0, blueprint.signals.MAX_PERIOD + 1):
+            with pytest.raises(blueprint.BlueprintError):
+                bot.Period(max_period=bad).validate()
+
+    def test_score_state_counts_moves_per_score(self) -> None:
+        runner = signal_bot(bot.ScoreState(bot.OPP))
+        # level: R; ahead: R, P, P. After +1 +1 -1 -1 the score is level again.
+        assert runner.last([P, P, R, R], [R, R, P, P]) == R
+        assert runner.last([P, P, P], [R, P, P]) == P  # ahead since round 1: P, P
+
     def test_geometry_plays_moves(self) -> None:
         runner = signal_bot(bot.Geometry(0.2, 10))
         moves = runner.moves([R, P, S] * 6, [P, S, R] * 6)

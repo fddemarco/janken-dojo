@@ -1,0 +1,34 @@
+description: |
+  Assumes the opponent models us: smartbot's predictors, never played straight.
+
+  smartbot's 18 opponent models, each played only as BEAT_BEAT (beat the move that
+  beats our counter) and COPY (beat the counter of that): the second and third
+  steps of sicilian reasoning, no first step. Dirichlet scores, Thompson sampling,
+  and a scored random arm.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [BEAT_BEAT, COPY]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [BEAT_BEAT, COPY]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [BEAT_BEAT, COPY]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [BEAT_BEAT, COPY]
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

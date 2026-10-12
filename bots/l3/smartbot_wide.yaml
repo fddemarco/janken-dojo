@@ -1,0 +1,39 @@
+description: |
+  smartbot's 18 predictors, the newest signals and two newer metabots.
+
+  smartbot's frequency, n-gram, longest-match and rotation models; period,
+  rarest-move and score-state models of the opponent; and zoo_hunter and
+  second_guess replayed from our side. Three rotations each, Dirichlet scores,
+  Thompson sampling, a scored random arm.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: period, space: {MAX_PERIOD: 12}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: rarest, space: {DECAY: $TABLE_DECAY}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: score_state, space: {DECAY: $TABLE_DECAY}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: zoo_hunter_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: second_guess_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

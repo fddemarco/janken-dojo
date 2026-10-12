@@ -1,0 +1,24 @@
+description: |
+  Names which simple zoo bot the opponent is, and beats it.
+
+  Each arm is a non-learning L1 of the field played from the opponent's side (rock,
+  cycler both ways, copycat, reactionary, counter_reactionary, self_beater, wsls
+  shifting 1 or 2, anti_frequency): what the opponent plays if it is that bot.
+  A decayed net score per arm, greedy; a pinned random arm when none is winning.
+defaults:
+  DECAY: 0.8
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: rock_v1, side: OPP}
+        - {bot: cycler_v1, arms: 2, space: {STEP: [1, 2]}, side: OPP}
+        - {bot: copycat_v1, side: OPP}
+        - {bot: reactionary_v1, side: OPP}
+        - {bot: counter_reactionary_v1, side: OPP}
+        - {bot: self_beater_v1, side: OPP}
+        - {bot: wsls_v1, arms: 2, space: {SHIFT: [1, 2]}, side: OPP}
+        - {bot: anti_frequency_v1, side: OPP}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

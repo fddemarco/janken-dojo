@@ -1,0 +1,13 @@
+description: |
+  Beats the opponent's least frequent move.
+  A balancer evens out its counts, so its rarest move is its likeliest next one.
+defaults:
+  DECAY: 1.0
+  NOISE: 0.0
+blueprint:
+  guards:
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: RANDOM_MOVE}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
+  core:
+    Heuristic: {signal: {Rarest: {of: OPP, decay: $DECAY}}, rotation: BEAT}

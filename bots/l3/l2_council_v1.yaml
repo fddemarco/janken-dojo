@@ -1,0 +1,21 @@
+description: |
+  A council of the original metabots: each L2 replayed, played three ways.
+
+  smartbot, smartbot_fast, iocaine_lite, rps4_lite and word2janken_scoreboard,
+  each replayed from our side (its own move), and played straight, beaten, or
+  beaten twice. Dirichlet scores and Thompson sampling pick the member (and the
+  twist) that is working.
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: smartbot_fast_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: iocaine_lite_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: rps4_lite_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: word2janken_scoreboard_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

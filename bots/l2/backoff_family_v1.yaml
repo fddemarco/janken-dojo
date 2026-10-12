@@ -1,0 +1,23 @@
+description: |
+  word2janken's back-off predictor in every shape, under Thompson sampling.
+
+  Back-off n-grams of orders up to 1, 2 and 3 over the opponent's, the joint and
+  our history (predicting the opponent), and up to 1-3 over the joint history
+  predicting us; three rotations each. Dirichlet scores, Thompson sampling, a
+  random arm pinned at 0.
+defaults:
+  ARM_DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: backoff
+          arms: 12
+          space:
+            MAX_ORDER: [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY, JOINT, JOINT, JOINT]
+            OF: [OPP, OPP, OPP, OPP, OPP, OPP, OPP, OPP, OPP, MY, MY, MY]
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

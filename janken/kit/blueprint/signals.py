@@ -219,6 +219,81 @@ class WinStay(Signal):
 
 
 @dataclasses.dataclass(frozen=True)
+class Rarest(Signal):
+    """The least frequent move of `of`, over counts decayed by `decay` per round:
+    what a player who evens out their counts plays next."""
+
+    kind: ClassVar[int] = c.S_RAREST
+    of: int = c.OPP
+    decay: Value = 1.0
+
+    def knobs(self) -> tuple[Value, ...]:
+        return (self.decay,)
+
+    def params(self) -> tuple[int, ...]:
+        return (self.of,)
+
+    def state(self) -> tuple[int, int]:
+        return 3, 0
+
+    def validate(self) -> None:
+        check_side(self.of, (c.OPP, c.MY), "Rarest of")
+
+
+MAX_PERIOD = 24
+
+
+@dataclasses.dataclass(frozen=True)
+class Period(Signal):
+    """Period detection: for every period p in 1..`max_period`, a score of how
+    often `of`'s move repeated the one p rounds before (decayed by `decay`); the
+    move p rounds ago of the best-scored p (the shortest among ties)."""
+
+    kind: ClassVar[int] = c.S_PERIOD
+    of: int = c.OPP
+    max_period: int = 12
+    decay: Value = 0.95
+
+    def knobs(self) -> tuple[Value, ...]:
+        return (self.decay,)
+
+    def params(self) -> tuple[int, ...]:
+        return self.of, self.max_period
+
+    def state(self) -> tuple[int, int]:
+        return self.max_period, 0
+
+    def validate(self) -> None:
+        check_side(self.of, (c.OPP, c.MY), "Period of")
+        check(
+            1 <= self.max_period <= MAX_PERIOD,
+            f"Period max_period must be 1..{MAX_PERIOD}",
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class ScoreState(Signal):
+    """The most frequent move of `of` given the match score so far (behind, level
+    or ahead, from our side of the history), over counts decayed by `decay`."""
+
+    kind: ClassVar[int] = c.S_SCORE_STATE
+    of: int = c.OPP
+    decay: Value = 1.0
+
+    def knobs(self) -> tuple[Value, ...]:
+        return (self.decay,)
+
+    def params(self) -> tuple[int, ...]:
+        return (self.of,)
+
+    def state(self) -> tuple[int, int]:
+        return 10, 0  # f: a count row per score state (9), the running score (1)
+
+    def validate(self) -> None:
+        check_side(self.of, (c.OPP, c.MY), "ScoreState of")
+
+
+@dataclasses.dataclass(frozen=True)
 class Geometry(Signal):
     """superant's geometry: a learned complex offset (rate `alpha`) rotates the
     longest joint match's next opponent move into a distribution over our moves,

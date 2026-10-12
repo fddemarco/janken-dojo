@@ -41,7 +41,10 @@ CRASH_ACTION, RANDOM_ACTION = 0, 1  # OnInvalid action
     S_BAYES,
     S_MATCH2,
     S_ORACLE,
-) = range(16)
+    S_RAREST,
+    S_PERIOD,
+    S_SCORE_STATE,
+) = range(19)
 
 # Oracles (research only, janken/mocks.py): none, a pure Oracle bot, an Oracle arm;
 # the level the referee reveals for an Oracle opponent (janken/kit/levels.py).

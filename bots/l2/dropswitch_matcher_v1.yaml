@@ -1,0 +1,25 @@
+description: |
+  History matchers that switch at once: an arm's score drops to 0 on a loss.
+
+  Longest-match and second-match predictors over the opponent's, the joint and
+  our history, three rotations each. The DropSwitch scorer zeroes an arm's net
+  score on a loss (with chance P_RESET), so the bot leaves a model the moment
+  the opponent stops following it; greedy, with a pinned random arm.
+defaults:
+  MAX_LEN: 10
+  P_RESET: 0.7
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_LEN, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: second_match
+          arms: 3
+          space: {MAX_LEN: $MAX_LEN, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {DropSwitch: {p_reset: $P_RESET}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

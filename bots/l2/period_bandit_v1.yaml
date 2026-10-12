@@ -1,0 +1,24 @@
+description: |
+  A bandit over the newest signals: periods, rarest moves and score states.
+
+  Period detectors (periods up to 3, 6 and 12 of the opponent's moves, 6 and 12
+  of ours), rarest-move models of both players and score-conditioned frequencies
+  of both, three rotations each. Dirichlet scores, Thompson sampling, a scored
+  random arm.
+defaults:
+  ARM_DECAY: 0.95
+  PERIOD_DECAY: 0.95
+  TABLE_DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: period
+          arms: 5
+          space: {OF: [OPP, OPP, OPP, MY, MY], MAX_PERIOD: [3, 6, 12, 6, 12], DECAY: $PERIOD_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: rarest, arms: 2, space: {OF: [OPP, MY], DECAY: $TABLE_DECAY}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: score_state, arms: 2, space: {OF: [OPP, MY], DECAY: $TABLE_DECAY}, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

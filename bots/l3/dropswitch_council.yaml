@@ -1,0 +1,20 @@
+description: |
+  A council of newer metabots that drops a member at its first loss.
+
+  vote_ensemble, zoo_hunter, period_bandit, outcome_reader and multiscale,
+  replayed from our side, three rotations each. DropSwitch scores (zeroed on a
+  loss with chance P_RESET), greedy, a pinned random arm.
+defaults:
+  P_RESET: 0.7
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: vote_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: zoo_hunter_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: period_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: outcome_reader_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: multiscale_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DropSwitch: {p_reset: $P_RESET}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

@@ -66,6 +66,9 @@ Write what you find into the verdict's `--analysis`.
   for small effects, and `--effort quick` only for smoke checks.
 - **Time.** Use a Bash timeout of 600000 ms. Run longer jobs with `run_in_background` and
   wait for the notification. Never poll in a sleep loop.
+- **Slow steps.** When a step's command is flagged `slow` by `janken lab profile spans`,
+  or keeps hitting the timeout, run `/profile` once on it (it decides whether fixing
+  it pays), then go on with the loop. Not otherwise: performance isn't the lab's goal.
 - **Smoke checks** go to a throwaway workspace and notebook (`--workspace <scratch>/ws
   --notebook <scratch>/research`, with the notebook copied there first). Only real steps
   write to `experiments/` and `research/`.

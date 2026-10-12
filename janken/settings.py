@@ -15,6 +15,7 @@ them when a function is decorated (janken/kit/jit.py), before any command runs:
     $JANKEN_JIT = on | off            overrides engine.jit
     $JANKEN_NUMBA_CACHE = 1 | 0       set by `apply` for the running command
     $JANKEN_PROGRESS = auto | on | off   overrides output.progress
+    $JANKEN_SPANS = on | off          overrides telemetry.spans
 """
 
 import dataclasses
@@ -32,6 +33,7 @@ LOCAL_FILE = os.path.join(ROOT, "janken.local.toml")
 JIT_ENV = "JANKEN_JIT"
 CACHE_ENV = "JANKEN_NUMBA_CACHE"
 PROGRESS_ENV = "JANKEN_PROGRESS"
+SPANS_ENV = "JANKEN_SPANS"
 PROGRESS_MODES = ("auto", "on", "off")
 FORMATS = ("text", "json")
 EFFORTS = ("quick", "standard", "thorough")
@@ -338,6 +340,60 @@ class SpeciesConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class TelemetryConfig:
+    """Timing spans: one JSON line per coarse operation, in the workspace.
+
+    Every lab command logs a `command` span, and the costly steps inside it (compiling,
+    playing, a round robin, a trial) log their own, so where the time goes can be read
+    over weeks (`janken lab profile spans`). A command whose last run took
+    `slow_factor` times its median is flagged slow.
+    """
+
+    spans: bool = setting("log timing spans ($JANKEN_SPANS overrides)")
+    file: str = setting("the spans' JSON-lines file, in the workspace")
+    max_mb: int = setting("size at which the spans file is rotated, in MB", minimum=1)
+    slow_factor: float = setting(
+        "a command's last run this many times its median is flagged slow", minimum=1
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class ProfileConfig:
+    """`lab profile`: hotspots, benchmarks and the optimization budget.
+
+    A hotspot is worth an optimization session only when it holds at least
+    `min_share` of the wall time, and removing `expected_cut` of it, on every use of
+    the command projected over `horizon_days` (its rate from the last `window_days`
+    of spans), saves at least the session's own `session_minutes`. A session tries
+    at most `max_attempts` changes, and keeps one only if it cuts the fastest of
+    `repeats` timed runs by at least `min_gain`.
+    """
+
+    dir: str = setting("where profiles and benchmarks go, in the workspace")
+    interval_s: float = setting("the profiler's sampling interval, in seconds")
+    top: int = setting("hotspots listed", minimum=1)
+    jit: bool = setting("profile compiled code (off: plain Python, inside kernels)")
+    warmup: bool = setting(
+        "run the command once first, unmeasured (fills numba's on-disk cache)"
+    )
+    min_share: float = setting("the smallest share of wall time worth optimizing")
+    expected_cut: float = setting("the share of a hotspot an optimization removes")
+    window_days: int = setting("days of spans that estimate a command's use", minimum=1)
+    horizon_days: int = setting("days of use a saving is projected over", minimum=1)
+    session_minutes: int = setting(
+        "an optimization session's cost cap, and the saving it must pay back",
+        minimum=1,
+    )
+    max_attempts: int = setting("changes one session tries at most", minimum=1)
+    min_gain: float = setting("the wall-time cut a change must show to be kept")
+    repeats: int = setting("timed runs per benchmark (the fastest counts)", minimum=1)
+    cooldown_days: int = setting(
+        "days before a command is profiled again (unless its spans flag it slow)",
+        minimum=0,
+    )
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -359,6 +415,8 @@ class Config:
     status: StatusConfig = setting("the status report")
     export: ExportConfig = setting("submission scripts")
     species: SpeciesConfig = setting("species and versions")
+    telemetry: TelemetryConfig = setting("timing spans")
+    profile: ProfileConfig = setting("profiling and the optimization budget")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""
@@ -602,6 +660,13 @@ def progress_enabled(environ: Mapping[str, str], interactive: bool) -> bool:
             f"{PROGRESS_ENV} must be one of {PROGRESS_MODES}, got {mode!r}"
         )
     return interactive if mode == "auto" else mode == "on"
+
+
+def spans_enabled(environ: Mapping[str, str]) -> bool:
+    """Whether timing spans are logged: $JANKEN_SPANS, else the config."""
+    if SPANS_ENV in environ:
+        return parse_switch(environ[SPANS_ENV], SPANS_ENV)
+    return config().telemetry.spans
 
 
 def wants_cache(command: str, flag: CacheFlag, environ: Mapping[str, str]) -> bool:

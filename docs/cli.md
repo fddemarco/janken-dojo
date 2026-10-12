@@ -131,6 +131,8 @@ Where flags apply differently:
 | `lab study run SPACE… --study NAME` / `lab study show NAME` / `lab study list` | Optuna studies without a note |
 | `lab dataset add BOTS…` / `lab dataset info` | grow or summarise the move dataset |
 | `lab predict BOT…` / `lab predict-tune SPACE… --study NAME` | bots as next-move predictors |
+| `lab profile run -- COMMAND…` / `lab profile bench -- COMMAND…` | a command's hotspots and whether fixing them pays; its wall time, vs a `--baseline` |
+| `lab profile list` / `lab profile show ID` / `lab profile spans` | stored profiles; the timing spans every command logs, slow ones flagged |
 
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches

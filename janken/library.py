@@ -40,9 +40,10 @@ def library_root(path: str) -> str:
         if parent == probe:
             break
         probe = parent
-    if levels.is_level_folder(os.path.basename(folder)) or os.path.basename(
-        folder
-    ) == BLOCKS:
+    if (
+        levels.is_level_folder(os.path.basename(folder))
+        or os.path.basename(folder) == BLOCKS
+    ):
         return os.path.dirname(folder)
     return folder
 

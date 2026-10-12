@@ -262,11 +262,6 @@ class TestLifecycle:
             "off",
         ]
 
-    def run_ok(self, *args: str) -> str:
-        result = self.runner.invoke(app, [*args, *self.common()])
-        assert result.exit_code == 0, f"{args}: {result.output}{result.exception!r}"
-        return result.output
-
     def bot(self, stem: str) -> str:
         return registry.find(self.bots, stem)
 
@@ -387,6 +382,38 @@ class TestLifecycle:
         nowhere = [*self.common(), "--workspace", os.path.join(self.root, "none")]
         result = self.runner.invoke(app, ["lab", "study", "list", *nowhere])
         assert "(no studies yet)" in result.output
+
+    def test_profiling(self) -> None:
+        target = [
+            "--",
+            "lab",
+            "match",
+            self.bot("rock_v1"),
+            self.bot("cycler_v1"),
+            "--rounds",
+            "5",
+            "--workspace",
+            os.path.join(self.root, "target"),
+        ]
+        flags = ["--no-jit", "--no-warmup"]
+        profiled = self.run_ok("lab", "profile", "run", *flags, *target)
+        assert "| hotspot |" in profiled
+        assert "worth optimizing" in profiled
+        again = self.run_ok("lab", "profile", "run", *flags, *target)
+        assert "already profiled" in again  # nothing changed: not profiled again
+        timed = self.run_ok(
+            "lab", "profile", "bench", *flags, "--repeats", "1", *target
+        )
+        assert "bench" in timed
+        assert "current" in self.run_ok("lab", "profile", "list")
+        assert "flame graph" in self.run_ok("lab", "profile", "show", "profile")
+
+    def run_ok(self, *args: str) -> str:
+        """Run a command with the common flags (before any `--` target)."""
+        cut = args.index("--") if "--" in args else len(args)
+        result = self.runner.invoke(app, [*args[:cut], *self.common(), *args[cut:]])
+        assert result.exit_code == 0, f"{args}: {result.output}{result.exception!r}"
+        return result.output
 
     def test_errors_are_messages_not_tracebacks(self) -> None:
         result = self.runner.invoke(

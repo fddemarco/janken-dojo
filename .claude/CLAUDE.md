@@ -16,7 +16,8 @@ verdicts → insights → ideas.
 - **Low level:** `janken lab ...`, ad hoc and without the notebook.
   - `experiment`, `resume`, `report`, `runs`, `history`, `leaderboard`, `match`;
   - `query` (read-only SQL), `space`, `study run | show | list`;
-  - `dataset add | info`, `predict`, `predict-tune`.
+  - `dataset add | info`, `predict`, `predict-tune`;
+  - `profile run | bench | list | show | spans` (hotspots, benchmarks, timing spans).
 
 Every lab command shares the same flags (workspace, evidence, execution, output).
 
@@ -31,6 +32,9 @@ The skills drive the self-improvement loop through the high-level commands:
 - `/classify`: a kept bot becomes a new species, the next version of one, or a variant
   (`janken species classify`).
 - `/learn`: insights that meet the bar, and follow-up ideas (`janken insight add`).
+- `/profile`: a bottleneck slowing the loop is profiled, judged against the optimization
+  budget, and fixed only if a benchmark proves it (`janken lab profile`). Sparingly: only
+  when something is slow, and never twice on unchanged code.
 
 **The lifecycle skills run experiments and tuning themselves** (into `experiments/`, with
 the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on the
@@ -39,7 +43,7 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
 - Smoke checks go to a throwaway `--workspace <tmp>/ws --notebook <tmp>/research`, with
   the notebook copied there first.
 - Read-only commands are always safe to run: `status`, `idea list | show`, `bot list | show`,
-  `insight list`, `species compare | census | list`, `config show | get | path | check`, `lab report | runs | history | leaderboard | query | study show | study list | dataset info | predict`.
+  `insight list`, `species compare | census | list`, `config show | get | path | check`, `lab report | runs | history | leaderboard | query | study show | study list | dataset info | predict | profile list | profile show | profile spans`.
 
 ## Bot rules (enforced by review, the engine and the tests)
 
@@ -181,6 +185,10 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   grammar), `levels.py`, `pipeline.py` and the compiled stages, and `bot.py` (the whole
   vocabulary in Python, for tests). `janken/library.py` reads bots by stem (references,
   their transitive source hash).
+- `janken/telemetry.py` logs timing spans (loguru, JSON lines in the workspace's
+  `logs/`): every lab command and its coarse steps. `janken/lab/profiling.py` profiles
+  (pyinstrument, in a subprocess) and benchmarks commands into the workspace's
+  `profiles/`, and holds the optimization budget rule.
 - `janken.toml` holds every default; `janken/settings.py` is its schema and loader, and
   `janken/config_file.py` edits it line by line.
 - Tests: `uv run pytest` (about 20 s, JIT off).

@@ -45,7 +45,7 @@ import optuna
 import polars as pl
 import tqdm
 
-from .. import library, progress, settings
+from .. import library, progress, settings, telemetry
 from ..engine import play_pairs
 from ..match import MatchResult
 from ..spec import BotSpec, format_spec, make_spec
@@ -207,6 +207,18 @@ def _pct(x: float) -> str:
     return "%.1f%%" % (100 * x)
 
 
+def timed_trial(
+    op: str, objective: Callable[[optuna.Trial], float]
+) -> Callable[[optuna.Trial], float]:
+    """`objective`, each trial logged as a timing span `op`."""
+
+    def timed(trial: optuna.Trial) -> float:
+        with telemetry.span(op, trial=trial.number):
+            return objective(trial)
+
+    return timed
+
+
 def objective_value(tallies: Mapping[str, Tally], spaces: Sequence[Space]) -> float:
     """The weighted mean of the tuned bots' scores."""
     total = sum(s.weight for s in spaces)
@@ -360,7 +372,7 @@ def run_tune(
         )
         try:
             study.optimize(
-                objective,
+                timed_trial("tune.trial", objective),
                 n_trials=n_trials,
                 timeout=search.timeout or None,
                 callbacks=[callback],
@@ -377,7 +389,8 @@ def run_tune(
     )
     report(study, spaces, 10)
     if search.validate_top:
-        validate(study, spaces, setup, search, study_name)
+        with telemetry.span("tune.validate", top=search.validate_top):
+            validate(study, spaces, setup, search, study_name)
     return study
 
 

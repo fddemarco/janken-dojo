@@ -51,6 +51,7 @@ from .tune import (
     param_key,
     params_text,
     suggest_param,
+    timed_trial,
 )
 
 PREDICTOR = "predictor"  # Optuna's name for the AutoML choice of predictor
@@ -261,7 +262,7 @@ def run_predict_tune(
     with progress.bar(n_trials or 0, "trials", "trial") as bar:
         try:
             study.optimize(
-                objective,
+                timed_trial("predict_tune.trial", objective),
                 n_trials=n_trials,
                 timeout=search.timeout or None,
                 callbacks=[TrialProgress(bar, lambda v: f"{v:.4f}")],

@@ -192,3 +192,41 @@ speed_matches = 8
 speed_repeats = 3
 # Retired versions and variants go here, relative to the bots dir (never in a pool).
 legacy_dir = "inactive/legacy"
+
+[telemetry]
+# Timing spans: one JSON line per coarse operation (a command, compiling, playing, a
+# round robin, a trial), in the workspace; read with `janken lab profile spans`.
+# $JANKEN_SPANS overrides.
+spans = true
+file = "logs/spans.jsonl"
+max_mb = 20
+# A command whose last run took this many times its median is flagged slow.
+slow_factor = 1.5
+
+[profile]
+# `janken lab profile`: profiles and benchmarks go to this folder of the workspace.
+dir = "profiles"
+interval_s = 0.001
+top = 15
+# Profile compiled code; false runs the command as plain Python, to see inside kernels.
+jit = true
+# Run the command once, unmeasured, before profiling or timing it: numba's on-disk
+# cache is then warm (for engine.cache_commands), as in everyday use.
+warmup = true
+# The optimization budget. A hotspot under min_share of the wall time isn't worth it
+# (removing it all gains < 11%). Otherwise a session is worth it when cutting
+# expected_cut of the hotspot, on every use of the command projected over
+# horizon_days (its rate over the last window_days of spans), saves at least the
+# session's cost, session_minutes.
+min_share = 0.10
+expected_cut = 0.5
+window_days = 30
+horizon_days = 90
+session_minutes = 60
+# A session tries at most max_attempts changes, and keeps one only if it cuts the
+# fastest of `repeats` timed runs by at least min_gain.
+max_attempts = 3
+min_gain = 0.05
+repeats = 3
+# A command is profiled again only after cooldown_days, unless its spans flag it slow.
+cooldown_days = 7

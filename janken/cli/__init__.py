@@ -17,7 +17,7 @@ Two levels, in the lab's ubiquitous language (docs/cli.md):
       config    every default: show, get, set, unset, path, check
 
 * **Low level**, `janken lab ...`: ad hoc experiments, studies, queries and reports,
-  without the notebook.
+  without the notebook; `janken lab profile ...` for performance.
 
 Every lab command shares one set of flags (janken/cli/options.py), and every default
 comes from janken.toml (janken/settings.py).

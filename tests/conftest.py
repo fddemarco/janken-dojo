@@ -5,10 +5,12 @@ repository root with
     uv run pytest
 
 pytest loads this file before it imports any test module, so the JIT is off by
-then. Set JANKEN_JIT=on to run it compiled instead.
+then. Set JANKEN_JIT=on to run it compiled instead. Timing spans are off too
+(janken/telemetry.py): its tests turn them on themselves.
 """
 
 import os
 
 os.environ.setdefault("JANKEN_JIT", "off")
 os.environ.setdefault("JANKEN_NUMBA_CACHE", "0")
+os.environ.setdefault("JANKEN_SPANS", "off")

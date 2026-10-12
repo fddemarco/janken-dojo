@@ -24,6 +24,8 @@ checks its type, its allowed values and its minimum.
 | `query` | `lab query`: `db`, `limit` |
 | `status` | how much `status` lists |
 | `export` | `bot export`: `dir`, `max_rounds`, and the screening rules `allowed_modules`, `banned_names` |
+| `telemetry` | timing spans: `spans` on or off, their `file` and rotation size `max_mb`, and `slow_factor` |
+| `profile` | `lab profile`: where profiles go, the profiler's `interval_s`, `top`, `jit`, `warmup`, and the optimization budget (`min_share`, `expected_cut`, `window_days`, `horizon_days`, `session_minutes`, `max_attempts`, `min_gain`, `repeats`, `cooldown_days`) |
 
 ## The `config` commands
 

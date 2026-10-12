@@ -11,6 +11,7 @@ import dataclasses
 
 import numpy as np
 
+from .. import telemetry
 from ..kit.moves import INVALID
 from . import metrics
 from .dataset import Sequences
@@ -72,7 +73,8 @@ def targets(seqs: Sequences) -> Targets:
 def evaluate(predictor: Predictor, seqs: Sequences) -> Evaluation:
     """The predictor's scores, overall and per predicted player."""
     truth = targets(seqs)
-    y_pred = predictions(predictor, seqs).reshape(-1)[truth.keep]
+    with telemetry.span("predict.evaluate", predictor=predictor.label):
+        y_pred = predictions(predictor, seqs).reshape(-1)[truth.keep]
     return Evaluation(
         label=predictor.label,
         scores=metrics.scores(truth.y_true, y_pred),

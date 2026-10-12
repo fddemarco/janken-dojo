@@ -75,4 +75,4 @@ uv run janken config show                    # every default (janken.toml)
 
 `research/README.md` describes the research loop and its protocol. The skills in
 `.claude/skills/` (`/lab-loop`, `/ideate`, `/build`, `/evaluate`, `/tune`, `/learn`)
-drive it.
+drive it; `/profile` finds and fixes a bottleneck when one slows the loop down.

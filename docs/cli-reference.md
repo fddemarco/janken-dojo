@@ -1063,6 +1063,7 @@ $ uv run janken lab [OPTIONS] COMMAND [ARGS]...
 * `predict-tune`: Tune predictors on the move dataset...
 * `study`: Tuning studies (Optuna), without a note.
 * `dataset`: The move dataset (DuckDB, append-only).
+* `profile`: Profiles, benchmarks and timing spans:...
 
 ### `uv run janken lab experiment`
 
@@ -1679,6 +1680,202 @@ $ uv run janken lab dataset info [OPTIONS]
 **Options**:
 
 * `--players / --no-players`: also list every player  [default: no-players]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+### `uv run janken lab profile`
+
+Profiles, benchmarks and timing spans: find hotspots, measure fixes.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `run`: Profile a janken command: its hotspots,...
+* `bench`: Time a janken command (no profiler); with...
+* `list`: The stored profiles and benchmarks;...
+* `show`: A stored profile or benchmark, and where...
+* `spans`: Where the lab's time went: each timed...
+
+#### `uv run janken lab profile run`
+
+Profile a janken command: its hotspots, and whether fixing them pays.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile run [OPTIONS] {target}...
+```
+
+**Arguments**:
+
+* `target...`: the janken command, after `--`: -- lab experiment bots/l1/x.yaml ...  [required]
+
+**Options**:
+
+* `--jit / --no-jit`: profile compiled code (off: plain Python, inside kernels) (config: profile.jit)  [default: jit]
+* `--warmup / --no-warmup`: run the command once first, unmeasured (fills numba's on-disk cache) (config: profile.warmup)  [default: warmup]
+* `--top <int>`: hotspots listed (config: profile.top)  [default: 15]
+* `--force / --no-force`: profile again even if this code was profiled  [default: no-force]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+#### `uv run janken lab profile bench`
+
+Time a janken command (no profiler); with --baseline, keep or revert a fix.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile bench [OPTIONS] {target}...
+```
+
+**Arguments**:
+
+* `target...`: the janken command, after `--`: -- lab experiment bots/l1/x.yaml ...  [required]
+
+**Options**:
+
+* `--jit / --no-jit`: profile compiled code (off: plain Python, inside kernels) (config: profile.jit)  [default: jit]
+* `--warmup / --no-warmup`: run the command once first, unmeasured (fills numba's on-disk cache) (config: profile.warmup)  [default: warmup]
+* `--repeats <int>`: timed runs per benchmark (the fastest counts) (config: profile.repeats)  [default: 3]
+* `--baseline <str>`: a benchmark of the same command to compare with (an id)
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+#### `uv run janken lab profile list`
+
+The stored profiles and benchmarks; `stale` ones ran on other code.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile list [OPTIONS]
+```
+
+**Options**:
+
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+#### `uv run janken lab profile show`
+
+A stored profile or benchmark, and where its flame graph is.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile show [OPTIONS] {ref}
+```
+
+**Arguments**:
+
+* `ref`: a profile's id, a unique part, or latest  [required]
+
+**Options**:
+
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+#### `uv run janken lab profile spans`
+
+Where the lab's time went: each timed operation per command, slow ones flagged.
+
+A command is slow when its last run took telemetry.slow_factor times its median.
+
+**Usage**:
+
+```console
+$ uv run janken lab profile spans [OPTIONS]
+```
+
+**Options**:
+
+* `--days <int>`: days of spans that estimate a command's use (config: profile.window_days)  [default: 30]
+* `--op <str>`: only this operation (command, engine.play, ...)
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

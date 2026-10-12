@@ -26,7 +26,7 @@ from typing import Annotated, Any, TypeVar
 
 import typer
 
-from .. import progress, settings
+from .. import progress, settings, telemetry
 
 CFG = settings.config()
 F = TypeVar("F", bound=Callable[..., Any])
@@ -351,9 +351,11 @@ def make_lab(command: str, raw: Mapping[str, Any], passed: frozenset[str]) -> La
     settings.apply(command, settings.CacheFlag(str(raw["cache"])), os.environ)
     os.environ[settings.PROGRESS_ENV] = str(raw["progress"])
     effort = str(raw["effort"])
+    workspace = CFG.path(raw["workspace"])
+    telemetry.configure(workspace, command)
     return Lab(
         command=command,
-        workspace=CFG.path(raw["workspace"]),
+        workspace=workspace,
         notebook=CFG.path(raw["notebook"]),
         bots_dir=os.path.relpath(CFG.path(raw["bots_dir"])),
         spaces_dir=CFG.path(raw["spaces_dir"]),
@@ -450,7 +452,8 @@ def lab_command(command: str) -> Callable[[F], F]:
             )
             lab = make_lab(command, raw, passed)
             try:
-                return fn(lab, **kwargs)
+                with telemetry.span("command", effort=lab.effort):
+                    return fn(lab, **kwargs)
             except _domain_errors() as exc:
                 raise fail(str(exc)) from None
             except (KeyboardInterrupt, SystemError) as exc:

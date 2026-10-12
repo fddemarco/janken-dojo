@@ -27,7 +27,7 @@ import sys
 import time
 from collections.abc import Callable, Sequence
 
-from .. import _numba_cache, library, progress, settings
+from .. import _numba_cache, library, progress, settings, telemetry
 from ..engine import play_pairs
 from ..match import MatchResult, bot_name
 from ..spec import BotSpec, make_spec, to_dict
@@ -145,18 +145,19 @@ def play_into(
             for i, rr in enumerate(schedule):
                 if i:
                     bar.set_description(f"rr {rr['rr'] + 1}/{last}")
-                results = play_pairs(rr["pairs"], rounds, rr["seeds"], workers)
-                runs.append_matches(
-                    match_rows(
-                        rr["rr"],
-                        rr["pairs"],
-                        rr["seeds"],
-                        results,
-                        rounds,
-                        run_id,
-                        labels,
+                with telemetry.span("experiment.round_robin", matches=len(rr["pairs"])):
+                    results = play_pairs(rr["pairs"], rounds, rr["seeds"], workers)
+                    runs.append_matches(
+                        match_rows(
+                            rr["rr"],
+                            rr["pairs"],
+                            rr["seeds"],
+                            results,
+                            rounds,
+                            run_id,
+                            labels,
+                        )
                     )
-                )
                 bar.update(len(results))
                 on_batch(rr["rr"])
     except BaseException:

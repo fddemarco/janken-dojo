@@ -14,6 +14,7 @@ import numba
 import numpy as np
 from numba.np.ufunc import parallel
 
+from .. import telemetry
 from ..match import MatchResult
 from .build import compile_bots
 from .registry import param_vector
@@ -28,7 +29,8 @@ def play_pairs(
         return []
     if workers:
         numba.set_num_threads(min(workers, parallel.NUM_THREADS))
-    bots = compile_bots([s.path for pair in pairs for s in pair])
+    with telemetry.span("engine.compile"):
+        bots = compile_bots([s.path for pair in pairs for s in pair])
     vectors = {}
 
     def vector(spec):
@@ -45,9 +47,10 @@ def play_pairs(
     )
     prm_a = np.array([vector(a) for a, _ in pairs])
     prm_b = np.array([vector(b) for _, b in pairs])
-    out, status = bots.play_batch(
-        codes_a, codes_b, prm_a, prm_b, rounds, np.array(seeds, np.int64)
-    )
+    with telemetry.span("engine.play", matches=len(pairs), rounds=rounds):
+        out, status = bots.play_batch(
+            codes_a, codes_b, prm_a, prm_b, rounds, np.array(seeds, np.int64)
+        )
     return [
         match_result(a.label, b.label, out[k], status[k])
         for k, (a, b) in enumerate(pairs)

@@ -33,3 +33,4 @@ Removed as duplicates (in git history before the clean-up commit):
   which no longer loaded (the Oracle stage changed) and were replaced by the per-level
   Oracles (`oracle_*`).
   | counter_anti_sims | counter_anti_sims | L3 | a pure specialist vs anti_smartbot_sims_v2 (71.7% of rounds, 10/10 at 250 rounds) but -38.5 pts [-45.7, -31.2] vs smartbot_sims_v2 over the field; its idea lives on gated in gate_counter_sims, [0031](../../../research/experiments/0031-counter-anti-sims-vs-smartbot-sims.md) |
+  | level_k_bandit | level_k_bandit | L4 | the bandit form of level_k_gate (same 6 arms, Thompson, decay 0.85, sharp 3): +7.5 pts [+1.6, +13.6] vs double_bluff_gate_v1, no different from the gate over the field (+1.5 [-4.4, +7.2] for the gate) but it beats the gate head to head (42.2% vs 29.5% of rounds over 5 matches); out of the field so the note classifies one bot, [0032](../../../research/experiments/0032-level-k-vs-double-bluff-gate.md) |

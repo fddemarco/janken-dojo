@@ -311,6 +311,7 @@ class TestLifecycle:
         assert note.status == notes.RUN
         assert note.run_ids
         assert "lab experiment" in note.section("Command")
+        assert "--mode full" in note.section("Command")  # the run, reproduced
 
         self.run_ok("evaluate", "--note", "1", "--round-robins", "3")  # grows its run
         grown = notes.find(self.notebook, "1")

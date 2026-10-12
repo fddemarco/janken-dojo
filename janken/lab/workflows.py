@@ -168,9 +168,12 @@ def _command(note: notes.Note, run_id: str, runs: RunStore) -> str:
     cands = " ".join(
         format_spec(make_spec(c["path"], c["params"])) for c in manifest["candidates"]
     )
+    small = "--allow-small-pool" if cfg.get("allow_small") else "--no-allow-small-pool"
+    mocks = "--mocks" if cfg.get("mocks") else "--no-mocks"
     return (
         f"uv run janken lab experiment {cands} --rounds {cfg['rounds']}"
         f" --round-robins {cfg['round_robins']} --pool-size {cfg['pool_size']}"
+        f" --mode {cfg.get('mode', 'full')} {small} {mocks}"
         f" --seed {cfg['seed']} --name {note.number:04d}-{note.slug}"
     )
 

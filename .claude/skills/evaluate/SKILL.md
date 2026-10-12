@@ -50,6 +50,23 @@ uv run janken evaluate --note NNNN --round-robins 5   # ... then 7, then 10 (the
   or resumes it.
 - **Tuning** instead: `/tune`.
 
+### Head to head: the seed ladder
+
+A claim about one opponent ("X wins >= 36% of rounds vs Y at 250 rounds") is checked
+head to head, not in the pools, where Y meets X once per round robin:
+
+```bash
+uv run python .claude/skills/evaluate/scripts/head_to_head.py bots/<level>/<x>.yaml \
+  bots/<level>/<y>.yaml --threshold 0.36 --rounds 250
+```
+
+It plays seeds 1..n for n = 10 --> 25 --> 50 --> 100, adding only the new seeds at each
+step, and stops at the first step whose 95% CI of the share of rounds won is clear of
+the threshold. More seeds only for an inconclusive result, never past 100; at 100,
+decide with what you have. Never start bigger (a 1000-seed run of an L4 bot takes
+over 10 minutes and adds nothing once 10 seeds are clear). It also prints the worst
+match and the match record. Put its lines in the verdict's analysis.
+
 ## 3. Read it, then decide
 
 - **A real difference** is a paired comparison whose **CI excludes 0**. Overlapping score

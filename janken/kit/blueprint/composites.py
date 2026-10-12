@@ -119,8 +119,9 @@ class Bandit(Composite):
 @dataclasses.dataclass(frozen=True)
 class Gate(Composite):
     """Two kinds of expert under a gatekeeper: the `main` bandit (Thompson
-    sampling over its arms) and the gated `experts`, one arm each, played after
-    the main bandit's arms. The gatekeeper keeps the gated experts' own Dirichlet
+    sampling over its arms) and the gated `experts`, played after the main
+    bandit's arms: one gated arm per rotation of each (an expert's prediction is
+    made once, however many rotations it has). The gatekeeper keeps the gated experts' own Dirichlet
     records, decayed by `decay`, every round, played or not, and with `rule`:
 
     EDGE        from round `warmup` on, the gated expert plays while its posterior
@@ -141,7 +142,8 @@ class Gate(Composite):
     LEADER_PRIORITY  LEADER, but from a gated expert only the main bandit or
                 the last gated expert (e.g. the anti expert) can take over.
 
-    Only the LEADER rules gate more than one expert.
+    Only the LEADER rules gate more than one arm (an expert of several rotations
+    is several arms).
     """
 
     main: Bandit

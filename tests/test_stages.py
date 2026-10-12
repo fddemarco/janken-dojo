@@ -614,6 +614,21 @@ class TestGate:
         assert self.three_experts(bot.LEADER)[15:] == [S] * 3
         assert self.three_experts(bot.LEADER_PRIORITY)[2:] == [P] * 16
 
+    def test_a_rotated_expert_gates_one_arm_per_rotation(self) -> None:
+        # Constant(ROCK) played BEAT and BEAT_BEAT is the gated PAPER, then SCISSORS.
+        rotated = bot.Rotated(bot.Constant(R), (bot.BEAT, bot.BEAT_BEAT))
+        gate = bot.Gate(main_bandit(R), (rotated,), bot.LEADER, 0.3, warmup=0)
+        opp = [R] * 3 + [P] * 14
+        moves = Runner(bot.Blueprint(core=gate)).moves([R] * len(opp), opp)
+        assert moves == self.leader(opp)
+
+    def test_a_rotated_expert_needs_a_leader_rule(self) -> None:
+        rotated = bot.Rotated(bot.Constant(R), (bot.BEAT, bot.BEAT_BEAT))
+        with pytest.raises(blueprint.BlueprintError):
+            bot.Blueprint(
+                core=bot.Gate(main_bandit(R), (rotated,), bot.MAIN_FIRST)
+            ).compile({})
+
     def test_only_leader_gates_several_experts_and_keeps_a_main_arm(self) -> None:
         with pytest.raises(blueprint.BlueprintError):
             bot.Blueprint(

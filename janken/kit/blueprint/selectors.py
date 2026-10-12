@@ -109,7 +109,7 @@ class Gatekeeper(Selector):
         check(self.experts >= 1, "a Gate gates one expert or more")
         check(
             self.experts == 1 or self.rule in (c.LEADER, c.LEADER_PRIORITY),
-            "only the LEADER rules gate more than one expert",
+            "only the LEADER rules gate more than one arm (one expert, one rotation)",
         )
 
 

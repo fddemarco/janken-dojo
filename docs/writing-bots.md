@@ -125,8 +125,12 @@ The aggregators:
   keeps every arm's record and a `selector` picks the arm to play. With no scorer
   (`First`), it plays its first arm with a move.
 - **`Gate`**: a gatekeeper between a `main` Bandit (Thompson sampling) and gated `experts`
-  (one arm each), switching by their own records and a `rule` (`EDGE`, `ANTI_FIRST`,
-  `ANTI_FIRST_HOLD`, `BANDIT`, `MAIN_FIRST`, `LEADER`, `LEADER_PRIORITY`).
+  (one gated arm per rotation, the expert's prediction made once), switching by their own
+  records and a `rule` (`EDGE`, `ANTI_FIRST`, `ANTI_FIRST_HOLD`, `BANDIT`, `MAIN_FIRST`,
+  `LEADER`, `LEADER_PRIORITY`; only the LEADER rules gate more than one arm).
+- **No repeated arms**: an aggregator never names the same bot twice with the same
+  parameters and side (it would be the same predictor, computed twice): one entry, with
+  all its rotations.
 - **`NaiveBayes`**: listed among a Bandit's predictors with no `inputs`, a posterior over
   the opponent's move from the bandit's other arms.
 

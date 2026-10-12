@@ -190,9 +190,13 @@ class TestLowering:
         with pytest.raises(BlueprintError, match="Thompson"):
             lowering.lower(bot.Gate(greedy, (EXPERT,)))
 
-    def test_a_gated_expert_is_one_arm(self) -> None:
-        with pytest.raises(BlueprintError, match="one arm"):
-            lowering.lower(bot.Gate(MAIN, (bot.React(),)))  # three rotations
+    def test_a_gated_expert_is_one_arm_per_rotation(self) -> None:
+        # React takes MAIN's three rotations: three gated arms, after MAIN's six.
+        flat = lowering.lower(bot.Gate(MAIN, (bot.React(),), rule=bot.LEADER))
+        assert isinstance(flat.selector, Gatekeeper)
+        assert flat.selector.experts == 3
+        assert flat.arms() == MAIN.arms() + 3
+        assert_refused(bot.Blueprint(core=bot.Gate(MAIN, (bot.React(),))))  # EDGE
 
     def test_a_gate_needs_a_main_arm_and_an_expert(self) -> None:
         empty = dataclasses.replace(MAIN, predictors=())

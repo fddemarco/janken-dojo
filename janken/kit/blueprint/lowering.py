@@ -6,13 +6,14 @@ encoded (encoder.py):
 
 * a Heuristic (an L1 core) is a bandit of its one arm, with no scorer: First
   plays it, or a random move when it has none (a Silent heuristic has no arm);
-* a Gate is its main bandit with the gated experts appended as its last arms, under
-  the Gatekeeper selector (the gate's rule, edge, decay and warmup, and the main
-  bandit's Thompson sharpness);
+* a Gate is its main bandit with the gated experts appended as its last arms (an
+  expert with several rotations is one gated arm per rotation, its prediction
+  made once), under the Gatekeeper selector (the gate's rule, edge, decay and
+  warmup, and the main bandit's Thompson sharpness);
 * a Bandit is played as it is.
 
 The shapes the runtime can't play are refused here, never approximated: a Gate
-anywhere but at the bot's core, a gated expert of more than one arm, a NaiveBayes
+anywhere but at the bot's core, several gated arms outside the LEADER rules, a NaiveBayes
 whose inputs aren't its bandit's other predictors.
 """
 
@@ -69,18 +70,13 @@ def _gated(gate: Gate) -> Bandit:
             "a Gate's main bandit samples by Thompson: use the Thompson selector"
         )
     check(main.arms() >= 1, "a Gate needs a main arm besides its gated experts")
-    for expert in gate.experts:
-        check(
-            arm_count(expert, main.rotations) == 1,
-            "a gated expert is one arm: give it one rotation",
-        )
     keeper = Gatekeeper(
         edge=gate.edge,
         decay=gate.decay,
         warmup=gate.warmup,
         sharp=selector.sharp,
         rule=gate.rule,
-        experts=len(gate.experts),
+        experts=sum(arm_count(e, main.rotations) for e in gate.experts),
     )
     return dataclasses.replace(
         main, predictors=main.predictors + gate.experts, selector=keeper

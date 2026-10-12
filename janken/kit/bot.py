@@ -1,6 +1,6 @@
 """The whole bot vocabulary in Python, in one module: `from janken.kit import bot`.
 
-Bots themselves are YAML (bots/<name>.yaml, read by declare.py); this module is for
+Bots themselves are YAML (bots/<level>/<name>.yaml, read by declare.py); this module is for
 code that builds blueprints directly, such as the tests:
 
     blueprint = bot.Blueprint(guards=(bot.Noise(bot.Knob("NOISE")),), ...)

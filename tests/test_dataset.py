@@ -14,6 +14,7 @@ import pytest
 from typer.testing import CliRunner
 
 from janken.cli import app
+from janken.engine import registry
 from janken.kit import bot
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
 from janken.lab import collect, dataset, metrics, predict, predict_tune, space
@@ -40,7 +41,7 @@ T = TypeVar("T")
 
 
 def bot_path(stem: str) -> str:
-    return os.path.join(BOTS_DIR, stem + ".yaml")
+    return registry.find(BOTS_DIR, stem)
 
 
 def quietly(fn: Callable[..., T], *args: object, **kwargs: object) -> T:

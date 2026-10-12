@@ -23,7 +23,7 @@ too noisy to decide anything.
 ## With a note: `janken evaluate`
 
 ```bash
-uv run janken evaluate bots/new.yaml --baseline bots/old.yaml \
+uv run janken evaluate bots/l2/new.yaml --baseline bots/l2/old.yaml \
   --hypothesis "new beats old by >= 2 pts, mostly vs the metabots" --idea 7
 uv run janken evaluate --note 0007        # run a planned note, or resume a cut one
 uv run janken verdict 0007 keep --summary "+3.1 pts [+0.8, +5.4] vs old ..."
@@ -43,7 +43,7 @@ matchups. `verdict` closes the note.
 ## Without a note: `janken lab …`
 
 ```bash
-uv run janken lab experiment bots/a.yaml bots/a.yaml:DECAY=0.8 --effort thorough
+uv run janken lab experiment bots/l1/a.yaml bots/l1/a.yaml:DECAY=0.8 --effort thorough
 uv run janken lab resume 20261010-144016          # finish an interrupted run
 uv run janken lab report latest                    # a run's full report
 uv run janken lab runs                             # every run, with its status

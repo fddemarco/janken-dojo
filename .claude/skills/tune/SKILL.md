@@ -27,9 +27,9 @@ The bot's file is never edited.
 ## 2. Run it
 
 ```bash
-uv run janken tune bots/<bot>.yaml --hypothesis "..." --idea <N> --effort standard
-uv run janken tune bots/fleets/iliad_v3/agamemnon_v3.yaml --support bots/fleets/iliad_v3/achilles_v3.yaml \
-  --support bots/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
+uv run janken tune bots/<level>/<bot>.yaml --hypothesis "..." --idea <N> --effort standard
+uv run janken tune bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml --support bots/inactive/fleets/iliad_v3/achilles_v3.yaml \
+  --support bots/inactive/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
 ```
 
 - **Budget:**

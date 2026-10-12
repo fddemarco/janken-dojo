@@ -1,11 +1,11 @@
 ---
 name: build
-description: Turn a janken lab idea into a bot - scaffold bots/<name>.yaml with `janken bot new`, write its blueprint from janken/kit stages (adding a new stage kind with tests when the idea needs one), and verify it with `janken bot check`. Use when the user asks for a new bot or variant, or `janken status` says build.
+description: Turn a janken lab idea into a bot - scaffold bots/<level>/<name>.yaml with `janken bot new`, write its blueprint from janken/kit stages (adding a new stage kind with tests when the idea needs one), and verify it with `janken bot check`. Use when the user asks for a new bot or variant, or `janken status` says build.
 ---
 
 # Build a bot
 
-Goal: a new `bots/<name>.yaml` that follows the bot rules (`.claude/CLAUDE.md`),
+Goal: a new `bots/<level>/<name>.yaml` that follows the bot rules (`.claude/CLAUDE.md`),
 compiles, and is ready for `/evaluate`. Run every command as `uv run janken ...`.
 
 ## 1. Pick the idea and the starting point

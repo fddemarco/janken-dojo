@@ -1,0 +1,26 @@
+# Legacy bots
+
+Bots taken out of the field so that no pool, compile or test spends time on them. Bot
+discovery doesn't recurse, so nothing under `bots/legacy/` is drawn into a pool or a
+tournament. They are kept for the record: their notes in `research/experiments/` still
+name them (by their old names, below), and any of them can be moved back to `bots/`
+(`janken tune` scaffolds a missing space file).
+
+| bot | old name | level | why it left |
+|---|---|---|---|
+| smartbot_geometry | smartbot_geo | L2 | dropped, [0001](../../../research/experiments/0001-smartbot-geo.md) |
+| smartbot_sims_naive_bayes | tpi_lite | L4 | dropped, [0009](../../../research/experiments/0009-tpi-lite-vs-smartbot-sims3.md); an expensive L4 |
+| smartbot_sims_staller | sims3_staller | L3 | dropped, [0012](../../../research/experiments/0012-sims3-staller-triggers-split.md) |
+| smartbot_sims_second_match | sims3_second | L3 | dropped, [0013](../../../research/experiments/0013-sims3-second-vs-smartbot-sims3.md) |
+| smartbot_sims_impostor | sinon | L3 | the impostor of the Iliad fleet, which was removed, [0014](../../../research/experiments/0014-sinon-vs-smartbot-sims3.md) |
+| smartbot_sims_self_replay | self_sim | L4 | an L4 replay of an L3, superseded by anti_smartbot_sims, [0015](../../../research/experiments/0015-mirror-sims3-vs-smartbot-sims3.md) |
+
+Removed as duplicates (in git history before the clean-up commit):
+
+- `smartbot_sims` (n=5) and `smartbot_sims2` (n=8): shorter prefixes of today's
+  `smartbot_sims` (n=10, once `smartbot_sims3` / `advanced_bot`), [0005](../../../research/experiments/0005-smartbot-sims3.md).
+- `smartbot_bandit`: at its defaults it was `smartbot_sims` exactly, [0006](../../../research/experiments/0006-smartbot-bandit.md).
+- `mock_anti_advanced`, `mock_replay_gate`, `mock_gate_anti_first`, `mock_gate_bandit`:
+  the calibrated mocks of [0017](../../../research/experiments/0017-mock-replay-gate-vs-replay-gate-mock-validation.md)-[0020](../../../research/experiments/0020-tuning-of-mock-gate-anti-first.md),
+  which no longer loaded (the Oracle stage changed) and were replaced by the per-level
+  Oracles (`oracle_*`).

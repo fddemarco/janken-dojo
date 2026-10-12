@@ -63,7 +63,7 @@ class TuneBudget:
 
 
 def specs(texts: Sequence[str]) -> list[BotSpec]:
-    """Bot specs from `bots/x.yaml[:NAME=value,...]` texts.
+    """Bot specs from `bots/l1/x.yaml[:NAME=value,...]` texts.
 
     Raises:
         WorkflowError: a spec that doesn't name a bot or its parameters.

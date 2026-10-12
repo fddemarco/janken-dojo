@@ -74,7 +74,7 @@ $ uv run janken evaluate [OPTIONS] [candidates]...
 
 **Arguments**:
 
-* `candidates...`: the bot(s) under test: bots/x.yaml[:NAME=value,...]
+* `candidates...`: the bot(s) under test: bots/l1/x.yaml[:NAME=value,...]
 
 **Options**:
 
@@ -433,7 +433,7 @@ $ uv run janken bot [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `new`: Scaffold bots/NAME.yaml from another bot...
+* `new`: Scaffold bots/<level>/NAME.yaml from...
 * `check`: Check bots: the file's contract, that it...
 * `export`: Export a bot, and its fleet's supports, as...
 * `list`: Every bot: its level, one-line...
@@ -441,9 +441,11 @@ $ uv run janken bot [OPTIONS] COMMAND [ARGS]...
 
 ### `uv run janken bot new`
 
-Scaffold bots/NAME.yaml from another bot (and its space file, if it has defaults).
+Scaffold bots/<level>/NAME.yaml from another bot (and its space file, if it has
+defaults), in the template's level folder.
 
-Edit the blueprint afterwards; `janken bot check NAME` verifies it.
+Edit the blueprint afterwards; `janken bot check NAME` verifies it, and refuses
+it until it sits in its new blueprint's level folder (move it there).
 
 **Usage**:
 
@@ -915,7 +917,7 @@ $ uv run janken lab experiment [OPTIONS] {candidates}...
 
 **Arguments**:
 
-* `candidates...`: bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value  [required]
+* `candidates...`: bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value  [required]
 
 **Options**:
 
@@ -1113,7 +1115,7 @@ $ uv run janken lab match [OPTIONS] {a} {b}
 
 **Arguments**:
 
-* `a`: the first bot: bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value  [required]
+* `a`: the first bot: bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value  [required]
 * `b`: the second bot  [required]
 
 **Options**:
@@ -1222,7 +1224,7 @@ $ uv run janken lab space [OPTIONS] {bots}...
 
 **Arguments**:
 
-* `bots...`: bot files (bots/x.yaml) to tune  [required]
+* `bots...`: bot files (bots/l1/x.yaml) to tune  [required]
 
 **Options**:
 
@@ -1258,7 +1260,7 @@ $ uv run janken lab predict [OPTIONS] {bots}...
 
 **Arguments**:
 
-* `bots...`: bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value  [required]
+* `bots...`: bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value  [required]
 
 **Options**:
 
@@ -1482,7 +1484,7 @@ $ uv run janken lab dataset add [OPTIONS] {bots}...
 
 **Arguments**:
 
-* `bots...`: bot directories and/or bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value  [required]
+* `bots...`: bot directories and/or bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value  [required]
 
 **Options**:
 

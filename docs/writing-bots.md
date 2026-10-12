@@ -12,7 +12,7 @@ A bot file only declares it, as data: which stages, and which of their knobs rea
 bot's parameters.
 
 ```yaml
-# bots/beat_last.yaml
+# bots/l1/beat_last.yaml
 description: Plays what beats the opponent's last move.
 defaults:            # the bot as submitted; at most 8, each feeds a $KNOB
   NOISE: 0.05

@@ -1,4 +1,4 @@
-bot: bots/transition_matrix.yaml
+bot: bots/l1/transition_matrix.yaml
 weight: 1.0
 params:
   DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.7, 0.85, 0.95, 1.0]}

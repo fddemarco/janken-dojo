@@ -1,6 +1,6 @@
 """Score predictors on the move dataset.
 
-    uv run janken lab predict bots/x.yaml [bots/y.yaml:NAME=value ...] --split test
+    uv run janken lab predict bots/l1/x.yaml [bots/l1/y.yaml:NAME=value ...] --split test
 
 Every stored match is replayed from both sides (predict_kernel.py), so each round
 gives two predictions: p1's move, made from p2's side, and p2's. A round where the

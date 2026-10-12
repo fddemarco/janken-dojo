@@ -77,7 +77,7 @@ Write what you find into the verdict's `--analysis`.
    - Then `uv run pre-commit run --all-files` must pass. Fix the code rather than
      silencing a check.
 1. **Stage by path**, only the lab's files:
-   - `bots/*.yaml` and `spaces/*.yaml`;
+   - `bots/` (the level folders and `inactive/`) and `spaces/*.yaml`;
    - `janken/kit/*` and `tests/*` if touched;
    - `research/`.
 

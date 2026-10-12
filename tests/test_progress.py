@@ -8,14 +8,14 @@ import os
 import pytest
 
 from janken import progress, settings
-from janken.engine import play_in_batches, play_pairs
+from janken.engine import play_in_batches, play_pairs, registry
 from janken.spec import make_spec
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def bot(stem: str) -> str:
-    return os.path.join(ROOT, "bots", stem + ".yaml")
+    return registry.find(os.path.join(ROOT, "bots"), stem)
 
 
 class TestProgress:

@@ -25,7 +25,7 @@ in the note. You bring the hypothesis and the judgement. Run every command as
 ## 2. Run it
 
 ```bash
-uv run janken evaluate bots/<new>.yaml --baseline bots/<old>.yaml \
+uv run janken evaluate bots/<level>/<new>.yaml --baseline bots/<level>/<old>.yaml \
   --hypothesis "..." --idea <N> --effort standard
 ```
 

@@ -6,7 +6,7 @@ This folder is the lab notebook. Results live in `experiments/` (gitignored, loc
 ## The loop
 
 ```
-ideas.md ──► new bot (bots/x.yaml) ──► evaluate / tune ──► verdict
+ideas.md ──► new bot (bots/l1/x.yaml) ──► evaluate / tune ──► verdict
    ▲                                                          │
    └──── insights.md ◄── experiments/NNNN-*.md (keep / drop / iterate)
 ```
@@ -72,12 +72,12 @@ re-baselines them.
 
 The bots were renamed for clarity (for example `advanced_bot` → `smartbot_sims`,
 `anti_advanced_bots` → `anti_smartbot_sims`, `replay_gate` → `gate_edge`), the legacy
-bots moved to `bots/legacy/` and the fleet to `bots/fleets/`, and duplicates were
-removed. The logic of every remaining bot is unchanged. The notes, ideas and insights
+bots moved to `bots/inactive/legacy/` and the fleet to `bots/inactive/fleets/`, duplicates were
+removed, and the field was split into one folder per level (`bots/l1/` … `bots/oracle/`). The logic of every remaining bot is unchanged. The notes, ideas and insights
 keep the names that were current when they were written, and so does the runs database
 (`lab history` and `lab leaderboard` list the old and the new names separately). The
 map from old names to new: [bots/README.md](../bots/README.md#renames) and
-[bots/legacy/README.md](../bots/legacy/README.md).
+[bots/inactive/legacy/README.md](../bots/inactive/legacy/README.md).
 
 ## Experiment protocol
 
@@ -111,7 +111,7 @@ map from old names to new: [bots/README.md](../bots/README.md#renames) and
 
 ## Tuning
 
-`janken tune bots/x.yaml --hypothesis …` runs **Optuna** over the bot's space file
+`janken tune bots/l1/x.yaml --hypothesis …` runs **Optuna** over the bot's space file
 (`spaces/x.yaml`, scaffolded if missing; edit its ranges first), then validates and records
 the best trials in the note. `janken lab study run` does the same without a note:
 

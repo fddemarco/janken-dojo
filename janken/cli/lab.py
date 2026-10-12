@@ -27,6 +27,7 @@ from .options import (
     Sampler,
     Split,
     about,
+    bot_path,
     budget_help,
     fail,
     lab_command,
@@ -47,7 +48,7 @@ app.add_typer(study_app, name="study")
 app.add_typer(dataset_app, name="dataset")
 
 QUERY_DB = Db(CFG.query.db)
-SPEC_HELP = "bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value"
+SPEC_HELP = "bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value"
 
 
 def _seed(seed: int) -> int:
@@ -208,7 +209,7 @@ def calibrate(
     from ..lab.calibrate import calibrate as measure
     from ..lab.calibrate import level_wins
 
-    path = bot if bot.endswith(".yaml") else os.path.join(lab.bots_dir, bot + ".yaml")
+    path = bot_path(lab, bot)
     if not os.path.isfile(path):
         raise fail(f"no bot file {path}")
     rows = measure(path, lab.bots_dir, lab.rounds, seeds, _seed(lab.seed), lab.workers)
@@ -267,7 +268,9 @@ def query(
 @lab_command("lab space")
 def space(
     lab: Lab,
-    bots: Annotated[list[str], typer.Argument(help="bot files (bots/x.yaml) to tune")],
+    bots: Annotated[
+        list[str], typer.Argument(help="bot files (bots/l1/x.yaml) to tune")
+    ],
     weight: Annotated[float, typer.Option(help=about("space.weight"))] = (
         CFG.space.weight
     ),

@@ -40,7 +40,7 @@ from ..kit import declare, levels
 from ..kit.blueprint import Blueprint, Compiled
 from ..match import bot_name
 from . import kernel
-from .registry import discover, module_name, param_names
+from .registry import discover, field_root, module_name, param_names
 
 DISPATCH_MARKER = "# --- dispatch"
 
@@ -143,9 +143,10 @@ def compile_bots(paths: Iterable[str]) -> CompiledBots:
 
 
 def with_neighbours(paths: Iterable[str]) -> list[str]:
-    """`paths` plus every bot file in their directories, normalised and sorted."""
+    """`paths` plus every bot their directories' discovery finds (the whole field
+    for a bot in a level folder), normalised and sorted."""
     normal = {os.path.normpath(p) for p in paths}
-    folders = {os.path.dirname(p) or "." for p in normal}
+    folders = {field_root(p) for p in normal}
     return sorted(normal | {p for folder in folders for p in discover(folder)})
 
 

@@ -1,4 +1,4 @@
-bot: bots/pattern_memory.yaml
+bot: bots/l1/pattern_memory.yaml
 weight: 1.0
 params:
   MAX_LEN: {type: int, low: 1, high: 20, grid: [3, 6, 10, 15]}

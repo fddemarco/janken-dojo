@@ -48,9 +48,10 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   several into a higher-order one. Every way of combining predictors is a composite,
   and a bot's level is the tree's. `lowering.py` flattens the tree into the one bandit
   the compiled pipeline plays, and refuses the shapes it can't.
-- One YAML file per bot, `bots/<name>.yaml`: a `description`, its `defaults` (at most 8,
+- One YAML file per bot, `bots/<level>/<name>.yaml`: a `description`, its `defaults` (at most 8,
   the bot as submitted) and a `blueprint` of kit stages whose knobs are literals or
-  `$NAME` (grammar in `janken/kit/declare.py`; copy any bot in `bots/`). A bot file holds
+  `$NAME` (grammar in `janken/kit/declare.py`; copy any bot in `bots/`). Stems are
+  unique across levels. A bot file holds
   no Python.
 - What a bot is tuned over lives outside it, in one space file per bot,
   `spaces/<name>.yaml` (`janken/lab/space.py`): `bot`, `weight` and `params`.
@@ -149,8 +150,10 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
 - `experiments/` (the workspace) holds the runs, the move dataset and the tuning studies.
   It's gitignored, local data.
 - `bots/` holds the field (YAML, indexed in `bots/README.md`, with the map of old names),
-  `bots/fleets/` the fleets and `bots/legacy/` the retired bots (bot discovery doesn't
-  recurse, so subfolders never enter a pool). `spaces/` holds one space file per tunable
+  one folder per level: `bots/l1/`, `bots/l2/`, …, `bots/oracle/`. A bot sits in the
+  folder of its computed level (`janken bot check` and `tests/test_bots.py` enforce it).
+  `bots/inactive/` holds the bots out of the field: `fleets/` and `legacy/` (discovery
+  reads only the level folders, so they never enter a pool). `spaces/` holds one space file per tunable
   bot of the field.
 - `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
   and `rps_kaggle.md`.

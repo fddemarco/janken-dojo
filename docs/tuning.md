@@ -8,9 +8,9 @@ that validation is evidence.
 ## With a note: `janken tune`
 
 ```bash
-uv run janken tune bots/smartbot_sims.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
-uv run janken tune bots/fleets/iliad_v3/agamemnon_v3.yaml --support bots/fleets/iliad_v3/achilles_v3.yaml \
-  --support bots/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
+uv run janken tune bots/l3/smartbot_sims.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
+uv run janken tune bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml --support bots/inactive/fleets/iliad_v3/achilles_v3.yaml \
+  --support bots/inactive/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
 uv run janken tune --note 0009              # resume the note's study, revalidate
 uv run janken verdict 0009 drop --summary "best +0.4 pts [-1.2, +2.0] vs defaults"
 ```
@@ -25,7 +25,7 @@ uv run janken verdict 0009 drop --summary "best +0.4 pts [-1.2, +2.0] vs default
 ## Without a note: `janken lab study …`
 
 ```bash
-uv run janken lab space bots/x.yaml                 # scaffold spaces/x.yaml, then edit it
+uv run janken lab space bots/l1/x.yaml                 # scaffold spaces/x.yaml, then edit it
 uv run janken lab study run spaces/x.yaml --study x-v1 --effort thorough
 uv run janken lab study run spaces/a.yaml spaces/b.yaml --study fleet-v1
 uv run janken lab study show x-v1                   # its recorded validations
@@ -109,7 +109,7 @@ stops cleanly, since every finished trial is already stored. The files:
 A bot's logic never changes under its filename, and its `defaults` are part of that
 logic. So:
 
-- keep a tuned configuration as a **variant** (`bots/x.yaml:NAME=value,...`), which works
+- keep a tuned configuration as a **variant** (`bots/l1/x.yaml:NAME=value,...`), which works
   anywhere a bot spec does; or
 - make it a **new bot**: `janken bot new x_tuned --from x`, then set its defaults, then
   `janken evaluate` it against `x`.

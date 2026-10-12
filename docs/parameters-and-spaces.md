@@ -6,8 +6,8 @@ A bot's parameters are its `defaults`; the engine hands them to the pipeline as 
 vector, in `defaults` order. Each one feeds a `$KNOB` in the blueprint (see
 [Writing a bot](writing-bots.md)).
 
-A **variant** is the same bot file with other values: `bots/x.yaml:DECAY=0.8` (several:
-`bots/x.yaml:DECAY=0.8,MAX_LEN=6`). It works anywhere a bot spec is accepted
+A **variant** is the same bot file with other values: `bots/l1/x.yaml:DECAY=0.8` (several:
+`bots/l1/x.yaml:DECAY=0.8,MAX_LEN=6`). It works anywhere a bot spec is accepted
 (`evaluate`, `lab experiment`, `lab dataset add`, `lab predict`, …). In results, a variant is labelled
 `x@<hash of its overrides>`.
 
@@ -18,7 +18,7 @@ bot, in `spaces/<bot>.yaml`. [`janken tune`](tuning.md) and
 [`lab predict-tune`](dataset.md#lab-predict-tune) read them.
 
 ```yaml
-bot: bots/iocaine_lite.yaml
+bot: bots/l2/iocaine_lite.yaml
 weight: 1.0          # its share of a multi-bot study's objective
 params:              # a subset of the defaults; the rest stay fixed
   DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.7, 0.8, 0.9, 0.95]}
@@ -57,6 +57,6 @@ point, not a design: before tuning, make the bounds sensible, use `log: true` wh
 fits, and drop params not worth searching.
 
 ```bash
-uv run janken lab space bots/fleets/iliad_v3/agamemnon_v3.yaml                     # weight 1
-uv run janken lab space bots/fleets/iliad_v3/achilles_v3.yaml bots/fleets/iliad_v3/ajax_v3.yaml --weight 0
+uv run janken lab space bots/inactive/fleets/iliad_v3/agamemnon_v3.yaml                     # weight 1
+uv run janken lab space bots/inactive/fleets/iliad_v3/achilles_v3.yaml bots/inactive/fleets/iliad_v3/ajax_v3.yaml --weight 0
 ```

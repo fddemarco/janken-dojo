@@ -1,16 +1,22 @@
 # Bots
 
 One YAML file per bot (grammar: [docs/writing-bots.md](../docs/writing-bots.md)); its
-tuning space, when it has one, is `spaces/<name>.yaml`. Only the files directly in
-`bots/` are the field: pools, tournaments and `janken bot list` don't look into the
-subfolders. Levels are computed from the blueprint (`janken/kit/levels.py`).
+tuning space, when it has one, is `spaces/<name>.yaml`. The field is the level folders:
+each bot sits in the folder of its level, computed from the blueprint
+(`janken/kit/levels.py`; `janken bot check` refuses a bot in the wrong one), and stems
+are unique across them. Pools, tournaments and `janken bot list` read the level folders
+only, never `inactive/`.
 
 ```
 bots/
-  *.yaml             the field: the zoo (L1-L2), the smartbot family (L2-L3),
-                     the gatekeepers (L4) and the research-only Oracles
-  fleets/iliad_v3/   the Iliad v3 fleet: a champion and four supports (Team overlay)
-  legacy/            bots out of the field, kept for the research record
+  l1/                the zoo's heuristics
+  l2/                bandits over L1 arms: smartbot and its variants, iocaine, rps4
+  l3/                smartbot_sims and its specialist
+  l4/                the gatekeepers
+  oracle/            the research-only Oracles
+  inactive/          bots out of the field
+    fleets/iliad_v3/ the Iliad v3 fleet: a champion and four supports (Team overlay)
+    legacy/          retired bots, kept for the research record
 ```
 
 ## The field
@@ -70,4 +76,4 @@ was run. Current names, and the old ones they replace:
 | `oracle_arm_gate_edge` | `arm_replay_gate` |
 | `oracle_arm_gate_anti_first` | `arm_gate_anti_first` |
 
-Legacy bots and their old names: [legacy/README.md](legacy/README.md).
+Legacy bots and their old names: [inactive/legacy/README.md](inactive/legacy/README.md).

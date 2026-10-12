@@ -1,10 +1,11 @@
-"""Every bot in bots/ honours the bot contract, and every space in spaces/ fits it."""
+"""Every bot in bots/ honours the bot contract, sits in its level's folder, and every space in spaces/ fits it."""
 
 import os
 
 import pytest
 
 from janken import botfile
+from janken.engine import registry
 from janken.engine.build import BlueprintBot, load_bot
 from janken.engine.registry import P_MAX, discover
 from janken.lab import space
@@ -37,3 +38,20 @@ class TestContract:
         assert found.stem == os.path.splitext(name)[0]
         assert found.stem in stems
         assert found.params
+
+
+class TestLayout:
+    @pytest.mark.parametrize("path", BOT_PATHS, ids=bot_name)
+    def test_every_bot_sits_in_its_level_folder(self, path: str) -> None:
+        assert os.path.dirname(path) == registry.expected_folder(path)
+
+    def test_stems_are_unique_across_levels(self) -> None:
+        stems = [bot_name(p) for p in BOT_PATHS]
+        assert len(stems) == len(set(stems))
+
+    @pytest.mark.parametrize("name", SPACE_FILES)
+    def test_every_space_names_its_bots_file(self, name: str) -> None:
+        found = space.load(os.path.join(SPACES_DIR, name))
+        assert os.path.normpath(os.path.join(ROOT, found.bot)) == registry.find(
+            BOTS_DIR, found.stem
+        )

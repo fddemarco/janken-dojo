@@ -76,7 +76,7 @@ class TestExportedBots:
     def test_exported_bots_play_exactly_like_the_kit(
         self, stem: str, rounds: int, seed: int, invalid_at: int
     ) -> None:
-        path = f"bots/{stem}.yaml"
+        path = registry.find("bots", stem)
         found = botfile.read(path)
         history = random.Random(seed)
         my = [history.randrange(3) for _ in range(rounds)]
@@ -91,13 +91,17 @@ class TestExportedBots:
         assert script_moves(module, my, opp) == expected, stem
 
     def test_a_crash_guard_forfeits_by_raising(self) -> None:
-        module = load(self.exported("bots/frequency.yaml")["frequency"], self.tmp, "f")
+        module = load(
+            self.exported(registry.find("bots", "frequency"))["frequency"],
+            self.tmp,
+            "f",
+        )
         module.play([], [])
         with pytest.raises(RuntimeError):  # frequency crashes on an invalid move
             module.play(["rock"], ["invalid"])
 
     def test_scripts_pass_the_screening_and_import_no_numpy(self) -> None:
-        source = self.exported("bots/frequency.yaml")["frequency"]
+        source = self.exported(registry.find("bots", "frequency"))["frequency"]
         assert sandbox.scan(source, RULES) == []
         assert "numpy" not in source
         assert "global " not in source
@@ -156,7 +160,9 @@ class TestExportedBots:
         assert chief.play([], []) == opening  # a new match: the handshake again
 
     def test_a_match_longer_than_the_export_is_an_error(self) -> None:
-        module = load(self.exported("bots/rock.yaml")["rock"], self.tmp, "rock")
+        module = load(
+            self.exported(registry.find("bots", "rock"))["rock"], self.tmp, "rock"
+        )
         with pytest.raises(ValueError):
             module.play(["rock"] * MAX_ROUNDS, ["rock"] * MAX_ROUNDS)
 
@@ -164,7 +170,7 @@ class TestExportedBots:
         compiled = bot.Blueprint(overlays=(bot.Team(bot.SUPPORT),)).compile({})
         spec = [int(v) for v in compiled.spec]
         assert [spec[x] for x in export.team_role_cells(spec)] == [c.SUPPORT]
-        prm = [float(v) for v in registry.param_vector("bots/rock.yaml")]
+        prm = [float(v) for v in registry.param_vector(registry.find("bots", "rock"))]
         with pytest.raises(export.ExportError):
             export.script(compiled, prm, [], [], MAX_ROUNDS)  # its role is missing
 

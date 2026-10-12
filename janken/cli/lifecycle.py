@@ -161,7 +161,7 @@ def evaluate(
     candidates: Annotated[
         list[str],
         typer.Argument(
-            help="the bot(s) under test: bots/x.yaml[:NAME=value,...]",
+            help="the bot(s) under test: bots/l1/x.yaml[:NAME=value,...]",
             default_factory=list,
             show_default=False,
         ),

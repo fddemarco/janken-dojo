@@ -15,6 +15,7 @@ from typer.testing import CliRunner, Result
 
 from janken import settings
 from janken.cli import app, options
+from janken.engine import registry
 from janken.notebook import ideas, notes
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -214,7 +215,7 @@ def lifecycle_lab(
     os.makedirs(cls.bots)
     os.makedirs(cls.notebook)
     for stem in LIGHT_BOTS:
-        shutil.copy(os.path.join(ROOT, "bots", stem + ".yaml"), cls.bots)
+        shutil.copy(registry.find(os.path.join(ROOT, "bots"), stem), cls.bots)
     for name in ("ideas.md", "insights.md"):
         shutil.copy(os.path.join(ROOT, "research", name), cls.notebook)
     cls.runner = CliRunner()
@@ -259,7 +260,7 @@ class TestLifecycle:
         return result.output
 
     def bot(self, stem: str) -> str:
-        return os.path.join(self.bots, stem + ".yaml")
+        return registry.find(self.bots, stem)
 
     def test_the_loop(self) -> None:
         added = json.loads(
@@ -289,6 +290,7 @@ class TestLifecycle:
         )
         assert "spaces" in made  # cycler has defaults, so a space file too
         assert ideas.load(self.notebook).get(number).state == ideas.IN_PROGRESS
+        assert os.path.dirname(self.bot("twin")) == os.path.join(self.bots, "l1")
         assert "ok twin" in self.run_ok("bot", "check", "twin")
         assert "twin" in self.run_ok("bot", "list")
         assert "A cycler twin." in self.run_ok("bot", "show", "twin")

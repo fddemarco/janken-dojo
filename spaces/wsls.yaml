@@ -1,4 +1,4 @@
-bot: bots/wsls.yaml
+bot: bots/l1/wsls.yaml
 weight: 1.0
 params:
   SHIFT: {type: int, low: 1, high: 2, grid: [1, 2]}

@@ -1,6 +1,6 @@
 """Blueprints declared as data: what a bot's YAML file says, turned into a Blueprint.
 
-A bot file (bots/<name>.yaml) holds plain data; its `blueprint` section is read here.
+A bot file (bots/<level>/<name>.yaml) holds plain data; its `blueprint` section is read here.
 It has guards, a core predictor (a Bandit or a Gate) and overlays:
 
     blueprint:

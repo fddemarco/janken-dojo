@@ -19,7 +19,7 @@ lives in [`janken.toml`](configuration.md).
 | word | meaning |
 | --- | --- |
 | **bot** | a YAML file in `bots/`; its stem is its identity ([Writing a bot](writing-bots.md)) |
-| **variant** | a bot with parameter overrides: `bots/x.yaml:NAME=value,NAME=value` |
+| **variant** | a bot with parameter overrides: `bots/l1/x.yaml:NAME=value,NAME=value` |
 | **candidate** | a bot under test |
 | **baseline** | a bot a candidate must beat, played in the same run, so the comparison is paired |
 | **pool** | the random opponents a round robin draws from the bots dir (candidates excluded) |
@@ -67,9 +67,9 @@ uv run janken idea add "**TPI-lite**: one naive-Bayes arm over every predictor" 
   --priority P1 --motivation "rps_kaggle §4.2"
 uv run janken bot new bayes_combiner --from smartbot_sims --idea 22 \
   --description "TPI-lite: a naive-Bayes combiner arm.\nMultiplies every predictor's evidence."
-# ... edit bots/bayes_combiner.yaml ...
+# ... edit bots/l2/bayes_combiner.yaml ...
 uv run janken bot check bayes_combiner
-uv run janken evaluate bots/bayes_combiner.yaml --baseline bots/smartbot_sims.yaml \
+uv run janken evaluate bots/l2/bayes_combiner.yaml --baseline bots/l3/smartbot_sims.yaml \
   --hypothesis "beats smartbot_sims by >= 2 pts, mostly vs the metabots" --idea 22
 uv run janken verdict 0007 keep --summary "+3.1 pts [+0.8, +5.4] vs sims3 ..."
 uv run janken insight add --note 0007 --finding "..." --mechanism "..." \
@@ -131,7 +131,7 @@ Where flags apply differently:
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches
   WHERE run_id LIKE '%0007%' AND (stem_a = 'geometry' OR stem_b = 'geometry')"
-uv run janken lab match bots/bayes_combiner.yaml bots/geometry.yaml --rounds 200 --seed 3
+uv run janken lab match bots/l2/bayes_combiner.yaml bots/l1/geometry.yaml --rounds 200 --seed 3
 ```
 
 ## Errors and exit status

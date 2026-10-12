@@ -3,6 +3,7 @@
 import os
 import pathlib
 import random
+import shutil
 import textwrap
 from collections import Counter
 
@@ -11,11 +12,14 @@ from typer.testing import CliRunner
 
 from janken import rating
 from janken.cli import app
-from janken.engine import play_pairs
-from janken.engine.build import BotContractError, load_bot
+from janken.engine import play_pairs, registry
+from janken.engine.build import BotContractError, load_bot, with_neighbours
+from janken.kit import levels
 from janken.match import INVALID_MOVE_LIMIT, MatchResult
 from janken.spec import make_spec
 from janken.tournament import Standing, balanced_schedule, discover_bots, run_tournament
+
+BOTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bots")
 
 # Fixture bots: name -> body of `step(f, i, prm, my, opp, n)`.
 FIXTURES = {
@@ -270,3 +274,72 @@ class TestRateTournament:
             [MatchResult("a", "b", wins_a=5, forfeit_a="crashed")]
         )
         assert ratings["a"].after < ratings["b"].after
+
+
+def touch(*parts: str) -> str:
+    """An empty file at the joined path, its folders made; returns the path."""
+    path = os.path.join(*parts)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w").close()
+    return os.path.normpath(path)
+
+
+class TestLevelFolders:
+    @pytest.mark.parametrize(
+        ("level", "folder"), [(1, "l1"), (4, "l4"), (levels.ORACLE, "oracle")]
+    )
+    def test_folder(self, level: int, folder: str) -> None:
+        assert levels.folder(level) == folder
+
+    @pytest.mark.parametrize(
+        ("name", "is_level"),
+        [("l1", True), ("l12", True), ("oracle", True), ("l", False)]
+        + [("lx", False), ("inactive", False), ("fleets", False)],
+    )
+    def test_is_level_folder(self, name: str, is_level: bool) -> None:
+        assert levels.is_level_folder(name) is is_level
+
+    def test_discover_reads_level_folders_only(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        found = [
+            touch(d, "flat.yaml"),
+            touch(d, "l1", "a.yaml"),
+            touch(d, "l3", "b.yaml"),
+            touch(d, "oracle", "c.yaml"),
+        ]
+        touch(d, "inactive", "legacy", "old.yaml")
+        touch(d, "inactive", "d.yaml")
+        touch(d, "notes", "e.yaml")
+        assert registry.discover(d) == sorted(found)
+
+    def test_field_root(self) -> None:
+        assert registry.field_root(os.path.join("bots", "l2", "x.yaml")) == "bots"
+        assert registry.field_root(os.path.join("bots", "x.yaml")) == "bots"
+        fleet = os.path.join("bots", "inactive", "fleets", "f")
+        assert registry.field_root(os.path.join(fleet, "x.yaml")) == fleet
+
+    def test_find(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        a = touch(d, "l1", "a.yaml")
+        touch(d, "l1", "twice.yaml")
+        touch(d, "l2", "twice.yaml")
+        assert registry.find(d, "a") == a
+        with pytest.raises(FileNotFoundError, match="no bot"):
+            registry.find(d, "missing")
+        with pytest.raises(FileNotFoundError, match="2 bots named"):
+            registry.find(d, "twice")
+
+    def test_neighbours_span_the_field(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        field = [touch(d, "l1", "a.yaml"), touch(d, "l2", "b.yaml")]
+        touch(d, "inactive", "c.yaml")
+        assert with_neighbours([field[1]]) == sorted(field)
+
+    def test_bot_check_refuses_a_misplaced_bot(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        rock = os.path.join(d, "l2", "rock.yaml")
+        os.makedirs(os.path.dirname(rock))
+        shutil.copy(registry.find(BOTS_DIR, "rock"), rock)
+        result = CliRunner().invoke(app, ["bot", "check", "--bots-dir", d, "rock"])
+        assert result.exit_code == 2
+        assert os.path.join(d, "l1") in result.output

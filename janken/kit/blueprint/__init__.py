@@ -22,7 +22,7 @@ a NaiveBayes (a posterior over its inputs). The bot's level is the tree's.
 7. overlays   transform the chosen move: stalling, a team handshake, spending the
               invalid moves the rules allow.
 
-A bot file (bots/<name>.yaml) declares a blueprint plus its defaults; declare.py
+A bot file (bots/<level>/<name>.yaml) declares a blueprint plus its defaults; declare.py
 turns its YAML into these dataclasses. A stage knob is either a literal or a
 `Knob("NAME")` (`$NAME` in YAML) read from the bot's parameters, so tuning and
 variants work on any stage:

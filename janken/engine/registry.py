@@ -5,7 +5,8 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
-from .. import botfile
+from .. import botfile, mocks
+from ..kit import levels
 from ..match import bot_name
 
 # Longest parameter vector a bot may take.
@@ -13,11 +14,50 @@ P_MAX = 8
 
 
 def discover(directory: str) -> list[str]:
-    """Every bot file in `directory` (non-recursive; '_'-prefixed files skipped)."""
-    return sorted(
-        os.path.normpath(os.path.join(directory, f))
+    """Every bot file in `directory` and in its level folders (l1, l2, ..., oracle),
+    '_'-prefixed files skipped. Other subfolders (bots/inactive) are never searched."""
+    folders = [directory] + [
+        os.path.join(directory, f)
         for f in os.listdir(directory)
+        if levels.is_level_folder(f) and os.path.isdir(os.path.join(directory, f))
+    ]
+    return sorted(
+        os.path.normpath(os.path.join(folder, f))
+        for folder in folders
+        for f in os.listdir(folder)
         if botfile.is_bot_file(f)
+    )
+
+
+def field_root(path: str) -> str:
+    """The directory whose discovery finds the bot at `path`: its folder, or that
+    folder's parent when it is a level folder."""
+    folder = os.path.dirname(os.path.normpath(path)) or "."
+    if levels.is_level_folder(os.path.basename(folder)):
+        return os.path.dirname(folder) or "."
+    return folder
+
+
+def find(directory: str, stem: str) -> str:
+    """The bot file named `stem` that `discover(directory)` finds.
+
+    Raises:
+        FileNotFoundError: no bot has that stem, or more than one has.
+    """
+    found = [p for p in discover(directory) if bot_name(p) == stem]
+    if len(found) != 1:
+        raise FileNotFoundError(
+            f"{len(found)} bots named {stem!r} in {directory}: {', '.join(found)}"
+            if found
+            else f"no bot {stem!r} in {directory}"
+        )
+    return found[0]
+
+
+def expected_folder(path: str) -> str:
+    """The level folder the bot at `path` belongs in, under its field root."""
+    return os.path.normpath(
+        os.path.join(field_root(path), levels.folder(mocks.path_level(path)))
     )
 
 

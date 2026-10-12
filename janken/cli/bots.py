@@ -7,18 +7,27 @@ from typing import Annotated, Any
 import typer
 
 from .. import settings
-from .options import CFG, Lab, about, fail, lab_command, shown
+from .options import CFG, Lab, about, bot_path, fail, lab_command, shown
 
 app = typer.Typer(
     help="The bots: scaffold, check and inspect them.", no_args_is_help=True
 )
 
 
-def _bot_path(lab: Lab, name: str) -> str:
-    """A bot by stem (in the bots dir) or by path."""
-    if name.endswith(".yaml") or os.sep in name:
-        return name
-    return os.path.join(lab.bots_dir, name + ".yaml")
+def _check_folder(lab: Lab, path: str) -> None:
+    """Refuse a bot of the field that isn't in its level's folder.
+
+    Raises:
+        typer.Exit: the bot is in the field but not in its level folder.
+    """
+    from ..engine import registry
+
+    root = os.path.normpath(registry.field_root(path))
+    if root != os.path.normpath(lab.bots_dir):
+        return  # outside the field (bots/inactive/...): no level folder to be in
+    folder = registry.expected_folder(path)
+    if os.path.dirname(os.path.normpath(path)) != folder:
+        raise fail(f"{path}: its level's folder is {folder}: move it there")
 
 
 def _with_description(template: str, description: str) -> str:
@@ -59,22 +68,30 @@ def new(
         int, typer.Option(help="the ideas.md number it implements; 0: none")
     ] = 0,
 ) -> None:
-    """Scaffold bots/NAME.yaml from another bot (and its space file, if it has defaults).
+    """Scaffold bots/<level>/NAME.yaml from another bot (and its space file, if it has
+    defaults), in the template's level folder.
 
-    Edit the blueprint afterwards; `janken bot check NAME` verifies it.
+    Edit the blueprint afterwards; `janken bot check NAME` verifies it, and refuses
+    it until it sits in its new blueprint's level folder (move it there).
     """
-    from .. import botfile
+    from .. import botfile, mocks
+    from ..engine import registry
+    from ..kit import levels
     from ..lab import space
+    from ..match import bot_name
     from ..notebook import ideas
 
-    target = os.path.join(lab.bots_dir, name + ".yaml")
     if not name.isidentifier():
         raise fail(f"a bot's stem is an identifier, got {name!r}")
-    if os.path.exists(target):
-        raise fail(f"{target} exists: a stem's logic never changes; pick a new name")
-    source = _bot_path(lab, template)
+    taken = [p for p in registry.discover(lab.bots_dir) if bot_name(p) == name]
+    if taken:
+        raise fail(f"{taken[0]} exists: a stem's logic never changes; pick a new name")
+    source = bot_path(lab, template)
     if not os.path.isfile(source):
         raise fail(f"no bot {source}")
+    folder = os.path.join(lab.bots_dir, levels.folder(mocks.path_level(source)))
+    os.makedirs(folder, exist_ok=True)
+    target = os.path.join(folder, name + ".yaml")
     with open(source, encoding="utf-8") as f:
         text = _with_description(f.read(), description.replace("\\n", "\n"))
     with open(target, "w", encoding="utf-8") as f:
@@ -116,12 +133,13 @@ def check(
 
     rows = []
     for name in names:
-        path = _bot_path(lab, name)
+        path = bot_path(lab, name)
         found = botfile.read(path)
         if not found.description:
             raise fail(f"{path}: a bot needs a description")
         if len(found.defaults) > P_MAX:
             raise fail(f"{path}: at most {P_MAX} defaults")
+        _check_folder(lab, path)
         load_bot(path)
         seed = (
             random.SystemRandom().getrandbits(32)
@@ -191,7 +209,7 @@ def export(
     from .. import sandbox
     from ..match import bot_name
 
-    path = _bot_path(lab, name)
+    path = bot_path(lab, name)
     if not os.path.isfile(path):
         raise fail(f"no bot {path}")
     try:
@@ -259,7 +277,7 @@ def show(
     from ..kit import levels
     from ..match import bot_name
 
-    path = _bot_path(lab, name)
+    path = bot_path(lab, name)
     with open(path, encoding="utf-8") as f:
         text = f.read()
     space_path = os.path.join(lab.spaces_dir, bot_name(path) + ".yaml")

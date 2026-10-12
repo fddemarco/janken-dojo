@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import optuna
 
 from janken import mocks
-from janken.engine import play_pairs
+from janken.engine import play_pairs, registry
 from janken.lab import analyze, space
 from janken.lab.experiment import build_schedule, resume_experiment, run_experiment
 from janken.lab.pool import sample_pool
@@ -44,7 +44,7 @@ POOL = 4
 
 
 def bot(stem: str) -> str:
-    return os.path.join(BOTS_DIR, stem + ".yaml")
+    return registry.find(BOTS_DIR, stem)
 
 
 @pytest.fixture(scope="class")
@@ -123,8 +123,7 @@ class TestPool:
     def test_small_pool(self) -> None:
         with pytest.raises(SystemExit):
             sample_pool(BOTS_DIR, 500, random.Random(1))
-        every = [os.path.join(BOTS_DIR, f) for f in os.listdir(BOTS_DIR)]
-        regular = [p for p in every if p.endswith(".yaml") and not mocks.is_mock(p)]
+        regular = [p for p in registry.discover(BOTS_DIR) if not mocks.is_mock(p)]
         assert len(
             sample_pool(BOTS_DIR, 500, random.Random(1), allow_small=True)
         ) == len(regular)

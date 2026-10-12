@@ -1,4 +1,4 @@
-bot: bots/cycler.yaml
+bot: bots/l1/cycler.yaml
 weight: 1.0
 params:
   STEP: {type: int, low: 1, high: 2, grid: [1, 2]}

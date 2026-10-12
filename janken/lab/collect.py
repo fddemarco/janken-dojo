@@ -1,6 +1,6 @@
 """Grow the move dataset: play a round robin and append every round to it.
 
-    uv run janken lab dataset add bots/ [bots/x.yaml:NAME=value ...] --matches 2
+    uv run janken lab dataset add bots/ [bots/l1/x.yaml:NAME=value ...] --matches 2
 
 Every pair of the given bots plays `matches_per_pair` matches. Each match draws
 its seed and its holdout key from one stream seeded by the batch seed (recorded
@@ -25,7 +25,7 @@ from . import dataset
 
 def expand(entries: Sequence[str]) -> list[BotSpec]:
     """Bot specs from directories (each bot in it, at its defaults) and specs
-    (`bots/x.yaml` or `bots/x.yaml:NAME=value,...`), in order, without repeats.
+    (`bots/l1/x.yaml` or `bots/l1/x.yaml:NAME=value,...`), in order, without repeats.
 
     Raises:
         ValueError: a spec is malformed, or two entries share a label.

@@ -1,7 +1,7 @@
 """Space files: what one bot's parameters are tuned over, one file per bot.
 
     # spaces/smartbot_sims.yaml
-    bot: bots/smartbot_sims.yaml
+    bot: bots/l3/smartbot_sims.yaml
     weight: 1.0     # its share of a multi-bot study's objective (0: tuned only
                     # for what it does to the others, e.g. a fleet's support)
     params:         # a subset of the bot's defaults; the rest stay at their defaults

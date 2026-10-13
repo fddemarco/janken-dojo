@@ -143,6 +143,7 @@ Where flags apply differently:
 | `lab gauntlet variations OUT` | the field's bots and up to `gauntlet.per_bot` parameter variants of each (drawn from its space file, kept only if they change its play), one spec per line |
 | `lab gauntlet nash LIST OUT --name LOG` | which bots of a list are Nash "with extra steps": no probe L1 (`gauntlet.nash_probes`) skews their results either way; with `--sequential`, a bot one probe skews by `gauntlet.nash_decisive` in its first match is settled at once |
 | `lab gauntlet run LIST --cand BOT... --name LOG` | candidates vs every opponent of a list, up to `gauntlet.seeds` seeds each; the opponents under `gauntlet.threshold` of rounds won (logged per match in the workspace, so it resumes). With `--sequential`, a pairing stops once its share is clear of the threshold (after `gauntlet.min_seeds`, at `gauntlet.stop_alpha` spent over the seeds) |
+| `lab arena LIST --name LOG` | research only: an experimental learner (`janken/experimental/`, Vowpal Wabbit learning online from the match's history and from what the `arena.experts` would play from either seat) vs every opponent of a gauntlet list, `arena.seeds` seeds each, logged and reported like `lab gauntlet run` so a kit bot's gauntlet on the same list compares directly |
 
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches

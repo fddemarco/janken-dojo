@@ -12,6 +12,11 @@
       supports: [first, second]         # their names (default: <stem>_support_K)
       handshake: [ROCK, PAPER, PAPER]   # the fleet's own opening
       vigilant: true                    # stop throwing at a teammate's first miss
+    experimental: true                  # research only: never exported (default false)
+
+An experimental bot is research only: `janken bot export` refuses it, and every
+bot that names it, directly or not (janken/export.py). It marks a bot that
+exists to test an idea, e.g. against a learner of janken/experimental/.
 
 A fleet is one file, its champion's: the `fleet` section adds a Team overlay
 (role CHAMPION) to the blueprint, and each support is the same bot with role
@@ -43,7 +48,7 @@ from .kit import declare
 BOT_SUFFIX = ".yaml"
 KERNEL_SUFFIX = ".py"
 SUFFIXES = (BOT_SUFFIX, KERNEL_SUFFIX)
-KEYS = ("description", "defaults", "blueprint", "mocks", "fleet")
+KEYS = ("description", "defaults", "blueprint", "mocks", "fleet", "experimental")
 FLEET_KEYS = ("size", "supports", "handshake", "vigilant")
 MOVE_NAMES = ("ROCK", "PAPER", "SCISSORS")  # a handshake's words
 SUPPORT_NAME = "{champion}_support_{k}"  # a support's name when the fleet names none
@@ -91,6 +96,7 @@ class BotFile:
     blueprint: object  # the raw section; janken/kit/declare.py builds it
     mocks: str = ""  # a mock's: the stem of the bot it stands in for (janken/mocks.py)
     fleet: Fleet = NO_FLEET  # a champion's: the fleet it leads
+    experimental: bool = False  # research only: never exported
 
 
 def is_kernel_module(path: str) -> bool:
@@ -124,6 +130,9 @@ def _read_yaml(path: str, sha256: str) -> BotFile:
     mocks = data.get("mocks") or ""
     if not isinstance(mocks, str):
         raise BotFileError(f"{path}: mocks must be a bot's stem")
+    experimental = data.get("experimental", False)
+    if not isinstance(experimental, bool):
+        raise BotFileError(f"{path}: experimental must be true or false")
     return BotFile(
         path=path,
         description=description.strip(),
@@ -131,6 +140,7 @@ def _read_yaml(path: str, sha256: str) -> BotFile:
         blueprint=data.get("blueprint"),
         mocks=mocks,
         fleet=_fleet(path, data.get("fleet")),
+        experimental=experimental,
     )
 
 

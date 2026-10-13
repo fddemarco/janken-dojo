@@ -11,6 +11,7 @@ version stays readable by the bots that name it. Stems are unique there.
     structural_parameters(path)  its parameters fixed at compile time
     source_hash(path)      its file's hash and those of every bot it names
     references(path)       the stems a bot file names
+    experimental(path)     the experimental bots among it and those it names
 """
 
 import dataclasses
@@ -169,6 +170,21 @@ def source_hash(path: str) -> str:
     for stem in _closure(library, named, seen):
         digest.update(f"{stem}:{botfile.source_hash(library.path(stem))}".encode())
     return digest.hexdigest()
+
+
+def experimental(path: str) -> list[str]:
+    """The stems of the experimental bots (botfile.BotFile.experimental) among the
+    bot at `path` and every bot it names, directly or not: what makes it research
+    only."""
+    if botfile.is_kernel_module(path):
+        return []
+    library = Library(library_root(path))
+    stem = bot_name(path)
+    found = [stem] if botfile.read(path).experimental else []
+    for named in _closure(library, references(path), {stem}):
+        if botfile.read(library.path(named)).experimental:
+            found.append(named)
+    return found
 
 
 def _closure(library: Library, stems: list[str], seen: set[str]) -> Iterator[str]:

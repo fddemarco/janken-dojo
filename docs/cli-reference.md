@@ -624,8 +624,8 @@ $ uv run janken bot fleet [OPTIONS] {base} {champion}
 
 ### `uv run janken bot list`
 
-Every bot: its level, one-line description, parameters, and whether it's
-tunable.
+Every bot: its level, one-line description, parameters, whether it's
+tunable, and whether it's experimental (research only, never exported).
 
 **Usage**:
 
@@ -1178,6 +1178,7 @@ $ uv run janken lab [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `arena`: Play an experimental Vowpal Wabbit learner...
 * `experiment`: Play candidates against fresh random pools...
 * `resume`: Play the round robins an interrupted run...
 * `report`: Analyze stored runs (finished or not) and...
@@ -1194,6 +1195,49 @@ $ uv run janken lab [OPTIONS] COMMAND [ARGS]...
 * `dataset`: The move dataset (DuckDB, append-only).
 * `profile`: Profiles, benchmarks and timing spans:...
 * `gauntlet`: Gauntlets: candidates vs every opponent of...
+
+### `uv run janken lab arena`
+
+Play an experimental Vowpal Wabbit learner vs every opponent of a list,
+and report it like a gauntlet (research only: it can never be exported).
+
+**Usage**:
+
+```console
+$ uv run janken lab arena [OPTIONS] {opponents}
+```
+
+**Arguments**:
+
+* `opponents`: a file of bot specs, one per line (bots/l1/x.yaml:NAME=value,...)  [required]
+
+**Options**:
+
+* `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
+* `--seeds <int>`: matches per opponent (seeds 1..n) (config: arena.seeds)  [default: 5]
+* `--vw-args <str>`: the learner's Vowpal Wabbit arguments (cost-sensitive) (config: arena.vw_args)  [default: --csoaa 3 --power_t 0 --learning_rate 0.1 --quiet]
+* `--history <int>`: rounds of history the learner's features read (config: arena.history)  [default: 3]
+* `--explore <float>`: the chance the learner plays a random move (config: arena.explore)  [default: 0.05]
+* `--expert <str>`: kit bots (stems) whose moves, from either seat, are the learner's features (config: arena.experts) (repeatable)  [default: frequency_v1, smartbot_fast_v1, backoff_family_v1, period_bandit_v1, iocaine_lite_v1, geometry_ensemble_v1]
+* `--no-experts / --no-no-experts`: play without experts: history features only  [default: no-no-experts]
+* `--threshold <float>`: the share of rounds won a candidate must reach (config: gauntlet.threshold)  [default: 0.36]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
 
 ### `uv run janken lab experiment`
 

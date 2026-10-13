@@ -315,3 +315,18 @@ nash_skew = 0.10
 # A bot whose first match vs some probe is already this skewed is settled (not
 # Nash-like) without the other seeds: a Nash-like bot's match is about 0.05 off.
 nash_decisive = 0.25
+
+[arena]
+# `janken lab arena`: an experimental learner (janken/experimental/: third-party
+# libraries allowed, research only, never exported) vs every opponent of a gauntlet
+# list, logged in this folder of the workspace and scored like `lab gauntlet run`.
+dir = "arena"
+seeds = 5
+# The learner: Vowpal Wabbit, cost-sensitive (one cost per move, every round, from
+# what each move would have scored), with a constant learning rate since opponents
+# adapt. Its features: the last `history` rounds, and what the `experts` would play
+# from our seat and from theirs. It plays a random move with chance `explore`.
+vw_args = "--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet"
+history = 3
+explore = 0.05
+experts = ["frequency_v1"]

@@ -27,6 +27,7 @@ checks its type, its allowed values and its minimum.
 | `telemetry` | timing spans: `spans` on or off, their `file` and rotation size `max_mb`, and `slow_factor` |
 | `profile` | `lab profile`: where profiles go, the profiler's `interval_s`, `top`, `jit`, `warmup`, and the optimization budget (`min_share`, `expected_cut`, `window_days`, `horizon_days`, `session_minutes`, `max_attempts`, `min_gain`, `repeats`, `cooldown_days`) |
 | `gauntlet` | `lab gauntlet`: where logs go, `seeds` and `threshold` per opponent, `batch`, and sequential stopping (`sequential`, `min_seeds`, `stop_alpha`); the variants (`per_bot`, `draws`, `seed`, `probe_rounds`, `variation_probes`, `levels`, `exclude`); the Nash check (`nash_probes`, `nash_seeds`, `nash_skew`, `nash_decisive`) |
+| `arena` | `lab arena` (research only): where logs go, `seeds` per opponent, and the experimental learner: `vw_args` (Vowpal Wabbit), `history`, `explore` and the kit `experts` whose moves are its features |
 
 ## The `config` commands
 

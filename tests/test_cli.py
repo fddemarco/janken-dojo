@@ -80,6 +80,8 @@ def test_no_default_is_hard_coded(case: tuple[str, Any]) -> None:
     key = CONFIG_KEY.search(getattr(param, "help", "") or "")
     if key:
         value = settings.entry(key.group(1), settings.config()).value
+        if isinstance(default, list):  # a repeatable option's setting is a tuple
+            default = tuple(default)
         assert str(default) == str(value)
     else:
         assert default in NEUTRAL

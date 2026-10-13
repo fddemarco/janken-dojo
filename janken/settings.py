@@ -508,6 +508,27 @@ class GauntletConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class ArenaConfig:
+    """`lab arena`: an experimental learner (janken/experimental/, research only)
+    vs every opponent of a gauntlet list, logged and scored like a gauntlet.
+
+    The learner is Vowpal Wabbit run with `vw_args`, learning online each round
+    which move pays, from the last `history` rounds and from the moves the
+    `experts` (kit bots, by stem) would play from either seat. It plays a random
+    move with chance `explore`.
+    """
+
+    dir: str = setting("where arena logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    vw_args: str = setting("the learner's Vowpal Wabbit arguments (cost-sensitive)")
+    history: int = setting("rounds of history the learner's features read", minimum=1)
+    explore: float = setting("the chance the learner plays a random move", minimum=0)
+    experts: tuple[str, ...] = setting(
+        "kit bots (stems) whose moves, from either seat, are the learner's features"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -533,6 +554,7 @@ class Config:
     telemetry: TelemetryConfig = setting("timing spans")
     profile: ProfileConfig = setting("profiling and the optimization budget")
     gauntlet: GauntletConfig = setting("gauntlets: every opponent on its own")
+    arena: ArenaConfig = setting("experimental learners vs a gauntlet's opponents")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""

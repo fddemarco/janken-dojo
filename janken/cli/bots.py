@@ -374,8 +374,8 @@ def fleet(
 @app.command("list")
 @lab_command("bot list")
 def list_bots(lab: Lab) -> None:
-    """Every bot: its level, one-line description, parameters, and whether it's
-    tunable."""
+    """Every bot: its level, one-line description, parameters, whether it's
+    tunable, and whether it's experimental (research only, never exported)."""
     from .. import botfile, mocks
     from ..engine.registry import discover
     from ..kit import levels
@@ -394,12 +394,14 @@ def list_bots(lab: Lab) -> None:
                 else "",
                 "params": list(found.defaults),
                 "space": os.path.isfile(os.path.join(lab.spaces_dir, stem + ".yaml")),
+                "experimental": found.experimental,
             }
         )
     lab.emit(
         rows,
         "\n".join(
             f"{r['level']:<7}{r['bot']:<22} {'[space] ' if r['space'] else ''}"
+            f"{'[experimental] ' if r['experimental'] else ''}"
             f"{r['description'][:84]}"
             for r in rows
         ),

@@ -39,7 +39,9 @@ like a person typed it:
   - `experiment`, `resume`, `report`, `runs`, `history`, `leaderboard`, `match`;
   - `query` (read-only SQL), `space`, `study run | show | list`;
   - `dataset add | info`, `predict`, `predict-tune`;
-  - `profile run | bench | list | show | spans` (hotspots, benchmarks, timing spans).
+  - `profile run | bench | list | show | spans` (hotspots, benchmarks, timing spans);
+  - `gauntlet variations | nash | run`, and `arena` (an experimental learner vs a
+    gauntlet's list, research only).
 
 Every lab command shares the same flags (workspace, evidence, execution, output).
 
@@ -113,6 +115,23 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   deterministic order.
 - A stem's logic never changes under the same filename once it has results; a new idea
   gets a new file. Nothing pins this automatically: it is enforced by review.
+- `experimental: true` in a bot file marks it research only: `janken bot export` refuses
+  it and every bot that names it, directly or not. Use it for bots that only exist to
+  test an idea; a bot meant for production never carries it or names one that does.
+
+## Experiments with other libraries (`janken/experimental/`)
+
+- An idea may be tried first with a third-party library (Vowpal Wabbit so far) in
+  `janken/experimental/`, played with `janken lab arena` against a gauntlet list (the
+  field's bots and their parameter variants) and compared with a kit bot's
+  `janken lab gauntlet run` on the same list.
+- Those libraries live in the `experimental` dependency group of `pyproject.toml`, and
+  only `janken/experimental/` and the command that runs it (`janken/cli/arena.py`,
+  importing it inside the command) may import them or the package;
+  `tests/test_experimental.py` enforces it. Adding one to that group is allowed when an
+  experiment needs it: say so in the hand-off.
+- Nothing from there ships. An idea that wins in the arena is rebuilt from scratch as a
+  kit stage (`/build`), then evaluated and exported like any bot.
 
 ## Coding conventions (all Python: `janken/`, `tests/`)
 
@@ -147,7 +166,9 @@ the notebook in `research/`). **Only `/lab-loop` commits**, after every step, on
   decorators of `janken/kit/jit.py` (never `numba.njit` directly). No new dependencies of
   any kind (runtime or dev); solve it with the stdlib, `numpy`, `numba` and what
   `pyproject.toml` already lists. (`pyyaml`, for bot and space files, was declared
-  explicitly; it was already installed through optuna and pre-commit.)
+  explicitly; it was already installed through optuna and pre-commit.) The one
+  exception is the `experimental` dependency group, for `janken/experimental/` only
+  (above).
 - Numba's on-disk cache is opt-in, set by `engine.cache_commands` in `janken.toml`: only
   the compute-intensive commands use it. `--cache on|off` or `$JANKEN_NUMBA_CACHE`
   override it, and `$JANKEN_JIT=off` runs everything as plain Python
@@ -207,6 +228,8 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   grammar), `levels.py`, `pipeline.py` and the compiled stages, and `bot.py` (the whole
   vocabulary in Python, for tests). `janken/library.py` reads bots by stem (references,
   their transitive source hash).
+- `janken/experimental/` holds the research-only learners (third-party libraries
+  allowed) and the arena that referees them against kit bots, round by round.
 - `janken/telemetry.py` logs timing spans (loguru, JSON lines in the workspace's
   `logs/`): every lab command and its coarse steps. `janken/lab/profiling.py` profiles
   (pyinstrument, in a subprocess) and benchmarks commands into the workspace's

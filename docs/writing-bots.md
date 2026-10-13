@@ -199,6 +199,23 @@ blueprint:
 `janken bot fleet BASE CHAMPION` writes such a file on any bot (with a random
 handshake of `fleet.handshake_length` moves) and exports it.
 
+## Experimental bots
+
+`experimental: true` marks a bot research only: `janken bot export` refuses it, and
+every bot that names it, directly or not (`janken bot list` flags it). It is for bots
+that only exist to test an idea; production bots never carry it.
+
+```yaml
+experimental: true
+description: a probe for the arena, never submitted
+blueprint:
+  core: {Heuristic: {signal: {Constant: [ROCK]}, rotation: COPY}}
+```
+
+Learners built on other libraries (`janken/experimental/`, played with
+`janken lab arena`) are never bots at all: an idea that wins there is rebuilt from
+scratch as a kit stage, and the bot made of it is evaluated and exported as usual.
+
 ## Rules
 
 - **Knobs** are literals or `$NAME`, read from the bot's parameters (`defaults` order, at

@@ -11,7 +11,7 @@
 jit = true
 # Commands that keep numba's compiled code on disk (the compute-intensive ones); the
 # rest compile in memory. --cache / --no-cache or $JANKEN_NUMBA_CACHE override.
-cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
+cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab arena", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
 
 [output]
 # Progress bars on long commands: "auto" (only on an interactive terminal), "on" or
@@ -309,3 +309,18 @@ nash_skew = 0.10
 # A bot whose first match vs some probe is already this skewed is settled (not
 # Nash-like) without the other seeds: a Nash-like bot's match is about 0.05 off.
 nash_decisive = 0.25
+
+[arena]
+# `janken lab arena`: an experimental learner (janken/experimental/: third-party
+# libraries allowed, research only, never exported) vs every opponent of a gauntlet
+# list, logged in this folder of the workspace and scored like `lab gauntlet run`.
+dir = "arena"
+seeds = 5
+# The learner: Vowpal Wabbit, cost-sensitive (one cost per move, every round, from
+# what each move would have scored), with a constant learning rate since opponents
+# adapt. Its features: the last `history` rounds, and what the `experts` would play
+# from our seat and from theirs. It plays a random move with chance `explore`.
+vw_args = "--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet"
+history = 3
+explore = 0.05
+experts = ["frequency_v1", "smartbot_fast_v1", "backoff_family_v1", "period_bandit_v1", "iocaine_lite_v1", "geometry_ensemble_v1"]

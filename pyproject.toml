@@ -28,6 +28,20 @@ dependencies = [
     "typer>=0.27.3",
 ]
 
+[dependency-groups]
+# Research only: the learners of janken/experimental/ (janken lab arena). No bot,
+# and nothing outside janken/experimental/ and its CLI command, may import these;
+# an idea that works there is rebuilt from scratch as a kit stage.
+experimental = [
+    "torch>=2.14.1",
+    "vowpalwabbit>=9.11.9",
+]
+
+[tool.uv]
+# `uv sync` / `uv run` install the experimental group too (`--no-group
+# experimental` leaves it out).
+default-groups = ["experimental"]
+
 [project.scripts]
 # `uv sync` installs the project (editable) with this console script: `janken ...` in
 # the activated env, or `uv run janken ...` anywhere.

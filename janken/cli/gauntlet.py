@@ -27,7 +27,7 @@ LIST_HELP = "a file of bot specs, one per line (bots/l1/x.yaml:NAME=value,...)"
 LOG_HELP = "the log's name in the workspace's gauntlet folder (resumed if it exists)"
 
 
-def _read_list(path: str) -> list[str]:
+def read_list(path: str) -> list[str]:
     if not os.path.isfile(path):
         raise fail(f"no list file {path}")
     with open(path) as lines:
@@ -37,6 +37,36 @@ def _read_list(path: str) -> list[str]:
 
 def _log(lab: Lab, name: str) -> str:
     return os.path.join(lab.workspace, CFG.gauntlet.dir, name + ".jsonl")
+
+
+def report(
+    lab: Lab,
+    done: "Log",
+    cand: list[str],
+    opps: list[str],
+    ladder: list[int],
+    threshold: float,
+) -> None:
+    """Each candidate's mean share won, and the opponents it falls under the
+    threshold against."""
+    from ..lab import gauntlet
+
+    data, text = {}, []
+    for c in cand:
+        rows = gauntlet.shares(done, c, opps, ladder)
+        under = sorted((r for r in rows if r.won < threshold), key=lambda r: r.won)
+        mean = sum(r.won for r in rows) / max(1, len(rows))
+        data[c] = {"mean": mean, "under": [r.__dict__ for r in under], "met": len(rows)}
+        text.append(
+            f"{c}: {len(under)} of {len(rows)} opponents under {threshold:.0%},"
+            f" mean {mean:.1%}"
+        )
+        text += [
+            f"  {r.won:.1%} [{r.won - r.half_width:.1%}, {r.won + r.half_width:.1%}]"
+            f" lost {r.lost:.1%} n={r.matches}  {r.opponent}"
+            for r in under
+        ]
+    lab.emit(data, "\n".join(text))
 
 
 def _done(lab: Lab, log: str) -> "Log":
@@ -144,7 +174,7 @@ def nash(
     from ..lab import gauntlet
 
     cfg = CFG.gauntlet
-    checked = _read_list(bots)
+    checked = read_list(bots)
     probes = list(cfg.nash_probes)
     ladder = list(range(1, seeds + 1))
     log = _log(lab, name)
@@ -213,7 +243,7 @@ def run(
     from ..lab import sequential as seq
 
     cfg = CFG.gauntlet
-    opps = _read_list(opponents)
+    opps = read_list(opponents)
     ladder = list(range(1, seeds + 1))
     log = _log(lab, name)
     open_ = [(c, o) for c in cand for o in opps]
@@ -235,20 +265,4 @@ def run(
                 _done(lab, log), open_, looked, threshold, alpha
             )
             lab.say(f"after {len(looked)} seeds: {len(open_)} pairings still close")
-    done = _done(lab, log)
-    data, text = {}, []
-    for c in cand:
-        rows = gauntlet.shares(done, c, opps, ladder)
-        under = sorted((r for r in rows if r.won < threshold), key=lambda r: r.won)
-        mean = sum(r.won for r in rows) / max(1, len(rows))
-        data[c] = {"mean": mean, "under": [r.__dict__ for r in under], "met": len(rows)}
-        text.append(
-            f"{c}: {len(under)} of {len(rows)} opponents under {threshold:.0%},"
-            f" mean {mean:.1%}"
-        )
-        text += [
-            f"  {r.won:.1%} [{r.won - r.half_width:.1%}, {r.won + r.half_width:.1%}]"
-            f" lost {r.lost:.1%} n={r.matches}  {r.opponent}"
-            for r in under
-        ]
-    lab.emit(data, "\n".join(text))
+    report(lab, _done(lab, log), cand, opps, ladder, threshold)

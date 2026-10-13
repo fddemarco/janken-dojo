@@ -12,6 +12,9 @@ only the standard library (janken/sandbox.py screens it). A script here holds:
 * the bot's compiled blueprint, as literals (`SPEC`, `KNOBS`, `PRM`), and a `play`
   that keeps the match's state in a module-level dict, never rebound (no `global`).
 
+Research-only bots are never exported: mocks (janken/mocks.py) and experimental
+bots, along with every bot that names one (janken/botfile.py).
+
 A fleet's champion brings its supports: the size - 1 bots its file's `fleet`
 section names (janken/botfile.py), one script each. A support's script is the
 champion's, plus a comment naming the support and its role line (`TEAM_ROLE`).
@@ -500,10 +503,16 @@ def scripts(path: str, max_rounds: int) -> dict[str, str]:
 
     Raises:
         ExportError: the bot can't be exported (see fleet_of, rewrite_module), or
-            it is a mock: it cheats, so it is research only (janken/mocks.py).
+            it is research only: a mock (an Oracle cheats, janken/mocks.py), or
+            experimental, or built on an experimental bot (janken/botfile.py).
     """
     if mocks.is_mock(path):
         raise ExportError(f"{path} is a mock (an Oracle cheats): research only")
+    flagged = library.experimental(path)
+    if flagged:
+        raise ExportError(
+            f"{path} is research only: experimental bot(s) {', '.join(flagged)}"
+        )
     fleet = fleet_of(path)
     found = botfile.read(path)
     compiled = _blueprint(path).compile(found.defaults)

@@ -43,6 +43,13 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    0071). Like the repeat followers it loses to `geometry` and plays a deterministic
    choice, so it should fall to its mirror counter. _Prediction:_ CTW on our moves,
    BEAT_BEAT, wins > 40% of rounds vs it.
+1. **A pre-trained prior generalises across parameters.** _supported._ A k=3
+   joint-context table trained on the move dataset's default-parameter matches and
+   refined online (`pretrained_context_v1`, stage `PriorTable`) beats
+   `context_mixture_v1` by +9.8 pts [+5.6, +14.4] in L1 pools of parameter variants
+   it never saw, confirmed on fresh seeds (notes 0072, 0073). It wins more matches
+   but by fewer rounds: the prior names the field's habits from the first rounds.
+   It still loses to `pattern_memory` and `geometry`.
 1. **L1 is non-transitive at the margins.** _supported._ A cycle among the middle
    learners (`markov2_joint` > `period_detector` > `transition_matrix` ~
    `markov2_joint`), and `rotation_outcome`, last among the learners, is the only one

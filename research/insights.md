@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: A move table pre-trained on the field's matches beats the best online L1 against parameter variants it never saw: pre-training generalises across parameters
+
+- **Evidence:** experiments/0073-pretrained-context-vs-context-mixture-v1.md (run 20261013-155311_0073-pretrained-context-vs-context-mixture-v1): `pretrained_context - context_mixture_v1 = +9.8 pts [+5.6, +14.4]` over 320 shared matches: pretrained_context better; experiments/0072-pretrained-context-vs-context-mixture-v1.md (run 20261013-155257_0072-pretrained-context-vs-context-mixture-v1): `pretrained_context - context_mixture_v1 = +6.8 pts [+1.8, +12.0]` over 200 shared matches: pretrained_context better
+- **Mechanism:** the prior (worth 5 observations per context) names how the field's bots respond to each 3-move joint context from the first rounds, where an online learner starts from nothing; trained on default-parameter matches and judged on variants, so it is generalisation, not memory: +9.8 pts [+5.6, +14.4] over context_mixture_v1 (320 matches, fresh seeds), after an arena probe showed +6.6 pts of net rounds over the same table online-only
+- **Implication:** pre-train the priors of the strong online learners (CTW's KT counts, repeat_mirror's arms) on the dataset with parameter variants (ideas #72, #74, #75), and keep the prior light (weight ~5): a heavier one (20) helped less
+
 ## 2026-10-13: An L2 built from L1's strong set (both repeat followers read from both seats, and geometry, every rotation) beats the field's iocaine-style L2 by about 7 pts
 
 - **Evidence:** experiments/0064-mirror-l1-bandit-vs-iocaine-lite-v1.md (run 20261013-142910_0064-mirror-l1-bandit-vs-iocaine-lite-v1): `mirror_l1_bandit - iocaine_lite_v1 = +7.3 pts [+3.0, +11.6]` over 480 shared matches: mirror_l1_bandit better; experiments/0063-mirror-l1-bandit-iocaine-lite-v1-vs-strong-l1-ba.md (run 20261013-142825_0063-mirror-l1-bandit-iocaine-lite-v1-vs-strong-l1-ba): `mirror_l1_bandit - iocaine_lite_v1 = +12.0 pts [+5.8, +18.8]` over 200 shared matches: mirror_l1_bandit better; `iocaine_lite_v1 - strong_l1_bandit = -9.2 pts [-16.5, -2.2]` over 200 shared matches: strong_l1_bandit better

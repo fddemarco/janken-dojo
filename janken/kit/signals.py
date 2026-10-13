@@ -255,6 +255,31 @@ def _ctw_predict(
 
 
 @kernel
+def _prior_predict(
+    f: np.ndarray,
+    at: int,
+    ctx: int,
+    order: int,
+    n: int,
+    my: np.ndarray,
+    opp: np.ndarray,
+    kn: np.ndarray,
+    kk: int,
+) -> int:
+    """A PriorTable's symbol: the first maximum of weight x prior + this match's
+    counts in the current context's row (kn[kk] the weight, then the prior)."""
+    if n < order:
+        return c.NO_MOVE
+    row = context(ctx, order, n, my, opp)
+    best, best_x = 0.0, c.NO_MOVE
+    for x in range(3):
+        belief = kn[kk] * kn[kk + 1 + 3 * row + x] + f[at + 3 * row + x]
+        if belief > best:
+            best, best_x = belief, x
+    return best_x
+
+
+@kernel
 def observe(
     spec: np.ndarray,
     r: int,
@@ -307,6 +332,9 @@ def observe(
             f[at + 9] += 1.0
         elif result == 2:
             f[at + 9] -= 1.0
+    elif kind == c.S_PRIOR:
+        if k >= order:
+            f[at + 3 * context(b, order, k, my, opp) + seq(a, k, my, opp)] += 1.0
     elif kind == c.S_CTW:
         _ctw_observe(f, at, b, order, k, seq(a, k, my, opp), kn[kk], my, opp)
     elif kind == c.S_GEOMETRY:
@@ -410,6 +438,8 @@ def predict(
         return argmax_random(f, at + 3 * score_row(f[at + 9]))
     if kind == c.S_CTW:
         return _ctw_predict(f, at, b, order, n, my, opp)
+    if kind == c.S_PRIOR:
+        return _prior_predict(f, at, b, order, n, my, opp, kn, kk)
     if kind == c.S_ORACLE:
         return oracle.symbol(spec, r, i, kn, rn)
     return c.NO_MOVE

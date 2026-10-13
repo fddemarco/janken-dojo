@@ -178,6 +178,21 @@ class TestSignal:
         opp = [S, P, S, R, S, P]
         assert signal_bot(bot.CTW(depth=0)).last([R] * 6, opp) == S
 
+    def test_a_prior_table_plays_its_belief_before_any_count(self) -> None:
+        prior = [1.0 / 3.0] * 27
+        prior[3 * (R * 3 + R) : 3 * (R * 3 + R) + 3] = [0.0, 0.0, 1.0]  # (R, R) --> S
+        runner = signal_bot(bot.PriorTable(order=1, weight=5.0, prior=tuple(prior)))
+        assert runner.last([R], [R]) == S
+
+    def test_a_prior_table_gives_way_to_the_match(self) -> None:
+        prior = [0.0, 0.0, 1.0] * 9  # every context says scissors, worth 1
+        runner = signal_bot(bot.PriorTable(order=1, weight=1.0, prior=tuple(prior)))
+        assert runner.last([R] * 6, [P] * 6) == P  # five counts of paper outweigh it
+
+    def test_a_prior_table_needs_a_row_per_context(self) -> None:
+        with pytest.raises(blueprint.BlueprintError, match="3 probabilities"):
+            bot.PriorTable(order=1, prior=(0.5, 0.5)).validate()
+
     def test_ctw_depth_is_bounded(self) -> None:
         with pytest.raises(blueprint.BlueprintError, match="joint CTW depth"):
             bot.CTW(depth=4, ctx=bot.JOINT).validate()

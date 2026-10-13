@@ -45,7 +45,8 @@ CRASH_ACTION, RANDOM_ACTION = 0, 1  # OnInvalid action
     S_PERIOD,
     S_SCORE_STATE,
     S_CTW,
-) = range(20)
+    S_PRIOR,
+) = range(21)
 CTW_NODE = 4  # a CTW context's floats: three KT counts, then its log mixing ratio
 CTW_RATIO_CAP = 50.0  # the log mixing ratio is kept within +-CTW_RATIO_CAP
 

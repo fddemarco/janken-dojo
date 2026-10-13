@@ -87,3 +87,8 @@ A claim with no possible refutation isn't a claim.
   per match on them (note 0068). Next session: grow 0068 to resolve match score, then
   revisit the L3 councils (notes 0065-0067) on hard pools, and the L1 diversity ideas
   (CTW, families with no signal).
+- **2026-10-13, learning.** Two new stage kinds: context-tree weighting
+  (`context_mixture_v1`, the L1 with the widest margins) and a pre-trained prior
+  (`pretrained_context_v1`, +9.8 pts [+5.6, +14.4] over CTW on parameter variants,
+  confirmed: notes 0071-0073). Pre-training generalises across parameters; online
+  combining (VW over the strong L1s) is level with the best L2 (ideas #72-75).

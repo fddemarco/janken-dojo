@@ -59,6 +59,25 @@ def _count(table: np.ndarray, my: np.ndarray, opp: np.ndarray, k: int) -> None:
         table[context(my, opp, t, k), opp[t]] += 1.0
 
 
+def write_block(table: np.ndarray, k: int, weight: float, path: str) -> None:
+    """The table as a kit block (bots/blocks/): a PriorTable signal whose prior is
+    its rows, normalised (an unseen row is uniform), played BEAT."""
+    totals = table.sum(axis=1, keepdims=True)
+    probs = np.where(totals > 0, table / np.maximum(totals, 1.0), 1.0 / 3.0)
+    flat = ", ".join(f"{p:.4f}" for p in probs.ravel())
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(
+            "description: |\n"
+            f"  Block: beats the opponent's next move after the last {k} joint moves by a\n"
+            "  table trained on the move dataset (janken/experimental/pretrained.py),\n"
+            "  WEIGHT observations' worth per context, plus this match's counts.\n"
+            f"defaults:\n  WEIGHT: {weight}\n"
+            "blueprint:\n  core:\n    Heuristic:\n"
+            f"      signal: {{PriorTable: {{order: {k}, weight: $WEIGHT, prior: [{flat}]}}}}\n"
+            "      rotation: BEAT\n"
+        )
+
+
 class Table:
     """Beats the opponent's likeliest next move by the table: a pre-trained
     prior (rows normalised, times `weight`) plus this match's counts."""

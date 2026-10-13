@@ -145,6 +145,36 @@ class CTW(Signal):
 
 
 @dataclasses.dataclass(frozen=True)
+class PriorTable(Signal):
+    """A pre-trained table: the opponent's next move after the last `order` joint
+    moves, by `weight` x a prior (one row of 3 probabilities per context, trained
+    offline on the move dataset: janken/experimental/pretrained.py) plus this
+    match's counts; the symbol is the first maximum. The prior is data, carried
+    in the bot's knobs (so an export inlines it)."""
+
+    kind: ClassVar[int] = c.S_PRIOR
+    order: int = 3
+    weight: Value = 5.0
+    prior: tuple[Value, ...] = ()
+
+    def knobs(self) -> tuple[Value, ...]:
+        return (self.weight, *self.prior)
+
+    def params(self) -> tuple[int, ...]:
+        return c.OPP, c.JOINT, self.order
+
+    def state(self) -> tuple[int, int]:
+        return _rows(c.JOINT, self.order) * 3, 0
+
+    def validate(self) -> None:
+        check(1 <= self.order <= 3, "PriorTable order must be 1..3")
+        check(
+            len(self.prior) == _rows(c.JOINT, self.order) * 3,
+            "PriorTable prior must hold 3 probabilities per joint context",
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class LongestMatch(Signal):
     """History matching: the move of `of` that followed the most recent earlier
     repeat of the longest suffix (up to `max_len`) of `ctx`."""

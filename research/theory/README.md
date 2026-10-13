@@ -102,3 +102,9 @@ A claim with no possible refutation isn't a claim.
   over every family's natural counter identifies by record and gains most (+18 rounds
   per match over `repeat_mirror` in the arena). In the kit that gate is an L3 that ties
   the field's L3 council (notes 0074, 0075): a fourth L3 design at the same score.
+- **2026-10-13, close of the learning hour.** Pre-training pays where a learner starts
+  weak, and a light prior pays most: `pretrained_context_v2` (prior worth 1
+  observation) beats v1 (worth 5) by +7.3 pts vs whole-field variant pools, and both
+  beat CTW by 12-30 pts there; as an arm beside strong online arms the prior adds
+  nothing (note 0077). Opening probes: the family is worth knowing, but records
+  identify it better than a script (notes 0074, 0075).

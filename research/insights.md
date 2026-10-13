@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: A pre-trained prior should be light: worth about one observation per context, it generalises from the levels it was trained on to the whole field
+
+- **Evidence:** experiments/0078-pretrained-light-vs-pretrained-context-v1.md (run 20261013-161451_0078-pretrained-light-vs-pretrained-context-v1): `pretrained_light - pretrained_context_v1 = +7.3 pts [+3.3, +11.4]` over 640 shared matches: pretrained_light better
+- **Mechanism:** the prior was trained on L1/L2 matches; vs L3-L5 opponents its habits are partly wrong, and a light prior lets the match's own counts overrule it within a few occurrences of each context: weight 1 beats weight 5 by +7.3 pts [+3.3, +11.4] (640 matches) and weight 20 by +17.5 pts [+7.0, +28.0] vs whole-field variant pools
+- **Implication:** train priors on the widest data available (add L3-L5 matches to the dataset), keep their weight near 1, and tune it per level of the opponents the bot will meet
+
 ## 2026-10-13: Identifying an opponent's family pays when done by records, not by a scripted probe: a gate over every family's natural counter beats a probe-then-switch, but an L3 holding them only ties the field's L3 council
 
 - **Evidence:** experiments/0074-family-counters-vs-repeat-mirror-v1.md (run 20261013-160748_0074-family-counters-vs-repeat-mirror-v1): `family_counters - repeat_mirror_v1 = +12.2 pts [+4.2, +20.2]` over 200 shared matches: family_counters better; experiments/0075-family-counters-vs-l2-council-v1.md (run 20261013-160825_0075-family-counters-vs-l2-council-v1): tentative, no 95% CI excludes 0: `family_counters - l2_council_v1 = -1.9 pts [-10.9, +6.9]` over 160 shared matches: no significant difference

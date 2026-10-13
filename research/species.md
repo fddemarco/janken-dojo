@@ -79,3 +79,4 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `replay_hunter_wide` | L4 | `replay_hunter_wide_v2` | `replay_hunter_wide` ([0034](experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md)) --> v1; `replay_hunter_wide_normal` ([0046](experiments/0046-replay-hunter-wide-normal.md)) --> v2 | |
 | `second_repeat` | L1 | `second_repeat_v1` | `second_repeat` ([0060](experiments/0060-second-repeat-vs-markov2-joint-v1.md)) --> v1 | |
 | `repeat_mirror` | L2 | `repeat_mirror_v1` | `mirror_l1_bandit` ([0064](experiments/0064-mirror-l1-bandit-vs-iocaine-lite-v1.md)) --> v1 | |
+| `context_mixture` | L1 | `context_mixture_v1` | `context_mixture` ([0071](experiments/0071-context-mixture-vs-pattern-memory-v1.md)) --> v1 | |

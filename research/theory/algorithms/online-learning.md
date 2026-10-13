@@ -40,6 +40,11 @@ repeat followers (note 0062). Slow on sources that change (needs decay or a rese
 **Cost.** O(D) node updates per move; with D = 6 on a 9-symbol joint alphabet, a few
 thousand nodes per 1000-round match: cheap.
 
+**In the kit since 2026-10-13** (`CTW` signal, `bots/blocks/ctw.yaml`, species
+`context_mixture_v1`, note 0071): at depth 3 on the joint history it ties
+`pattern_memory` in an L1 pool (-4.7 pts [-10.5, +0.8]) and wins the most rounds
+per match of any L1.
+
 ## Online logistic / cost-sensitive regression (VW-style)
 
 **What.** A linear model per move over hashed features of the history (and the arms'

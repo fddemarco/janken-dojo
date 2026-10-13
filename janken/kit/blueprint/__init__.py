@@ -127,6 +127,7 @@ from .selectors import (
     Thompson,
 )
 from .signals import (
+    CTW,
     Backoff,
     Biased,
     Constant,
@@ -151,6 +152,7 @@ from .signals import (
 
 __all__ = [
     "ALL_ROTATIONS",
+    "CTW",
     "MAX_NGRAM_ORDER",
     "MAX_REPLAY_DEPTH",
     "MOVES",

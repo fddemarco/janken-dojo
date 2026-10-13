@@ -36,6 +36,13 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    [+0.3, +12.9] over `markov2_joint` in an L1 pool). A fixed context is a special
    case of the longest repeat; a variable-order n-gram (`backoff_ngram`, note 0061)
    only re-derives the longest repeat (83% core agreement).
+1. **A Bayesian mixture of context lengths joins the strong tier.** _supported._
+   Context-tree weighting (`context_mixture_v1`, a new stage kind) ties
+   `pattern_memory` in an L1 pool (-4.7 pts [-10.5, +0.8]) and wins the most rounds
+   per match of any L1 (+121 vs +112), with 74% core agreement: a new species (note
+   0071). Like the repeat followers it loses to `geometry` and plays a deterministic
+   choice, so it should fall to its mirror counter. _Prediction:_ CTW on our moves,
+   BEAT_BEAT, wins > 40% of rounds vs it.
 1. **L1 is non-transitive at the margins.** _supported._ A cycle among the middle
    learners (`markov2_joint` > `period_detector` > `transition_matrix` ~
    `markov2_joint`), and `rotation_outcome`, last among the learners, is the only one

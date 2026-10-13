@@ -11,6 +11,8 @@ from ..moves import ROCK
 from .base import MAX_NGRAM_ORDER, MOVES, Stage, Value, check, check_side
 from .predictor import Decorator, Leaf, Predictor
 
+MAX_CTW_DEPTH = 5
+
 
 @dataclasses.dataclass(frozen=True)
 class Signal(Leaf, Stage):
@@ -107,6 +109,39 @@ class Backoff(Signal):
         check_side(self.of, (c.OPP, c.MY), "Backoff of")
         check_side(self.ctx, (c.OPP, c.MY, c.JOINT), "Backoff ctx")
         check(0 <= self.max_order <= 3, "Backoff max_order must be 0..3")
+
+
+@dataclasses.dataclass(frozen=True)
+class CTW(Signal):
+    """Context-tree weighting: the next move of `of`, by a Bayesian mixture of every
+    context of `ctx` up to `depth` symbols long. Each context keeps
+    Krichevsky-Trofimov counts (decayed by `decay`) and a mixing weight that
+    favours it over its longer contexts as far as it has predicted better; the
+    symbol is the mixture's first maximum."""
+
+    kind: ClassVar[int] = c.S_CTW
+    depth: int = 3
+    ctx: int = c.JOINT
+    of: int = c.OPP
+    decay: Value = 1.0
+
+    def knobs(self) -> tuple[Value, ...]:
+        return (self.decay,)
+
+    def params(self) -> tuple[int, ...]:
+        return self.of, self.ctx, self.depth
+
+    def state(self) -> tuple[int, int]:
+        nodes = sum(_rows(self.ctx, d) for d in range(self.depth + 1))
+        return nodes * c.CTW_NODE, 0
+
+    def validate(self) -> None:
+        check_side(self.of, (c.OPP, c.MY), "CTW of")
+        check_side(self.ctx, (c.OPP, c.MY, c.JOINT), "CTW ctx")
+        check(0 <= self.depth <= MAX_CTW_DEPTH, "CTW depth must be 0..5")
+        check(
+            not (self.ctx == c.JOINT and self.depth > 3), "joint CTW depth must be <= 3"
+        )
 
 
 @dataclasses.dataclass(frozen=True)

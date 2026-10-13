@@ -14,6 +14,7 @@ import numpy as np
 
 from .blueprint import (
     ALL_ROTATIONS,
+    CTW,
     Backoff,
     Bandit,
     Biased,
@@ -110,6 +111,7 @@ __all__ = [
     "CHAMPION",
     "COPY",
     "CRASH_ACTION",
+    "CTW",
     "EDGE",
     "EST_DRAWS",
     "EST_NORMAL",

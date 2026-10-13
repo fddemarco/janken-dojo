@@ -44,7 +44,10 @@ CRASH_ACTION, RANDOM_ACTION = 0, 1  # OnInvalid action
     S_RAREST,
     S_PERIOD,
     S_SCORE_STATE,
-) = range(19)
+    S_CTW,
+) = range(20)
+CTW_NODE = 4  # a CTW context's floats: three KT counts, then its log mixing ratio
+CTW_RATIO_CAP = 50.0  # the log mixing ratio is kept within +-CTW_RATIO_CAP
 
 # Oracles (research only, janken/mocks.py): none, a pure Oracle bot, an Oracle arm;
 # the level the referee reveals for an Oracle opponent (janken/kit/levels.py).

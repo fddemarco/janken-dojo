@@ -1,0 +1,11 @@
+description: |
+  Beats the opponent's next move as context-tree weighting over the joint history predicts it (idea #68: L1 diversity, online learning).
+  A Bayesian mixture of every context up to 3 joint moves (KT counts), weighted by how well each context has predicted: the principled form of what back-off and repeat matching approximate.
+defaults:
+  DEPTH: 3
+  CTX: JOINT
+  OF: OPP
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {CTW: {depth: $DEPTH, ctx: $CTX, of: $OF, decay: $DECAY}}, rotation: BEAT}

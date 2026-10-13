@@ -158,6 +158,103 @@ def _geometry_move(f: np.ndarray, at: int, x: int, sample: bool) -> int:
 
 
 @kernel
+def _ctw_node(at: int, ctx: int, d: int, key: int) -> int:
+    """The f offset of the CTW context of length d with row index `key`."""
+    start = 0
+    for q in range(d):
+        start += rows(ctx, q)
+    return at + c.CTW_NODE * (start + key)
+
+
+@kernel
+def _kt(f: np.ndarray, node: int, x: int) -> float:
+    """The Krichevsky-Trofimov estimate of symbol x at a CTW context."""
+    total = f[node] + f[node + 1] + f[node + 2]
+    return (f[node + x] + 0.5) / (total + 1.5)
+
+
+@kernel
+def _ctw_weight(f: np.ndarray, node: int) -> float:
+    """A context's mixing weight: the sigmoid of its log ratio."""
+    return 1.0 / (1.0 + math.exp(-f[node + 3]))
+
+
+@kernel
+def _ctw_mixture(
+    f: np.ndarray,
+    at: int,
+    ctx: int,
+    deepest: int,
+    end: int,
+    my: np.ndarray,
+    opp: np.ndarray,
+    out: np.ndarray,
+) -> None:
+    """out[3 d + x]: the mixture's probability of x at the depth-d context of the
+    path ending before `end`, from the deepest context up."""
+    node = _ctw_node(at, ctx, deepest, context(ctx, deepest, end, my, opp))
+    for x in range(3):
+        out[3 * deepest + x] = _kt(f, node, x)
+    for d in range(deepest - 1, -1, -1):
+        node = _ctw_node(at, ctx, d, context(ctx, d, end, my, opp))
+        w = _ctw_weight(f, node)
+        for x in range(3):
+            out[3 * d + x] = w * _kt(f, node, x) + (1.0 - w) * out[3 * (d + 1) + x]
+
+
+@kernel
+def _ctw_observe(
+    f: np.ndarray,
+    at: int,
+    ctx: int,
+    depth: int,
+    k: int,
+    x: int,
+    decay: float,
+    my: np.ndarray,
+    opp: np.ndarray,
+) -> None:
+    """Fold symbol x at round k into the CTW contexts on its path: each context's
+    log ratio gains how much better its own estimate named x than the mixture
+    below it, then its counts are decayed and x counted."""
+    deepest = min(depth, k)
+    out = np.zeros(3 * (deepest + 1))
+    _ctw_mixture(f, at, ctx, deepest, k, my, opp, out)
+    for d in range(deepest + 1):
+        node = _ctw_node(at, ctx, d, context(ctx, d, k, my, opp))
+        if d < deepest:
+            gain = math.log(_kt(f, node, x)) - math.log(out[3 * (d + 1) + x])
+            ratio = f[node + 3] + gain
+            f[node + 3] = max(-c.CTW_RATIO_CAP, min(c.CTW_RATIO_CAP, ratio))
+        bump(f, node, x, decay)
+
+
+@kernel
+def _ctw_predict(
+    f: np.ndarray,
+    at: int,
+    ctx: int,
+    depth: int,
+    n: int,
+    my: np.ndarray,
+    opp: np.ndarray,
+) -> int:
+    """The mixture's most likely next symbol (its first maximum), or NO_MOVE
+    before anything was counted."""
+    root = _ctw_node(at, ctx, 0, 0)
+    if f[root] + f[root + 1] + f[root + 2] <= 0:
+        return c.NO_MOVE
+    deepest = min(depth, n)
+    out = np.zeros(3 * (deepest + 1))
+    _ctw_mixture(f, at, ctx, deepest, n, my, opp, out)
+    best = 0
+    for x in range(1, 3):
+        if out[x] > out[best]:
+            best = x
+    return best
+
+
+@kernel
 def observe(
     spec: np.ndarray,
     r: int,
@@ -210,6 +307,8 @@ def observe(
             f[at + 9] += 1.0
         elif result == 2:
             f[at + 9] -= 1.0
+    elif kind == c.S_CTW:
+        _ctw_observe(f, at, b, order, k, seq(a, k, my, opp), kn[kk], my, opp)
     elif kind == c.S_GEOMETRY:
         ia = spec[r + c.R_I]
         if i[ia] == rk + 1:
@@ -309,6 +408,8 @@ def predict(
         return seq(a, n - best_p, my, opp) if best_p > 0 else c.NO_MOVE
     if kind == c.S_SCORE_STATE:
         return argmax_random(f, at + 3 * score_row(f[at + 9]))
+    if kind == c.S_CTW:
+        return _ctw_predict(f, at, b, order, n, my, opp)
     if kind == c.S_ORACLE:
         return oracle.symbol(spec, r, i, kn, rn)
     return c.NO_MOVE

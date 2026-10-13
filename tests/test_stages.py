@@ -161,6 +161,27 @@ class TestSignal:
         sampled = signal_bot(bot.NGram(1, ctx=bot.OPP, sample=True))
         assert sampled.last([R] * 12, cycle) == R  # the row is all R
 
+    def test_ctw_learns_a_cycle(self) -> None:
+        cycle = [R, P, S] * 6
+        runner = signal_bot(bot.CTW(depth=2, ctx=bot.OPP))
+        assert runner.last([R] * 18, cycle) == R  # after ... S comes R
+
+    def test_ctw_follows_a_pattern_only_its_context_reveals(self) -> None:
+        # The opponent repeats our previous move: no single move dominates its
+        # counts, but the joint context of length 1 names it every time.
+        my = [R, P, S, S, P, R, R, S, P, P, R, S]
+        opp = [S, *my[:-1]]
+        runner = signal_bot(bot.CTW(depth=1, ctx=bot.JOINT))
+        assert runner.last(my, opp) == my[-1]
+
+    def test_ctw_at_depth_0_is_the_frequency_count(self) -> None:
+        opp = [S, P, S, R, S, P]
+        assert signal_bot(bot.CTW(depth=0)).last([R] * 6, opp) == S
+
+    def test_ctw_depth_is_bounded(self) -> None:
+        with pytest.raises(blueprint.BlueprintError, match="joint CTW depth"):
+            bot.CTW(depth=4, ctx=bot.JOINT).validate()
+
     def test_backoff_uses_the_longest_known_context(self) -> None:
         runner = signal_bot(bot.Backoff(3, ctx=bot.JOINT))
         my = [R, P, S, R, P, S, R, P]

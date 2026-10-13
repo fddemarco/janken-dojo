@@ -1,0 +1,11 @@
+description: |
+  Block: beats OF's next move as context-tree weighting over CTX predicts it: a
+  Bayesian mixture of every context up to DEPTH symbols, KT counts decayed by DECAY.
+defaults:
+  DEPTH: 3
+  CTX: JOINT
+  OF: OPP
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {CTW: {depth: $DEPTH, ctx: $CTX, of: $OF, decay: $DECAY}}, rotation: BEAT}

@@ -259,6 +259,7 @@ $ uv run janken idea [OPTIONS] COMMAND [ARGS]...
 * `list`: The open ideas, in progress first, then by...
 * `show`: One idea in full.
 * `start`: Mark an idea in progress.
+* `done`: Mark an idea done without a note of its...
 * `drop`: Drop an idea without a note of its own (a...
 
 ### `uv run janken idea add`
@@ -381,6 +382,43 @@ $ uv run janken idea start [OPTIONS] {number}
 
 **Options**:
 
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--variants <float>`: the share of pool members that play a parameter variant drawn from their space file (0: every member at its defaults) (config: pool.variants)  [default: 0.0]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+### `uv run janken idea done`
+
+Mark an idea done without a note of its own (a keep verdict marks its idea
+done), e.g. one realised by a later bot or a lab change.
+
+**Usage**:
+
+```console
+$ uv run janken idea done [OPTIONS] {number}
+```
+
+**Arguments**:
+
+* `number`: the idea's number in ideas.md  [required]
+
+**Options**:
+
+* `--reason <str>`: what realised it, with a link to the note, commit or bot that shows it  [required]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

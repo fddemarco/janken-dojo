@@ -70,6 +70,13 @@ class TestIdeas(Notebook):
         untouched = [i for i in closed.ideas if i.number != idea.number]
         assert untouched == before
 
+    def test_an_idea_marked_done_with_a_reason_leaves_the_open_backlog(self) -> None:
+        backlog = ideas.load(self.dir)
+        idea = next(i for i in backlog.ideas if i.is_open)
+        closed = backlog.set_status(idea.number, f"{ideas.DONE} (realised by bot x)")
+        assert closed.get(idea.number).state == ideas.DONE
+        assert idea.number not in [i.number for i in ideas.ranked(closed)]
+
     def test_bad_ideas_are_refused(self) -> None:
         backlog = ideas.load(self.dir)
         with pytest.raises(ideas.IdeaError):

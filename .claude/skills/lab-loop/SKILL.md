@@ -129,5 +129,6 @@ when:
 - Every evaluated bot has a note, and every note ends with a verdict.
 - Insights only through `janken insight add`, which cites the notes' stored results
   (tentative when no CI excludes 0) and refuses a note with none.
-- Ideas are never silently dropped: `janken verdict` or `janken idea drop --reason`.
+- Ideas are never silently closed: `janken verdict`, or `janken idea done --reason` (realised
+  without a note of its own: a later bot, a lab change) / `janken idea drop --reason`.
 - Never delete stored runs, and never change a bot's logic under its filename.

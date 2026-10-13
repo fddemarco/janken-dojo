@@ -93,6 +93,27 @@ def idea_start(
     lab.emit({"number": number, "status": ideas.IN_PROGRESS}, f"#{number}: in-progress")
 
 
+@idea_app.command("done")
+@lab_command("idea done")
+def idea_done(
+    lab: Lab,
+    number: Annotated[int, typer.Argument(help=NUMBER_HELP)],
+    reason: Annotated[
+        str,
+        typer.Option(
+            help="what realised it, with a link to the note, commit or bot that shows it"
+        ),
+    ],
+) -> None:
+    """Mark an idea done without a note of its own (a keep verdict marks its idea
+    done), e.g. one realised by a later bot or a lab change."""
+    from ..notebook import ideas
+
+    status = f"{ideas.DONE} ({reason})"
+    ideas.save(lab.notebook, ideas.load(lab.notebook).set_status(number, status))
+    lab.emit({"number": number, "status": status}, f"#{number}: {status}")
+
+
 @idea_app.command("drop")
 @lab_command("idea drop")
 def idea_drop(

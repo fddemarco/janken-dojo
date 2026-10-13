@@ -48,7 +48,7 @@ status --> idea --> bot new / check --> evaluate --> verdict --> species classif
 | command | does |
 | --- | --- |
 | `janken status` | the research state, and the **next step** with its command |
-| `janken idea add / list / show / start / drop` | the backlog |
+| `janken idea add / list / show / start / done / drop` | the backlog (`done` and `drop` close an idea without a note: `--reason` says what realised or refuted it) |
 | `janken bot new NAME --from BOT` | scaffold a bot (and its space file); then edit its blueprint |
 | `janken bot check / list / show` | verify a bot (contract, compile, smoke run); inspect bots |
 | `janken bot export NAME` | a bot (a champion: with its fleet's supports) as tournament submission scripts: stdlib-only `play(my_moves, opp_moves)` files in `exports/NAME/`, one per fleet bot |

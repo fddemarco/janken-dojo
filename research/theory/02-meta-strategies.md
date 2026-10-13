@@ -33,7 +33,10 @@ since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror
    hard opponents (idea #60), the same comparisons separate. _Supported on rounds_
    (note 0068): on hard pools `replay_hunter_wider` gains +21.2 rounds per match
    +- 11.7 over `replay_hunter_wide_v2`, where random pools tied them; its match-score
-   gain (+3.8 pts) needs more round robins.
+   gain (+3.8 pts) needs more round robins. _Refined_ (note 0069): on fresh seeds the
+   round gain halves (+10.0 +- 9.9) and the match score shows none (-1.6 pts
+   [-13.0, +9.9]). Hard pools separate round margins, not match wins: the extra
+   experts widen matches already won.
 1. **Replaying a named bot beats that bot, and only that bot.** _supported._ An exact
    replay or impostor wins its target outright (in note 0014, 96.8% of rounds vs
    agamemnon) but moves the pool score by about 1 pt, as the target is one pool slot.

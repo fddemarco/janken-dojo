@@ -9,14 +9,19 @@ import polars as pl
 
 
 def insert_frame(
-    con: duckdb.DuckDBPyConnection, table: str, frame: pl.DataFrame
+    con: duckdb.DuckDBPyConnection,
+    table: str,
+    frame: pl.DataFrame,
+    on_conflict_ignore: bool = False,
 ) -> None:
-    """Append `frame` to `table`, by column name, through a parquet file."""
+    """Append `frame` to `table`, by column name, through a parquet file; with
+    `on_conflict_ignore`, rows whose primary key is already there are skipped."""
+    verb = "INSERT OR IGNORE" if on_conflict_ignore else "INSERT"
     with tempfile.TemporaryDirectory(prefix="janken-duck-") as tmp:
         path = os.path.join(tmp, f"{table}.parquet")
         frame.write_parquet(path)
         con.execute(
-            f"INSERT INTO {table} BY NAME SELECT * FROM read_parquet(?)", [path]
+            f"{verb} INTO {table} BY NAME SELECT * FROM read_parquet(?)", [path]
         )
 
 

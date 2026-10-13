@@ -114,6 +114,19 @@ def ratings_per_rr(df: pl.DataFrame) -> dict[str, list[float]]:
     return out
 
 
+def paired_units(lf: pl.DataFrame, a: str, b: str) -> np.ndarray:
+    """score(a) - score(b) on every (rr, pool opponent) unit both played."""
+    pool = lf.filter(~pl.col("opp_cand"))
+    sa = pool.filter(pl.col("bot") == a).select(
+        "rr", "opp", pl.col("result").alias("ra")
+    )
+    sb = pool.filter(pl.col("bot") == b).select(
+        "rr", "opp", pl.col("result").alias("rb")
+    )
+    joined = sa.join(sb, on=["rr", "opp"])
+    return (joined["ra"] - joined["rb"]).to_numpy()
+
+
 def paired_diff(
     lf: pl.DataFrame,
     a: str,
@@ -124,17 +137,9 @@ def paired_diff(
 ):
     """Mean of score(a) - score(b) over shared (rr, pool opponent) units, with a
     bootstrap CI at `level` (95% by default); None if they share no opponents."""
-    pool = lf.filter(~pl.col("opp_cand"))
-    sa = pool.filter(pl.col("bot") == a).select(
-        "rr", "opp", pl.col("result").alias("ra")
-    )
-    sb = pool.filter(pl.col("bot") == b).select(
-        "rr", "opp", pl.col("result").alias("rb")
-    )
-    joined = sa.join(sb, on=["rr", "opp"])
-    if joined.height == 0:
+    d = paired_units(lf, a, b)
+    if d.size == 0:
         return None
-    d = (joined["ra"] - joined["rb"]).to_numpy()
     rng = np.random.default_rng(seed)
     boots = d[rng.integers(0, d.size, (reps, d.size))].mean(axis=1)
     tail = (1 - level) / 2

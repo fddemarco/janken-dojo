@@ -174,6 +174,20 @@ class EvaluationConfig:
         "full: every pair plays; candidates: only matches with a candidate", MODES
     )
     seed: int = setting("pools and match seeds (-1: a fresh, recorded seed)")
+    sequential: bool = setting(
+        "evaluate plays its round robins in looks, stopping once the paired"
+        " comparison is clear (or futile): janken/lab/sequential.py"
+    )
+    looks: int = setting("looks spread over the planned round robins", minimum=1)
+    alpha: float = setting(
+        "the paired comparison's error rate, spent over the looks (O'Brien-Fleming)",
+        minimum=0,
+    )
+    futility: float = setting(
+        "stop when the chance of clearing the last look, if the effect seen so far"
+        " is the true one, falls under this (0: never)",
+        minimum=0,
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -256,6 +270,10 @@ class RunsConfig:
     file: str = setting("the runs database's DuckDB file, in the workspace")
     lock_timeout_s: float = setting(
         "seconds to wait for a runs database another process holds", minimum=0
+    )
+    match_cache: bool = setting(
+        "read back a match already played (same bots, overrides, seed, rounds and"
+        " code) instead of replaying it (janken/lab/match_cache.py)"
     )
 
 
@@ -433,12 +451,26 @@ class GauntletConfig:
     default's vs `variation_probes`; `exclude` names the bots it skips. `nash`
     calls a bot Nash-like when vs every one of `nash_probes` its rounds won minus
     lost stay under `nash_skew`. `run` plays `seeds` matches per opponent and
-    reports those under `threshold`.
+    reports those under `threshold`; with `sequential`, a pairing stops once its
+    share is clear of the threshold (after `min_seeds`, at `stop_alpha` spent
+    over the seeds: janken/lab/sequential.py). `nash` settles a bot after one
+    match when a probe already skews it by `nash_decisive`.
     """
 
     dir: str = setting("where gauntlet logs go, in the workspace")
     seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
     threshold: float = setting("the share of rounds won a candidate must reach")
+    sequential: bool = setting(
+        "stop a pairing once its share won is clear of the threshold"
+    )
+    min_seeds: int = setting(
+        "matches a pairing plays before it may stop (a spread needs two)", minimum=2
+    )
+    stop_alpha: float = setting(
+        "the chance of stopping a pairing on the wrong side of the threshold, spent"
+        " over its seeds (O'Brien-Fleming)",
+        minimum=0,
+    )
     batch: int = setting("matches per batch (one log write)", minimum=1)
     per_bot: int = setting("variants drawn per field bot", minimum=1)
     draws: int = setting("Latin hypercubes drawn per bot at most", minimum=1)
@@ -453,6 +485,10 @@ class GauntletConfig:
     nash_seeds: int = setting("matches per probe in a Nash check", minimum=1)
     nash_skew: float = setting(
         "rounds won minus lost a probe must reach for a bot not to be Nash-like"
+    )
+    nash_decisive: float = setting(
+        "rounds won minus lost in one match vs a probe that settles a bot as not"
+        " Nash-like at once (a Nash-like bot's match is about 0.05 off, one sd)"
     )
 
 

@@ -128,5 +128,11 @@ under `runs` in `janken.toml`):
 - **Resume.** `lab resume` (or `evaluate --note`) plays only the missing matches.
   The rebuilt schedule makes the result identical to an uninterrupted run. It refuses if
   a bot file or the kit/engine changed meanwhile.
+- **Match cache.** Every match played is also kept in table `match_cache`, keyed by
+  what decides it: both bots' sources (and the bots they name), their overrides, the
+  seed, the rounds and the kit's code. A match played again (tuning trials replay the
+  same pools and seeds, gauntlets the same seeds, species runs the incumbent's matches)
+  is read back instead (`janken/lab/match_cache.py`). Editing a bot or the kit changes
+  the key, so a stale match is never read. `runs.match_cache = false` turns it off.
 - **Shared file.** Several processes can share the file: each write is a short
   transaction, and a process that finds the file busy waits up to `runs.lock_timeout_s`.

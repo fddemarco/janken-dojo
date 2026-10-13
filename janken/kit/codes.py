@@ -69,6 +69,10 @@ EDGE, ANTI_FIRST, BANDIT, ANTI_FIRST_HOLD, MAIN_FIRST, LEADER, LEADER_PRIORITY =
     7
 )
 
+# How a replay names a Thompson bandit's likely move: by Monte Carlo draws, or
+# computed from a normal approximation of each arm's draw (janken/kit/replay.py).
+EST_DRAWS, EST_NORMAL = 0, 1
+
 # Overlays.
 O_STALL, O_TEAM, O_EMIT_INVALID = 0, 1, 2
 CHAMPION, SUPPORT, IMPOSTOR = 0, 1, 2  # Team roles

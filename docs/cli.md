@@ -82,9 +82,14 @@ uv run janken insight add --note 0007 --finding "..." --mechanism "..." \
   --implication "..."
 ```
 
-- **Interrupted runs:** if Ctrl-C (or a crash) cuts an evaluation, the finished round
-  robins stay stored and `status` says so. `janken evaluate --note 0007` finishes the
-  run.
+- **Interrupted runs:** if Ctrl-C (or a crash) cuts an evaluation, the finished matches
+  stay stored and `status` says so. `janken evaluate --note 0007` finishes the run.
+- **Sequential evaluation:** with `--sequential` (`evaluation.sequential`, on by default)
+  and a baseline, a new note's run plays its round robins in `evaluation.looks` steps.
+  It stops at the first step where the candidate vs the first baseline is clear of 0
+  (each step spends part of `evaluation.alpha`), or where going on is futile: even if
+  the effect seen so far is the true one, clearing the last step is unlikely
+  (`evaluation.futility`).
 - **Tuning:** `janken tune --note NNNN` resumes a study.
 
 ## The common flags
@@ -136,8 +141,8 @@ Where flags apply differently:
 | `lab profile run -- COMMAND...` / `lab profile bench -- COMMAND...` | a command's hotspots and whether fixing them pays; its wall time, vs a `--baseline` |
 | `lab profile list` / `lab profile show ID` / `lab profile spans` | stored profiles; the timing spans every command logs, slow ones flagged |
 | `lab gauntlet variations OUT` | the field's bots and up to `gauntlet.per_bot` parameter variants of each (drawn from its space file, kept only if they change its play), one spec per line |
-| `lab gauntlet nash LIST OUT --name LOG` | which bots of a list are Nash "with extra steps": no probe L1 (`gauntlet.nash_probes`) skews their results either way |
-| `lab gauntlet run LIST --cand BOT... --name LOG` | candidates vs every opponent of a list, `gauntlet.seeds` seeds each; the opponents under `gauntlet.threshold` of rounds won (logged per match in the workspace, so it resumes) |
+| `lab gauntlet nash LIST OUT --name LOG` | which bots of a list are Nash "with extra steps": no probe L1 (`gauntlet.nash_probes`) skews their results either way; with `--sequential`, a bot one probe skews by `gauntlet.nash_decisive` in its first match is settled at once |
+| `lab gauntlet run LIST --cand BOT... --name LOG` | candidates vs every opponent of a list, up to `gauntlet.seeds` seeds each; the opponents under `gauntlet.threshold` of rounds won (logged per match in the workspace, so it resumes). With `--sequential`, a pairing stops once its share is clear of the threshold (after `gauntlet.min_seeds`, at `gauntlet.stop_alpha` spent over the seeds) |
 
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches

@@ -35,7 +35,10 @@ class Replay(Decorator, Signal):
     bot. The symbol is its most likely move, read from its arms' records (its own
     selector isn't run): the arm with the best score, or, with `draws` > 0, the move
     Thompson sampling picks most often in that many draws of every arm's Dirichlet
-    (a scored random arm counts for each move). A replayed Gate (a bandit lowered
+    (a scored random arm counts for each move). With `estimate` NORMAL, that move
+    is computed instead of drawn: each arm's draw approximated by a normal of the
+    same mean and variance, P(it is the largest) integrated on a grid, summed per
+    move (no draws, so far cheaper, and no sampling noise). A replayed Gate (a bandit lowered
     with its Gatekeeper, lowering.py) is the exception: its gatekeeper runs, with
     its own records, and the symbol is the gated expert's move while the gate
     plays one, else the main bandit's likely move (its arms only). Bot files name
@@ -46,18 +49,24 @@ class Replay(Decorator, Signal):
     bandit: "Bandit"
     draws: int = 0
     side: int = c.OPP
+    estimate: int = c.EST_DRAWS
 
     def child(self) -> Predictor:
         return self.bandit
 
     def params(self) -> tuple[int, ...]:
-        return (self.draws,)
+        return (self.draws, 0, self.estimate)  # R_B: a replayed Gate's gatekeeper
 
     def validate(self) -> None:
         check(self.draws >= 0, "Replay draws must be >= 0")
         check(self.side in (c.OPP, c.MY), "a Replay's side is OPP or MY")
         check(
-            self.draws == 0 or isinstance(self.bandit.scorer, Dirichlet),
+            self.estimate in (c.EST_DRAWS, c.EST_NORMAL),
+            "a Replay's estimate is DRAWS or NORMAL",
+        )
+        check(
+            (self.draws == 0 and self.estimate == c.EST_DRAWS)
+            or isinstance(self.bandit.scorer, Dirichlet),
             "Replay draws sample a Dirichlet: use the Dirichlet scorer",
         )
         check(

@@ -86,6 +86,9 @@ A reference is a mapping with a `bot` key (`janken/kit/blueprint/refs.py`):
 | `side` | `MY`: the bot plays for us (`MY`); `OPP`: the bot as the opponent would play it, a model of us |
 | `draws` | a bot of level 2+: its move by that many Thompson draws (0: its best-scored arm) |
 | `random_arm` | a bot of level 2+: its random arm replaced (`RA_NONE`, ...) |
+| `inner_draws` | a bot of level 3+: the draws of the replays it holds, capped |
+| `estimate` | a bot of level 2+: `DRAWS` names its move by `draws` Thompson draws (`DRAWS`); `NORMAL` computes it from a normal approximation of each arm's draw, with no draws: about 10x cheaper and without sampling noise |
+| `inner_estimate` | a bot of level 3+: the estimate of the replays it holds that draw (`NORMAL` makes a model of an L4 cheap) |
 
 An arm is the referenced bot's **core**, its knobs bound to the arm's values; its guards
 and overlays are left out, since they are about playing the game, not about predicting. An

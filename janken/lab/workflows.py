@@ -26,11 +26,11 @@ from collections.abc import Collection, Sequence
 import numpy as np
 import polars as pl
 
-from .. import settings
+from .. import progress, settings
 from ..notebook import ideas, insights, notes
 from ..notebook import species as registry
 from ..spec import BotSpec, format_spec, make_spec, parse_spec
-from . import analyze, classify, space
+from . import analyze, classify, sequential, space
 from .dataset import Sequences
 from .runs_db import COMPLETE, RunStore
 
@@ -40,6 +40,19 @@ if typing.TYPE_CHECKING:
 
 class WorkflowError(ValueError):
     """A lifecycle step that can't be taken as asked."""
+
+
+@dataclasses.dataclass(frozen=True)
+class Stopping:
+    """When a sequential evaluation stops early (sequential.py)."""
+
+    sequential: bool
+    looks: int  # spread over the planned round robins
+    alpha: float  # the paired comparison's error rate, spent over the looks
+    futility: float  # stop when the conditional power falls under it (0: never)
+
+
+FIXED = Stopping(sequential=False, looks=1, alpha=0.05, futility=0.0)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -57,6 +70,8 @@ class Plan:
     workers: int
     mode: str
     flush_s: float  # seconds between commits of the matches finished so far
+    cache: bool  # read back matches already played (match_cache.py)
+    stopping: Stopping = FIXED  # a new evaluation's early stop
 
 
 @dataclasses.dataclass(frozen=True)
@@ -128,6 +143,7 @@ def evaluate(
             how.workers or None,
             round_robins=grow_to,
             flush_s=how.flush_s,
+            cache=how.cache,
         )
     elif known:
         run_id = known[-1]
@@ -143,12 +159,13 @@ def evaluate(
                 started[0], notes.with_field(started[0].text, "Run", f"`{run_id}`")
             )
 
+        looks = _looks(note, how)
         run_id = run_experiment(
             candidates,
             bots_dir=how.bots_dir,
             pool_size=how.pool_size,
             rounds=how.rounds,
-            round_robins=how.round_robins,
+            round_robins=looks[0],
             seed=how.seed,
             mode=how.mode,
             name=stem,
@@ -158,13 +175,60 @@ def evaluate(
             root=how.workspace,
             on_start=remember,
             flush_s=how.flush_s,
+            cache=how.cache,
         )
         note = started[0]
+        if len(looks) > 1:
+            first_baseline = candidates[len(note.candidates)].label
+            _grow_sequentially(run_id, candidates[0].label, first_baseline, looks, how)
     summary = analyze.analyze_run(run_id, how.workspace)
     note = notes.record_command(note, _command(note, run_id, runs))
     return notes.record_results(
         note, "Run", run_id, analyze.render_brief(summary)
     ), summary
+
+
+def _looks(note: notes.Note, how: Plan) -> list[int]:
+    """The round robins a new note's run plays to at each look: the plan's alone,
+    unless the evaluation is sequential and has a baseline to compare with."""
+    if not (how.stopping.sequential and note.baselines and note.candidates):
+        return [how.round_robins]
+    return sequential.ladder(how.round_robins, how.stopping.looks)
+
+
+def _grow_sequentially(
+    run_id: str, candidate: str, baseline: str, looks: Sequence[int], how: Plan
+) -> None:
+    """Grow the run look by look while `candidate` vs `baseline` (labels) is
+    neither clear nor futile."""
+    from .experiment import resume_experiment
+
+    fractions = [k / looks[-1] for k in looks]
+    alphas = sequential.look_alphas(fractions, how.stopping.alpha)
+    runs = RunStore.at(how.workspace)
+    for k, size in enumerate(looks):
+        if k:
+            resume_experiment(
+                run_id,
+                how.workspace,
+                how.workers or None,
+                round_robins=size,
+                flush_s=how.flush_s,
+                cache=how.cache,
+            )
+        units = analyze.paired_units(
+            analyze.long_form(runs.matches(run_id)), candidate, baseline
+        )
+        seen = sequential.look(
+            units.tolist(), fractions[k], alphas[k], alphas[-1], how.stopping.futility
+        )
+        verdict = "clear" if seen.clear else "futile" if seen.futile else "open"
+        progress.log(
+            f"look {k + 1}/{len(looks)} at {size} round robin(s): {candidate} vs"
+            f" {baseline} z = {seen.z:+.2f} on {seen.n} units ({verdict})"
+        )
+        if seen.clear or seen.futile:
+            return
 
 
 def _command(note: notes.Note, run_id: str, runs: RunStore) -> str:
@@ -238,6 +302,7 @@ def tune(
             allow_small=how.allow_small,
             use_mocks=how.use_mocks,
             root=how.workspace,
+            match_cache=how.cache,
         ),
         Search(
             sampler=budget.sampler,
@@ -496,7 +561,11 @@ def _species_run(
         run_id = str(stored["run_id"][-1])
         if runs.status(run_id) != COMPLETE:
             run_id = resume_experiment(
-                run_id, how.workspace, how.workers or None, flush_s=how.flush_s
+                run_id,
+                how.workspace,
+                how.workers or None,
+                flush_s=how.flush_s,
+                cache=how.cache,
             )
         return run_id, note
     started: list[notes.Note] = [note]
@@ -521,6 +590,7 @@ def _species_run(
         root=how.workspace,
         on_start=remember,
         flush_s=how.flush_s,
+        cache=how.cache,
     )
     return run_id, started[0]
 

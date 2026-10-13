@@ -16,6 +16,7 @@ each depth has its own functions: `fold` / `predict`, `_fold_inner` /
 `_predict_inner` and `_fold_deepest` / `_predict_deepest`).
 """
 
+import math
 import random
 
 import numpy as np
@@ -96,12 +97,97 @@ def likely_move_among(
     return top
 
 
+# Points of the grid a NORMAL estimate integrates over: an arm's draw is in [-1, 1].
+NORMAL_GRID = 48
+SQRT2 = math.sqrt(2.0)
+SQRT2PI = math.sqrt(2.0 * math.pi)
+TINY = 1e-300  # the smallest normal cdf kept in a log (the same one cancels out)
+FAR = 64.0  # z^2 beyond which an arm's density adds nothing (8 standard deviations)
+
+
+@kernel
+def likely_move_normal(
+    spec: np.ndarray, e: int, f: np.ndarray, i: np.ndarray, n_arms: int
+) -> int:
+    """The move ensemble e's Thompson sampling picks most often, computed rather
+    than drawn, over its first `n_arms` arms (and its random arm).
+
+    An arm's draw, P(win) - P(loss) under Dirichlet(1 + its record), is
+    approximated by a normal of the same mean and variance. P(arm a draws the
+    largest) is the integral of its density times every other arm's cdf, on a
+    grid over [-1, 1]: the sum of the log cdfs is taken once per grid point, so it
+    costs O(arms x grid). Each arm's probability goes to its move (the random
+    arm's a third to each); the first maximum wins. NO_MOVE when no arm has one."""
+    pend = spec[e + c.E_PEND_I]
+    score_f = spec[e + c.E_SCORE_F]
+    has_random = spec[e + c.E_RANDOM] == c.RA_SCORED
+    total = n_arms + 1
+    mean = np.zeros(total)
+    sd = np.zeros(total)
+    used = np.zeros(total, np.int64)  # 1: the arm has a move (plain lists export)
+    for a in range(total):
+        if a == n_arms:
+            if not has_random:
+                continue
+            at = score_f + 3 * spec[e + c.E_NARMS]
+        else:
+            if i[pend + 1 + a] < 0:
+                continue
+            at = score_f + 3 * a
+        w = 1.0 + f[at]
+        t = 1.0 + f[at + 1]
+        lo = 1.0 + f[at + 2]
+        s = w + t + lo
+        mean[a] = (w - lo) / s
+        sd[a] = math.sqrt(
+            (w * (s - w) + lo * (s - lo) + 2.0 * w * lo) / (s * s * (s + 1.0))
+        )
+        used[a] = 1
+    step = 2.0 / NORMAL_GRID
+    log_cdf = np.zeros(total * NORMAL_GRID)  # [arm a, grid point g]: a * grid + g
+    log_all = np.zeros(NORMAL_GRID)
+    for a in range(total):
+        if used[a]:
+            for g in range(NORMAL_GRID):
+                z = (-1.0 + (g + 0.5) * step - mean[a]) / sd[a]
+                cell = a * NORMAL_GRID + g
+                log_cdf[cell] = math.log(max(0.5 * math.erfc(-z / SQRT2), TINY))
+                log_all[g] += log_cdf[cell]
+    votes = np.zeros(3)
+    found = False
+    for a in range(total):
+        if not used[a]:
+            continue
+        found = True
+        p = 0.0
+        for g in range(NORMAL_GRID):
+            z = (-1.0 + (g + 0.5) * step - mean[a]) / sd[a]
+            if z * z > FAR:
+                continue
+            density = math.exp(-0.5 * z * z) / (sd[a] * SQRT2PI)
+            p += density * math.exp(log_all[g] - log_cdf[a * NORMAL_GRID + g]) * step
+        if a == n_arms:
+            for m in range(3):
+                votes[m] += p / 3.0
+        else:
+            votes[i[pend + 1 + a]] += p
+    if not found:
+        return c.NO_MOVE
+    top = 0
+    for m in range(1, 3):
+        if votes[m] > votes[top]:
+            top = m
+    return top
+
+
 @kernel
 def _likely(
     spec: np.ndarray, r: int, sub: int, f: np.ndarray, i: np.ndarray, n_arms: int
 ) -> int:
-    """The likely move of the replayed ensemble's first n_arms arms: by draws, or
-    its best arm's."""
+    """The likely move of the replayed ensemble's first n_arms arms: computed
+    (estimate NORMAL), by draws, or its best arm's."""
+    if spec[r + c.R_C] == c.EST_NORMAL:
+        return likely_move_normal(spec, sub, f, i, n_arms)
     draws = spec[r + c.R_A]
     if draws > 0:
         return likely_move_among(spec, sub, f, i, draws, n_arms)

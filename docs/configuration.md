@@ -15,18 +15,18 @@ checks its type, its allowed values and its minimum.
 | `match` | `rounds` per match |
 | `pool` | pool `size`, `allow_small` |
 | `effort` | the `default` effort, and the budgets `effort.quick` / `.standard` / `.thorough`: round robins, tuning round robins, trials, validation top K and round robins, predictor trials |
-| `evaluation` | `mode` (full or candidates), `seed` (-1: fresh) |
+| `evaluation` | `mode` (full or candidates), `seed` (-1: fresh); sequential stopping: `sequential`, `looks`, `alpha`, `futility` |
 | `tuning` | `sampler`, `prune`, `seed`, `sampler_seed`, `export_every`, `timeout_s` |
 | `space` | how a space file is scaffolded: `spread`, `grid_points`, `weight` |
 | `tournament` | `matches`, `games`, `league`, `batch_matches`, `seed` |
 | `dataset` | the move dataset: `file`, `holdout`, `metric`, `chunks`, `batch_matches`, `matches`, `seed`, `split`, `tune_split` |
-| `runs` | the runs database: `file`, `lock_timeout_s` |
+| `runs` | the runs database: `file`, `lock_timeout_s`, and `match_cache` (read back a match already played instead of replaying it) |
 | `query` | `lab query`: `db`, `limit` |
 | `status` | how much `status` lists |
 | `export` | `bot export`: `dir`, `max_rounds`, and the screening rules `allowed_modules`, `banned_names` |
 | `telemetry` | timing spans: `spans` on or off, their `file` and rotation size `max_mb`, and `slow_factor` |
 | `profile` | `lab profile`: where profiles go, the profiler's `interval_s`, `top`, `jit`, `warmup`, and the optimization budget (`min_share`, `expected_cut`, `window_days`, `horizon_days`, `session_minutes`, `max_attempts`, `min_gain`, `repeats`, `cooldown_days`) |
-| `gauntlet` | `lab gauntlet`: where logs go, `seeds` and `threshold` per opponent, `batch`; the variants (`per_bot`, `draws`, `seed`, `probe_rounds`, `variation_probes`, `levels`, `exclude`); the Nash check (`nash_probes`, `nash_seeds`, `nash_skew`) |
+| `gauntlet` | `lab gauntlet`: where logs go, `seeds` and `threshold` per opponent, `batch`, and sequential stopping (`sequential`, `min_seeds`, `stop_alpha`); the variants (`per_bot`, `draws`, `seed`, `probe_rounds`, `variation_probes`, `levels`, `exclude`); the Nash check (`nash_probes`, `nash_seeds`, `nash_skew`, `nash_decisive`) |
 
 ## The `config` commands
 

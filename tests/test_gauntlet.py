@@ -82,6 +82,29 @@ class TestNash:
         assert [v.nash_like for v in verdicts] == [False, True]
 
 
+class TestSequential:
+    def test_the_first_seeds_play_together_then_one_at_a_time(self) -> None:
+        assert gauntlet.stages([1, 2, 3, 4, 5], 3) == [[1, 2, 3], [4], [5]]
+        assert gauntlet.stages([1, 2], 3) == [[1, 2]]
+
+    def test_a_pairing_clear_of_the_threshold_closes(self) -> None:
+        done = {Job(A, B, s): Played(0.60 + s / 100, 0.2) for s in (1, 2, 3)}
+        done |= {
+            Job(A, C, s): Played(w, 0.3) for s, w in ((1, 0.3), (2, 0.4), (3, 0.38))
+        }
+        still = gauntlet.still_open(done, [(A, B), (A, C)], [1, 2, 3], 0.36, 0.05)
+        assert still == [(A, C)]
+
+    def test_one_match_is_never_clear(self) -> None:
+        done = {Job(A, B, 1): Played(0.9, 0.0)}
+        assert gauntlet.still_open(done, [(A, B)], [1], 0.36, 0.05) == [(A, B)]
+
+    def test_a_decisive_first_match_settles_a_nash_check(self) -> None:
+        done = {Job(A, B, 1): Played(0.34, 0.33), Job(A, C, 1): Played(0.9, 0.05)}
+        assert gauntlet.decisive(done, A, [B, C], skew=0.25)
+        assert not gauntlet.decisive(done, A, [B], skew=0.25)
+
+
 class TestVariants:
     def test_float_values_fill_every_stratum_of_the_range(self) -> None:
         values = gauntlet.quantiles(

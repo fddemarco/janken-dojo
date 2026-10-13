@@ -46,11 +46,11 @@ import polars as pl
 import tqdm
 
 from .. import library, progress, settings, telemetry
-from ..engine import play_pairs
 from ..match import MatchResult
 from ..spec import BotSpec, format_spec, make_spec
 from . import analyze, store
 from .experiment import build_schedule, run_experiment
+from .match_cache import MatchCache
 from .runs_db import RunStore
 from .space import Number, Param, Space, check_unique_stems
 
@@ -73,6 +73,7 @@ class Setup:
     allow_small: bool = False
     use_mocks: bool = False  # pools draw the mocks (janken/mocks.py)
     root: str = ""  # "": the default experiments directory
+    match_cache: bool = False  # read back matches already played (match_cache.py)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -332,6 +333,10 @@ def run_tune(
         file=sys.stderr,
     )
 
+    # Every trial plays the same pools on the same seeds: the matches it doesn't
+    # change (pool vs pool, the supports' with defaults) are read back after the first.
+    matches = MatchCache(RunStore.at(setup.root), setup.match_cache)
+
     def objective(trial: optuna.Trial) -> float:
         params = suggest(trial, spaces)
         tuned = {s.stem: spec for s, spec in zip(spaces, specs_for(spaces, params))}
@@ -340,7 +345,7 @@ def run_tune(
             pairs = [
                 (tuned.get(a.stem, a), tuned.get(b.stem, b)) for a, b in rr["pairs"]
             ]
-            results = play_pairs(
+            results = matches.play(
                 pairs, setup.rounds, rr["seeds"], setup.workers or None
             )
             for (a, b), m in zip(pairs, results):
@@ -574,6 +579,7 @@ def validate(
             use_mocks=setup.use_mocks,
             root=setup.root or None,
             extra={"tuning": {"study": study_name, "trials": trials}},
+            cache=setup.match_cache,
         )
         print(analyze.render(analyze.analyze_run(run_id, setup.root or None)))
         played.update({c.key: run_id for c in group})

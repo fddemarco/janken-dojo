@@ -67,9 +67,12 @@ Test candidates against random pools, with a note: hypothesis --> results.
 Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
 it, and writes its results in (status run). Close it with `janken verdict`.
 
-Start small and grow: `--round-robins 1`, then `--note NNNN --round-robins 3`
-(5, 7, 10) while the comparison is unclear. A grown run equals one planned at
-its new size, so the steps cost nothing extra.
+With --sequential (and a baseline), a new note's run grows by itself: it
+plays its round robins in evaluation.looks steps and stops at the first one
+where the comparison with the first baseline is clear, or futile (each look
+spends part of evaluation.alpha). Or grow it by hand: `--round-robins 1`,
+then `--note NNNN --round-robins 3` (5, 7, 10). A grown run equals one planned
+at its new size, so the steps cost nothing extra.
 
 **Usage**:
 
@@ -90,6 +93,7 @@ $ uv run janken evaluate [OPTIONS] [candidates]...
 * `--idea <int>`: the ideas.md number it tests (it goes in progress); 0: none  [default: 0]
 * `--note <str>`: an existing note (number or NNNN-name) to run or resume, instead of a new one; with --round-robins, its run grows to that many
 * `--mode <full|candidates>`: full: every pair plays; candidates: only matches with a candidate (config: evaluation.mode)  [default: full]
+* `--sequential / --no-sequential`: evaluate plays its round robins in looks, stopping once the paired comparison is clear (or futile): janken/lab/sequential.py (config: evaluation.sequential)  [default: sequential]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
@@ -2080,6 +2084,9 @@ $ uv run janken lab gauntlet variations [OPTIONS] {out}
 
 Which bots are Nash-like: no probe bot skews their results either way.
 
+With --sequential, a bot that one probe already skews decisively in its first
+match (gauntlet.nash_decisive) is settled without the other seeds.
+
 **Usage**:
 
 ```console
@@ -2096,6 +2103,7 @@ $ uv run janken lab gauntlet nash [OPTIONS] {bots} {out}
 * `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
 * `--seeds <int>`: matches per probe in a Nash check (config: gauntlet.nash_seeds)  [default: 3]
 * `--skew <float>`: rounds won minus lost a probe must reach for a bot not to be Nash-like (config: gauntlet.nash_skew)  [default: 0.1]
+* `--sequential / --no-sequential`: stop a pairing once its share won is clear of the threshold (config: gauntlet.sequential)  [default: sequential]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
@@ -2118,6 +2126,10 @@ $ uv run janken lab gauntlet nash [OPTIONS] {bots} {out}
 
 Play candidates vs every opponent; list those under the threshold.
 
+With --sequential, every pairing plays gauntlet.min_seeds seeds, then one
+more at a time while its share won isn't yet clear of the threshold
+(janken/lab/sequential.py): only the close ones play every seed.
+
 **Usage**:
 
 ```console
@@ -2134,6 +2146,7 @@ $ uv run janken lab gauntlet run [OPTIONS] {opponents}
 * `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
 * `--seeds <int>`: matches per opponent (seeds 1..n) (config: gauntlet.seeds)  [default: 10]
 * `--threshold <float>`: the share of rounds won a candidate must reach (config: gauntlet.threshold)  [default: 0.36]
+* `--sequential / --no-sequential`: stop a pairing once its share won is clear of the threshold (config: gauntlet.sequential)  [default: sequential]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

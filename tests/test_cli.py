@@ -545,6 +545,25 @@ class TestSpeciesLifecycle:
         self.run_ok("verdict", number, "keep", "--summary", "kept for the test")
         return number
 
+    def test_a_sequential_evaluation_stops_once_the_comparison_is_futile(
+        self,
+    ) -> None:
+        # The same bot under two labels: no difference, so going on is futile.
+        cycler = registry.find(self.bots, "cycler_v1")
+        self.run_ok(
+            "evaluate",
+            cycler + ":NOISE=0.05",
+            "--baseline",
+            cycler,
+            "--hypothesis",
+            "a relabelled bot plays the same",
+            "--round-robins",
+            "4",
+            "--sequential",
+        )
+        (note,) = notes.all_notes(self.notebook)
+        assert "1 of 1 round robin(s)" in note.section("Results")
+
     @pytest.mark.heavy
     def test_a_twin_is_a_variant_and_a_stranger_a_new_species(self) -> None:
         stems = [registry.find(self.bots, s) for s in SPECIES_FIELD]

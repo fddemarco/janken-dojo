@@ -957,6 +957,44 @@ class TestReplay:
     ) -> None:
         assert replay._decided(np.array(votes), left) == decided
 
+    def test_a_normal_estimate_names_the_move_many_draws_name(self) -> None:
+        # Against 1024 draws on biased histories: the same move but for near ties.
+        replayed = bot.Bandit(
+            (
+                bot.LastMove(bot.OPP),
+                bot.Frequency(bot.OPP, 0.9),
+                bot.Constant(R),
+                bot.LastMove(bot.MY),
+            ),
+            (bot.COPY, bot.BEAT, bot.BEAT_BEAT),
+            bot.Dirichlet(0.95),
+            random_arm=bot.RA_SCORED,
+        )
+        rng = random.Random(3)
+        my = [rng.choices(range(3), (0.6, 0.3, 0.1))[0] for _ in range(40)]
+        opp = [rng.choices(range(3), (0.2, 0.2, 0.6))[0] for _ in range(40)]
+        computed = signal_bot(bot.Replay(replayed, estimate=bot.EST_NORMAL))
+        drawn = signal_bot(bot.Replay(replayed, draws=1024))
+        random.seed(0)
+        pairs = zip(computed.moves(my, opp), drawn.moves(my, opp), strict=True)
+        assert sum(a == b for a, b in pairs) >= 0.9 * (len(my) + 1)
+
+    def test_a_normal_estimate_follows_the_arm_that_keeps_winning(self) -> None:
+        # The same setup as the draws test above: P wins or ties every round.
+        replayed = bot.Bandit(
+            (bot.LastMove(bot.OPP), bot.LastMove(bot.OPP), bot.Constant(R)),
+            (bot.BEAT,),
+            bot.Dirichlet(1.0),
+        )
+        runner = signal_bot(bot.Replay(replayed, estimate=bot.EST_NORMAL))
+        my = [R, P] * 6
+        assert runner.last(my, [R] * len(my)) == P
+
+    def test_an_estimate_is_draws_or_normal(self) -> None:
+        replayed = bot.Bandit((bot.LastMove(bot.OPP),), (bot.BEAT,), bot.Dirichlet(1.0))
+        with pytest.raises(blueprint.BlueprintError, match="DRAWS or NORMAL"):
+            signal_bot(bot.Replay(replayed, estimate=7))
+
     def test_a_nested_replay_sees_the_history_swapped_back(self) -> None:
         # The opponent replays "beat their last move" from our side (so it beats the
         # opponent's own last move) and beats that; we copy its predicted move.

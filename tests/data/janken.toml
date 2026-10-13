@@ -97,6 +97,14 @@ predict_trials = 300
 mode = "full"
 # -1 draws a fresh seed (recorded with the run); any other value reproduces a run.
 seed = -1
+# Sequential evaluation: a new note's run plays its round robins in `looks` steps and
+# stops at the first look where the candidate vs baseline comparison is clear of 0 (each
+# look spends part of alpha, O'Brien-Fleming), or where, if the effect seen so far is
+# the true one, the chance of clearing the last look is under `futility`.
+sequential = false
+looks = 5
+alpha = 0.05
+futility = 0.10
 
 [tuning]
 # "tpe", "grid" (each param's grid list) or "random" (a baseline).
@@ -154,6 +162,10 @@ tune_split = "train"
 # A process that finds the file locked retries for lock_timeout_s seconds.
 file = "runs.duckdb"
 lock_timeout_s = 30.0
+# Every match played is kept (table match_cache), keyed by what decides it: the bots'
+# sources and overrides, the seed, the rounds and the kit's code. A match played again
+# (tuning's fixed pools, gauntlet seeds, species runs) is read back, not replayed.
+match_cache = true
 
 [query]
 # `janken lab query`: the database read ("runs" or "dataset"), and the rows printed.
@@ -263,6 +275,12 @@ dir = "gauntlet"
 seeds = 10
 threshold = 0.36
 batch = 256
+# Sequential stopping: after min_seeds matches, a pairing whose share won is already
+# clear of the threshold stops (each further seed a look; stop_alpha spent over them,
+# O'Brien-Fleming: janken/lab/sequential.py). Only the close ones play every seed.
+sequential = true
+min_seeds = 3
+stop_alpha = 0.05
 # `variations`: per_bot variants of each field bot, drawn from its space file (at
 # most `draws` Latin hypercubes), kept only if their moves differ from the
 # default's vs the probes in seeded matches of probe_rounds rounds.
@@ -282,3 +300,6 @@ exclude = ["nash_v1"]
 nash_probes = ["bots/l1/rock_v1.yaml", "bots/l1/cycler_v1.yaml", "bots/l1/reactionary_v1.yaml", "bots/l1/frequency_v1.yaml", "bots/l1/pattern_memory_v1.yaml"]
 nash_seeds = 3
 nash_skew = 0.10
+# A bot whose first match vs some probe is already this skewed is settled (not
+# Nash-like) without the other seeds: a Nash-like bot's match is about 0.05 off.
+nash_decisive = 0.25

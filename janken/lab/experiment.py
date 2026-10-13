@@ -34,10 +34,10 @@ import time
 from collections.abc import Callable, Collection, Sequence
 
 from .. import _numba_cache, library, progress, settings, telemetry
-from ..engine import play_pairs
 from ..match import MatchResult, bot_name
 from ..spec import BotSpec, make_spec, to_dict
 from . import store
+from .match_cache import MatchCache
 from .pool import sample_pool
 from .runs_db import COMPLETE, INTERRUPTED, RUNNING, RunStore
 
@@ -152,6 +152,7 @@ def play_into(
     on_batch: Callable[[int], None] = _no_hook,
     flush_s: float = 0.0,
     played: Collection[tuple[int, int]] = frozenset(),
+    cache: bool = False,
 ) -> float:
     """Play `schedule` into run `run_id` but the matches already `played` (as
     (rr, k)); returns the seconds spent.
@@ -159,7 +160,8 @@ def play_into(
     Every round robin plays in one batch, so the cores stay busy, and matches are
     committed as they end, every `flush_s` seconds (0: once, at the end): an
     interrupted run keeps every finished match. `on_batch(rr)` runs once a
-    round robin's matches are all stored.
+    round robin's matches are all stored. With `cache`, a match already played
+    (match_cache.py) is read back instead.
 
     The run ends `complete`; if anything stops it (Ctrl-C included) it ends
     `interrupted`, keeping every match committed so far, and the error goes on.
@@ -193,7 +195,7 @@ def play_into(
                         on_batch(number)
 
             with telemetry.span("experiment.play", matches=len(todo)):
-                play_pairs(
+                MatchCache(runs, cache).play(
                     [rr["pairs"][k] for rr, k in todo],
                     rounds,
                     [rr["seeds"][k] for rr, k in todo],
@@ -231,6 +233,7 @@ def run_experiment(
     on_batch: Callable[[int], None] = _no_hook,
     on_start: Callable[[str], None] = lambda run_id: None,
     flush_s: float = 0.0,
+    cache: bool = False,
 ) -> str:
     """Play and store one experiment, matches stored as they end (every
     `flush_s` seconds); returns its run id.
@@ -284,7 +287,16 @@ def run_experiment(
     )
     on_start(run_id)
     elapsed = play_into(
-        runs, run_id, schedule, rounds, workers, candidates, on_batch, flush_s
+        runs,
+        run_id,
+        schedule,
+        rounds,
+        workers,
+        candidates,
+        on_batch,
+        flush_s,
+        (),
+        cache,
     )
     print(f"played {n} matches in {elapsed:.1f}s -> run {run_id}", file=sys.stderr)
     return run_id
@@ -297,6 +309,7 @@ def resume_experiment(
     on_batch: Callable[[int], None] = _no_hook,
     round_robins: int = 0,
     flush_s: float = 0.0,
+    cache: bool = False,
 ) -> str:
     """Play the matches a stored run is missing; returns its run id.
 
@@ -361,6 +374,7 @@ def resume_experiment(
         on_batch,
         flush_s,
         played,
+        cache,
     )
     return run_id
 

@@ -8,11 +8,15 @@ workspace's `gauntlet.dir` as they are played, so every command resumes.
 
 import os
 from collections.abc import Callable
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from .options import CFG, Lab, about, fail, lab_command
+
+if TYPE_CHECKING:
+    from ..lab.gauntlet import Job, Log
+    from ..lab.match_cache import MatchCache
 
 app = typer.Typer(
     help="Gauntlets: candidates vs every opponent of a list, variations included.",
@@ -33,6 +37,36 @@ def _read_list(path: str) -> list[str]:
 
 def _log(lab: Lab, name: str) -> str:
     return os.path.join(lab.workspace, CFG.gauntlet.dir, name + ".jsonl")
+
+
+def _done(lab: Lab, log: str) -> "Log":
+    from ..lab import gauntlet
+
+    return gauntlet.load(log, lab.rounds)
+
+
+def _play(lab: Lab, jobs: "list[Job]", log: str) -> None:
+    """Play the jobs into the log: streamed, read back from the match cache."""
+    from ..lab import gauntlet
+
+    gauntlet.play(
+        jobs,
+        lab.rounds,
+        CFG.gauntlet.batch,
+        log,
+        lab.workers,
+        CFG.execution.flush_s,
+        _progress(lab),
+        _matches(lab),
+    )
+
+
+def _matches(lab: Lab) -> "MatchCache":
+    """The workspace's match cache (on unless runs.match_cache is off)."""
+    from ..lab.match_cache import MatchCache
+    from ..lab.runs_db import RunStore
+
+    return MatchCache(RunStore.at(lab.workspace), CFG.runs.match_cache)
 
 
 def _progress(lab: Lab) -> Callable[[int, int], None]:
@@ -75,7 +109,7 @@ def variations(
                 path, spaces.load(space_file), per_bot, cfg.draws, cfg.seed
             )
             kept = gauntlet.changing(
-                path, drawn, cfg.variation_probes, cfg.probe_rounds
+                path, drawn, cfg.variation_probes, cfg.probe_rounds, _matches(lab)
             )
             found = kept[:per_bot]
         lab.say(f"{stem}: {len(found)} variants")
@@ -99,8 +133,14 @@ def nash(
     skew: Annotated[
         float, typer.Option(help=about("gauntlet.nash_skew"))
     ] = CFG.gauntlet.nash_skew,
+    sequential: Annotated[
+        bool, typer.Option(help=about("gauntlet.sequential"))
+    ] = CFG.gauntlet.sequential,
 ) -> None:
-    """Which bots are Nash-like: no probe bot skews their results either way."""
+    """Which bots are Nash-like: no probe bot skews their results either way.
+
+    With --sequential, a bot that one probe already skews decisively in its first
+    match (gauntlet.nash_decisive) is settled without the other seeds."""
     from ..lab import gauntlet
 
     cfg = CFG.gauntlet
@@ -108,16 +148,14 @@ def nash(
     probes = list(cfg.nash_probes)
     ladder = list(range(1, seeds + 1))
     log = _log(lab, name)
-    jobs = gauntlet.missing(checked, probes, ladder, gauntlet.load(log, lab.rounds))
-    gauntlet.play(
-        jobs,
-        lab.rounds,
-        cfg.batch,
-        log,
-        lab.workers,
-        CFG.execution.flush_s,
-        _progress(lab),
-    )
+    _play(lab, gauntlet.missing(checked, probes, ladder[:1], _done(lab, log)), log)
+    done = _done(lab, log)
+    rest = [
+        b
+        for b in checked
+        if not (sequential and gauntlet.decisive(done, b, probes, cfg.nash_decisive))
+    ]
+    _play(lab, gauntlet.missing(rest, probes, ladder[1:], done), log)
     verdicts = gauntlet.nash_verdicts(
         gauntlet.load(log, lab.rounds), checked, probes, ladder, skew
     )
@@ -162,24 +200,42 @@ def run(
     threshold: Annotated[
         float, typer.Option(help=about("gauntlet.threshold"))
     ] = CFG.gauntlet.threshold,
+    sequential: Annotated[
+        bool, typer.Option(help=about("gauntlet.sequential"))
+    ] = CFG.gauntlet.sequential,
 ) -> None:
-    """Play candidates vs every opponent; list those under the threshold."""
-    from ..lab import gauntlet
+    """Play candidates vs every opponent; list those under the threshold.
 
+    With --sequential, every pairing plays gauntlet.min_seeds seeds, then one
+    more at a time while its share won isn't yet clear of the threshold
+    (janken/lab/sequential.py): only the close ones play every seed."""
+    from ..lab import gauntlet
+    from ..lab import sequential as seq
+
+    cfg = CFG.gauntlet
     opps = _read_list(opponents)
     ladder = list(range(1, seeds + 1))
     log = _log(lab, name)
-    jobs = gauntlet.missing(cand, opps, ladder, gauntlet.load(log, lab.rounds))
-    gauntlet.play(
-        jobs,
-        lab.rounds,
-        CFG.gauntlet.batch,
-        log,
-        lab.workers,
-        CFG.execution.flush_s,
-        _progress(lab),
-    )
-    done = gauntlet.load(log, lab.rounds)
+    open_ = [(c, o) for c in cand for o in opps]
+    looked: list[int] = []
+    first = cfg.min_seeds if sequential else len(ladder)
+    for stage in gauntlet.stages(ladder, first):
+        looked += stage
+        done = _done(lab, log)
+        jobs = [
+            gauntlet.Job(a, b, s)
+            for s in stage
+            for a, b in open_
+            if gauntlet.Job(a, b, s) not in done
+        ]
+        _play(lab, jobs, log)
+        if len(looked) < len(ladder):
+            alpha = seq.look_alpha(len(looked), len(ladder), cfg.stop_alpha)
+            open_ = gauntlet.still_open(
+                _done(lab, log), open_, looked, threshold, alpha
+            )
+            lab.say(f"after {len(looked)} seeds: {len(open_)} pairings still close")
+    done = _done(lab, log)
     data, text = {}, []
     for c in cand:
         rows = gauntlet.shares(done, c, opps, ladder)

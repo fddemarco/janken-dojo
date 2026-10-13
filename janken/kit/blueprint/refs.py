@@ -21,6 +21,11 @@ the parameters of every arm it makes of it (declare.py reads the mapping):
     inner_draws a replayed bot of level 3+: the draws of the replays it holds
                 capped (theirs kept when fewer, a best arm's left as is); Thompson
                 draws are what a replay costs, so a model of an L4 is cheaper
+    estimate    a replayed bot of level 2+: DRAWS (default) names its move by
+                `draws` Thompson draws; NORMAL computes it (composites.Replay), far
+                cheaper and without sampling noise
+    inner_estimate a replayed bot of level 3+: the estimate of the replays it
+                holds that draw (NORMAL makes a model of an L4 cheap)
 
 An instance is the referenced bot's core, its knobs bound (binding.py), its guards
 and overlays left out (they are about playing the game, not about predicting):
@@ -50,7 +55,7 @@ from .heuristic import Heuristic, Silent
 from .predictor import Predictor
 from .signals import Rotated, Signal, Sim
 
-KEEP = -1  # random_arm, inner_draws: the referenced bot's own
+KEEP = -1  # random_arm, inner_draws, inner_estimate: the referenced bot's own
 
 P = typing.TypeVar("P", bound=Predictor)
 
@@ -63,6 +68,8 @@ KEYS = (
     "draws",
     "random_arm",
     "inner_draws",
+    "estimate",
+    "inner_estimate",
 )
 
 
@@ -78,6 +85,8 @@ class Reference:
     draws: int = 0
     random_arm: int = KEEP
     inner_draws: int = KEEP
+    estimate: int = c.EST_DRAWS
+    inner_estimate: int = KEEP
 
 
 @dataclasses.dataclass(frozen=True)
@@ -124,8 +133,10 @@ def core(ref: Reference, library: Library) -> Predictor:
         not ref.rotations
         and ref.side == c.MY
         and ref.draws == 0
-        and ref.inner_draws == KEEP,
-        f"{ref.bot}: a core plays as it is: no rotations, side or draws",
+        and ref.inner_draws == KEEP
+        and ref.estimate == c.EST_DRAWS
+        and ref.inner_estimate == KEEP,
+        f"{ref.bot}: a core plays as it is: no rotations, side, draws or estimate",
     )
     (bound,) = _instances(ref, target)
     if isinstance(bound, Bandit):
@@ -197,8 +208,10 @@ def _arm(ref: Reference, core: Predictor) -> Rotated:
         if ref.inner_draws != KEEP:
             check(ref.inner_draws >= 0, f"{ref.bot}: inner_draws must be >= 0")
             replayed = _capped(replayed, ref.inner_draws)
+        if ref.inner_estimate != KEEP:
+            replayed = _estimated(replayed, ref.inner_estimate)
         rotations = _rotations(ref, 0)
-        return Rotated(Replay(replayed, ref.draws, ref.side), rotations)
+        return Rotated(Replay(replayed, ref.draws, ref.side, ref.estimate), rotations)
     raise BlueprintError(
         f"{ref.bot}: its core is {type(core).__name__}, which can't be an arm"
     )
@@ -215,8 +228,13 @@ def _heuristic_arm(ref: Reference, core: Heuristic) -> Rotated:
             flipped = c.MY if signal.side == c.OPP else c.OPP
             signal = dataclasses.replace(signal, side=flipped)
         signal = dataclasses.replace(signal, draws=ref.draws or signal.draws)
+        if ref.estimate != c.EST_DRAWS:
+            signal = dataclasses.replace(signal, estimate=ref.estimate)
         return Rotated(signal, _rotations(ref, rotation))
-    check(ref.draws == 0, f"{ref.bot}: draws sample a replayed bandit")
+    check(
+        ref.draws == 0 and ref.estimate == c.EST_DRAWS,
+        f"{ref.bot}: draws and estimate are a replayed bandit's",
+    )
     if ref.side == c.MY:
         return Rotated(signal, _rotations(ref, rotation))
     check(isinstance(signal, Signal), f"{ref.bot}: already plays a model of us")
@@ -228,18 +246,40 @@ def _heuristic_arm(ref: Reference, core: Heuristic) -> Rotated:
 
 def _capped(node: P, cap: int) -> P:
     """`node` with the draws of every replay below it capped at `cap`."""
+
+    def cap_draws(replay: Replay) -> Replay:
+        draws = min(replay.draws, cap) if replay.draws > 0 else 0
+        return dataclasses.replace(replay, draws=draws)
+
+    return _replays_mapped(node, cap_draws)
+
+
+def _estimated(node: P, estimate: int) -> P:
+    """`node` with every replay below it that draws estimating its move by
+    `estimate` instead (a best arm's left as is)."""
+
+    def set_estimate(replay: Replay) -> Replay:
+        if replay.draws == 0 and replay.estimate == c.EST_DRAWS:
+            return replay
+        return dataclasses.replace(replay, estimate=estimate)
+
+    return _replays_mapped(node, set_estimate)
+
+
+def _replays_mapped(node: P, change: typing.Callable[[Replay], Replay]) -> P:
+    """`node` with `change` applied to every replay below it (deepest first)."""
     if isinstance(node, Replay):
-        draws = min(node.draws, cap) if node.draws > 0 else 0
-        return dataclasses.replace(node, bandit=_capped(node.bandit, cap), draws=draws)
+        inner = dataclasses.replace(node, bandit=_replays_mapped(node.bandit, change))
+        return typing.cast(P, change(inner))
     if isinstance(node, Bandit):
         return dataclasses.replace(
-            node, predictors=tuple(_capped(p, cap) for p in node.predictors)
+            node, predictors=tuple(_replays_mapped(p, change) for p in node.predictors)
         )
     if isinstance(node, Rotated | Sim):
-        return dataclasses.replace(node, signal=_capped(node.signal, cap))
+        return dataclasses.replace(node, signal=_replays_mapped(node.signal, change))
     if isinstance(node, NaiveBayes):
         return dataclasses.replace(
-            node, inputs=tuple(_capped(p, cap) for p in node.inputs)
+            node, inputs=tuple(_replays_mapped(p, change) for p in node.inputs)
         )
     return node
 

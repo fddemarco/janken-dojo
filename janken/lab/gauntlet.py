@@ -25,8 +25,14 @@ import math
 import os
 import random
 from collections.abc import Callable, Mapping, Sequence
+from typing import TYPE_CHECKING
 
+from . import sequential
 from . import space as spaces
+
+if TYPE_CHECKING:
+    from ..spec import BotSpec
+    from .match_cache import MatchCache
 
 Z95 = 1.96
 OVERRIDES = ":"  # a spec's path and its overrides: bots/l1/x.yaml:NAME=value
@@ -117,13 +123,13 @@ def play(
     workers: int,
     flush_s: float,
     on_flush: Callable[[int, int], None],
+    matches: "MatchCache",
 ) -> None:
     """Play the jobs in batches over every core, logging each match as it ends:
     every `flush_s` seconds the matches finished since are appended to the log,
-    and `on_flush` gets (matches done, of all)."""
-    from ..engine import play_pairs
+    and `on_flush` gets (matches done, of all). A match `matches` already holds
+    is read back."""
     from ..match import MatchResult
-    from .workflows import specs
 
     done = 0
     for k in range(0, len(jobs), batch):
@@ -142,10 +148,53 @@ def play(
             done += len(finished)
             on_flush(done, len(jobs))
 
-        pairs = [tuple(specs([j.a, j.b])) for j in chunk]
-        play_pairs(
+        pairs = [_pair(j.a, j.b) for j in chunk]
+        matches.play(
             pairs, rounds, [j.seed for j in chunk], workers or None, store, flush_s
         )
+
+
+def _pair(a: str, b: str) -> tuple["BotSpec", "BotSpec"]:
+    from .workflows import specs
+
+    first, second = specs([a, b])
+    return first, second
+
+
+def stages(seeds: Sequence[int], first: int) -> list[list[int]]:
+    """The seeds played together: the first `first` at once (the fewest a spread
+    needs), then one at a time, so a pairing can stop after any of them."""
+    return [list(seeds[:first])] + [[s] for s in seeds[first:]]
+
+
+def still_open(
+    done: Log,
+    pairs: Sequence[tuple[str, str]],
+    seeds: Sequence[int],
+    threshold: float,
+    alpha: float,
+) -> list[tuple[str, str]]:
+    """The (bot, opponent) pairings whose share won over `seeds` isn't yet clear
+    of `threshold` either way, by a t test at `alpha` (sequential.py)."""
+    return [
+        (a, b)
+        for a, b in pairs
+        if not sequential.clear_of(
+            [done[Job(a, b, s)].won for s in seeds if Job(a, b, s) in done],
+            threshold,
+            alpha,
+        )
+    ]
+
+
+def decisive(done: Log, bot: str, probes: Sequence[str], skew: float) -> bool:
+    """Whether one match vs some probe already skews the bot by `skew` or more:
+    a Nash-like bot's single match is never that far off (seed 1)."""
+    return any(
+        abs(done[Job(bot, p, 1)].won - done[Job(bot, p, 1)].lost) >= skew
+        for p in probes
+        if Job(bot, p, 1) in done
+    )
 
 
 # --- reading it -------------------------------------------------------------------
@@ -265,18 +314,17 @@ def candidates(
 
 
 def changing(
-    default: str, variants: Sequence[str], probes: Sequence[str], rounds: int
+    default: str,
+    variants: Sequence[str],
+    probes: Sequence[str],
+    rounds: int,
+    matches: "MatchCache",
 ) -> list[str]:
     """The variants whose moves differ from the default's in the same seeded
     matches vs the probes: their parameters change the bot's play."""
-    from ..engine import play_pairs
-    from .workflows import specs
-
     bots = [default, *variants]
     jobs = [(b, p, s) for b in bots for s, p in enumerate(probes, start=1)]
-    out = play_pairs(
-        [tuple(specs([b, p])) for b, p, _ in jobs], rounds, [s for *_, s in jobs]
-    )
+    out = matches.play([_pair(b, p) for b, p, _ in jobs], rounds, [s for *_, s in jobs])
     moves: dict[str, list[str]] = {}
     for (b, _, _), result in zip(jobs, out, strict=True):
         moves.setdefault(b, []).append(result.moves[0::2])

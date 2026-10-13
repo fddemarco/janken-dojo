@@ -102,6 +102,7 @@ def experiment(
         use_mocks=lab.use_mocks,
         root=lab.workspace,
         flush_s=CFG.execution.flush_s,
+        cache=CFG.runs.match_cache,
     )
     summary = analyze.analyze_run(run_id, lab.workspace)
     lab.emit(summary, analyze.render(summary))
@@ -122,7 +123,11 @@ def resume(
 
     try:
         run_id = resume_experiment(
-            run, lab.workspace, lab.workers or None, flush_s=CFG.execution.flush_s
+            run,
+            lab.workspace,
+            lab.workers or None,
+            flush_s=CFG.execution.flush_s,
+            cache=CFG.runs.match_cache,
         )
     except ValueError as exc:  # a candidate's bot file is gone
         raise fail(str(exc)) from None
@@ -366,6 +371,7 @@ def study_run(
             allow_small=lab.allow_small,
             use_mocks=lab.use_mocks,
             root=lab.workspace,
+            match_cache=CFG.runs.match_cache,
         ),
         Search(
             sampler=str(sampler),

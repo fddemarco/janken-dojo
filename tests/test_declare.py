@@ -282,6 +282,49 @@ class TestReference:
         assert inner(bandit_of.format(", inner_draws: 32")) == 32
         assert inner(bandit_of.format(", inner_draws: 1000")) == 256
 
+    def test_estimate_and_inner_estimate_set_how_replays_name_a_move(self) -> None:
+        shelf = Shelf(
+            {
+                **SHELF,
+                "deep": """
+                    blueprint:
+                      core:
+                        Bandit:
+                          predictors:
+                            - {bot: board, side: OPP, draws: 256}
+                            - {bot: board, side: OPP}
+                          scorer: {Dirichlet: {decay: 0.9}}
+                          selector: Thompson
+                """,
+            }
+        )
+
+        def estimates(ref: str) -> tuple[int, int, int]:
+            text = f"core: {{Bandit: {{predictors: [{{bot: deep{ref}}}]}}}}"
+            core = blueprint_from_data(yaml.safe_load(text), shelf).core
+            assert isinstance(core, bot.Bandit)
+            (arm,) = core.predictors
+            assert isinstance(arm, bot.Rotated) and isinstance(arm.signal, bot.Replay)
+            held = []
+            for p in arm.signal.bandit.predictors:
+                assert isinstance(p, bot.Rotated) and isinstance(p.signal, bot.Replay)
+                held.append(p.signal.estimate)
+            drawn, best = held
+            return arm.signal.estimate, drawn, best
+
+        assert estimates("") == (bot.EST_DRAWS,) * 3
+        assert estimates(", estimate: NORMAL") == (
+            bot.EST_NORMAL,
+            bot.EST_DRAWS,
+            bot.EST_DRAWS,
+        )
+        # a replay that names its best arm keeps doing so
+        assert estimates(", inner_estimate: NORMAL") == (
+            bot.EST_DRAWS,
+            bot.EST_NORMAL,
+            bot.EST_DRAWS,
+        )
+
     def test_choose_selector(self) -> None:
         assert bandit("""
                 core:

@@ -23,6 +23,8 @@ dependencies = [
     # Bot files (bots/<level>/*.yaml) and space files (spaces/*.yaml).
     "pyyaml>=6.0",
     "ruff>=0.17.0",
+    "scikit-learn>=1.9.1",
+    "skore>=0.27.0",
     "tqdm>=4.70.1",
     "ty>=0.0.86",
     "typer>=0.27.3",

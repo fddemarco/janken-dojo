@@ -50,16 +50,16 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `multiscale` | L2 | `multiscale_v1` | `multiscale` (2026-10-12 seeded) --> v1 | |
 | `sampled_markov` | L2 | `sampled_markov_v1` | `sampled_markov` (2026-10-12 seeded) --> v1 | |
 | `anti_smartbot` | L2 | `anti_smartbot_v2` | `anti_smartbot` (2026-10-12 seeded) --> v1; `anti_smartbot_normal` ([0035](experiments/0035-anti-smartbot-normal.md)) --> v2 | |
-| `anti_smartbot_sims` | L3 | `anti_smartbot_sims_v2` | `anti_smartbot_sims` (2026-10-11 rename) --> v1; `anti_smartbot_sims_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
+| `anti_smartbot_sims` | L3 | `anti_smartbot_sims_v3` | `anti_smartbot_sims` (2026-10-11 rename) --> v1; `anti_smartbot_sims_v1` over smartbot_sims_v2 (2026-10-12) --> v2; `anti_smartbot_sims_normal` ([0036](experiments/0036-anti-smartbot-sims-normal.md)) --> v3 | |
 | `smartbot_sims` | L3 | `smartbot_sims_v2` | `smartbot_sims` (2026-10-11 rename) --> v1; `smartbot_sims_v1` minus the word2janken and word2janken_scoreboard sims (2026-10-12) --> v2 | |
 | `l2_council` | L3 | `l2_council_v1` | `l2_council` (2026-10-12 seeded) --> v1 | |
 | `naive_bayes_markov` | L3 | `naive_bayes_markov_v1` | `naive_bayes_markov` (2026-10-12 seeded) --> v1 | |
 | `gate_leader` | L3 | `gate_leader_v1` | `gate_leader` (2026-10-12 seeded) --> v1 | |
-| `predator` | L3 | `predator_v1` | `predator` (2026-10-12 seeded) --> v1 | |
-| `leader_hunter` | L3 | `leader_hunter_v1` | `leader_hunter` (2026-10-12 seeded) --> v1 | |
-| `gate_edge_smartbot` | L3 | `gate_edge_smartbot_v1` | `gate_edge_smartbot` (2026-10-12 seeded) --> v1 | |
+| `predator` | L3 | `predator_v2` | `predator` (2026-10-12 seeded) --> v1; `predator_normal` ([0047](experiments/0047-predator-normal.md)) --> v2 | |
+| `leader_hunter` | L3 | `leader_hunter_v2` | `leader_hunter` (2026-10-12 seeded) --> v1; `leader_hunter_normal` ([0037](experiments/0037-leader-hunter-normal.md)) --> v2 | |
+| `gate_edge_smartbot` | L3 | `gate_edge_smartbot_v2` | `gate_edge_smartbot` (2026-10-12 seeded) --> v1; `gate_edge_smartbot_normal` ([0038](experiments/0038-gate-edge-smartbot-normal.md)) --> v2 | |
 | `gate_fast_hold` | L3 | `gate_fast_hold_v1` | `gate_fast_hold` (2026-10-12 seeded) --> v1 | |
-| `gate_bandit_period` | L3 | `gate_bandit_period_v1` | `gate_bandit_period` (2026-10-12 seeded) --> v1 | |
+| `gate_bandit_period` | L3 | `gate_bandit_period_v2` | `gate_bandit_period` (2026-10-12 seeded) --> v1; `gate_bandit_period_normal` ([0039](experiments/0039-gate-bandit-period-normal.md)) --> v2 | |
 | `gate_main_first_backoff` | L3 | `gate_main_first_backoff_v1` | `gate_main_first_backoff` (2026-10-12 seeded) --> v1 | |
 | `leader_new_l2` | L3 | `leader_new_l2_v1` | `leader_new_l2` (2026-10-12 seeded) --> v1 | |
 | `vote_council` | L3 | `vote_council_v1` | `vote_council` (2026-10-12 seeded) --> v1 | |
@@ -70,10 +70,10 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `multiscale_council` | L3 | `multiscale_council_v1` | `multiscale_council` (2026-10-12 seeded) --> v1 | |
 | `bayes_predators` | L3 | `bayes_predators_v1` | `bayes_predators` (2026-10-12 seeded) --> v1 | |
 | `smartbot_wide` | L3 | `smartbot_wide_v1` | `smartbot_wide` (2026-10-12 seeded) --> v1 | |
-| `gate_edge` | L4 | `gate_edge_v2` | `gate_edge` (2026-10-11 rename) --> v1; `gate_edge_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
-| `gate_main_first_stationary` | L4 | `gate_main_first_stationary_v2` | `gate_main_first_stationary` (2026-10-11 rename) --> v1; `gate_main_first_stationary_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
-| `gate_main_first` | L4 | `gate_main_first_v2` | `gate_main_first` (2026-10-11 rename) --> v1; `gate_main_first_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | `gate_anti_first_v1` (2026-10-12 fused: 93.1% core agreement, -0.6 pts [-4.6, +3.4] vs gate_main_first_v1, 40 pools) |
-| `double_bluff_gate` | L4 | `double_bluff_gate_v1` | `gate_counter_sims` ([0031](experiments/0031-counter-anti-sims-vs-smartbot-sims.md)) --> v1 | |
+| `gate_edge` | L4 | `gate_edge_v3` | `gate_edge` (2026-10-11 rename) --> v1; `gate_edge_v1` over smartbot_sims_v2 (2026-10-12) --> v2; `gate_edge_normal` ([0043](experiments/0043-gate-edge-normal.md)) --> v3 | |
+| `gate_main_first_stationary` | L4 | `gate_main_first_stationary_v3` | `gate_main_first_stationary` (2026-10-11 rename) --> v1; `gate_main_first_stationary_v1` over smartbot_sims_v2 (2026-10-12) --> v2; `gate_main_first_stationary_normal` ([0042](experiments/0042-gate-main-first-stationary-normal.md)) --> v3 | |
+| `gate_main_first` | L4 | `gate_main_first_v3` | `gate_main_first` (2026-10-11 rename) --> v1; `gate_main_first_v1` over smartbot_sims_v2 (2026-10-12) --> v2; `gate_main_first_normal` ([0041](experiments/0041-gate-main-first-normal.md)) --> v3 | `gate_anti_first_v1` (2026-10-12 fused: 93.1% core agreement, -0.6 pts [-4.6, +3.4] vs gate_main_first_v1, 40 pools) |
+| `double_bluff_gate` | L4 | `double_bluff_gate_v2` | `gate_counter_sims` ([0031](experiments/0031-counter-anti-sims-vs-smartbot-sims.md)) --> v1; `double_bluff_gate_normal` ([0044](experiments/0044-double-bluff-gate-normal.md)) --> v2 | |
 | `level_k_gate` | L4 | `level_k_gate_v2` | `level_k_gate` ([0032](experiments/0032-level-k-vs-double-bluff-gate.md)) --> v1; `level_k_gate_normal` ([0040](experiments/0040-level-k-gate-normal.md)) --> v2 | |
-| `replay_hunter_gate` | L4 | `replay_hunter_gate_v1` | `replay_hunter_gate` ([0033](experiments/0033-replay-hunter-vs-level-k-gate.md)) --> v1 | |
-| `replay_hunter_wide` | L4 | `replay_hunter_wide_v1` | `replay_hunter_wide` ([0034](experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md)) --> v1 | |
+| `replay_hunter_gate` | L4 | `replay_hunter_gate_v2` | `replay_hunter_gate` ([0033](experiments/0033-replay-hunter-vs-level-k-gate.md)) --> v1; `replay_hunter_gate_normal` ([0045](experiments/0045-replay-hunter-gate-normal.md)) --> v2 | |
+| `replay_hunter_wide` | L4 | `replay_hunter_wide_v2` | `replay_hunter_wide` ([0034](experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md)) --> v1; `replay_hunter_wide_normal` ([0046](experiments/0046-replay-hunter-wide-normal.md)) --> v2 | |

@@ -85,7 +85,7 @@ bots/
 | L2 | `smartbot_v1` | 18 predictors x 3 arms, Thompson sampling (Kaggle 1st place) |
 | L2 | `smartbot_fast_v1` | smartbot with faster memories (0.6, 0.6, 8) |
 | L2 | `smartbot_staller_v1` | smartbot plus stalling (random play on drawdown or a safe lead) |
-| L2 | `anti_smartbot_v1` | replays smartbot exactly and beats its likeliest move |
+| L2 | `anti_smartbot_v2` | replays smartbot exactly and beats its likeliest move; replays computed (estimate NORMAL) |
 | L2 | `anti_iocaine_v1` | replays iocaine_lite exactly and beats its move |
 | L2 | `anti_rps4_v1` | replays rps4_lite exactly and beats its move |
 | L2 | `zoo_hunter_v1` | names which non-learning zoo L1 the opponent is (sims), greedy |
@@ -101,15 +101,15 @@ bots/
 | L2 | `multiscale_v1` | frequency and n-grams at four memories, greedy |
 | L2 | `sampled_markov_v1` | sampling n-grams under flattened Thompson (SHARP 0.5) |
 | L3 | `smartbot_sims_v2` | smartbot plus 8 "model of us" sims (replays of the metabots included) |
-| L3 | `anti_smartbot_sims_v2` | replays smartbot_sims exactly and beats its likeliest move |
+| L3 | `anti_smartbot_sims_v3` | replays smartbot_sims exactly and beats its likeliest move; replays computed (estimate NORMAL) |
 | L3 | `l2_council_v1` | four original L2s replayed, three rotations each, Thompson |
 | L3 | `naive_bayes_markov_v1` | n-grams of orders 1-3 on three histories plus a NaiveBayes arm |
 | L3 | `gate_leader_v1` | a Markov bandit and three pattern experts, LEADER gate |
-| L3 | `predator_v1` | the anti-L2 specialists and zoo_hunter replayed, greedy |
-| L3 | `leader_hunter_v1` | smartbot with iocaine/rps4/smartbot_fast replays gated, LEADER |
-| L3 | `gate_edge_smartbot_v1` | smartbot with its own replay gated by EDGE |
+| L3 | `predator_v2` | the anti-L2 specialists and zoo_hunter replayed, greedy; replays computed (estimate NORMAL) |
+| L3 | `leader_hunter_v2` | smartbot with iocaine/rps4/smartbot_fast replays gated, LEADER; replays computed (estimate NORMAL) |
+| L3 | `gate_edge_smartbot_v2` | smartbot with its own replay gated by EDGE; replays computed (estimate NORMAL) |
 | L3 | `gate_fast_hold_v1` | smartbot_fast vs rps4_lite's counter, ANTI_FIRST_HOLD |
-| L3 | `gate_bandit_period_v1` | period_bandit vs smartbot's counter, BANDIT gate |
+| L3 | `gate_bandit_period_v2` | period_bandit vs smartbot's counter, BANDIT gate; replays computed (estimate NORMAL) |
 | L3 | `gate_main_first_backoff_v1` | backoff_family first, iocaine_lite's counter, MAIN_FIRST |
 | L3 | `leader_new_l2_v1` | mirror_bandit with zoo_hunter/period_bandit/outcome_reader gated, LEADER |
 | L3 | `vote_council_v1` | seven newer L2s replayed, a sampled vote |
@@ -120,13 +120,13 @@ bots/
 | L3 | `multiscale_council_v1` | the memory-shaped L2s replayed, sharp Thompson |
 | L3 | `bayes_predators_v1` | the zoo's models of us plus a NaiveBayes arm |
 | L3 | `smartbot_wide_v1` | smartbot's arms, the newest signals, zoo_hunter and second_guess |
-| L4 | `gate_edge_v2` | smartbot_sims's arms + anti expert, gated by EDGE |
-| L4 | `gate_main_first_v2` | same experts, the main arms first (MAIN_FIRST) - the fleet's core |
-| L4 | `gate_main_first_stationary_v2` | gate_main_first plus a stationary (frequency) expert |
-| L4 | `double_bluff_gate_v1` | smartbot_sims's arms + a replay of itself from our side played BEAT_BEAT (beats anti_smartbot_sims), gated by EDGE |
-| L4 | `level_k_gate_v1` | smartbot_sims's arms + replays of smartbot_sims from both seats at every rotation, LEADER-gated: no fixed level for a specialist to exploit |
-| L4 | `replay_hunter_gate_v1` | level_k_gate plus replays of eight adaptive L2/L3 learners from their seat, every rotation, LEADER-gated |
-| L4 | `replay_hunter_wide_v1` | replay_hunter_gate plus replays of mirror_bandit, dropswitch_matcher, smartbot_wide and rps4_lite (our seat) |
+| L4 | `gate_edge_v3` | smartbot_sims's arms + anti expert, gated by EDGE; replays computed (estimate NORMAL) |
+| L4 | `gate_main_first_v3` | same experts, the main arms first (MAIN_FIRST) - the fleet's core; replays computed (estimate NORMAL) |
+| L4 | `gate_main_first_stationary_v3` | gate_main_first plus a stationary (frequency) expert; replays computed (estimate NORMAL) |
+| L4 | `double_bluff_gate_v2` | smartbot_sims's arms + a replay of itself from our side played BEAT_BEAT (beats anti_smartbot_sims), gated by EDGE; replays computed (estimate NORMAL) |
+| L4 | `level_k_gate_v2` | smartbot_sims's arms + replays of smartbot_sims from both seats at every rotation, LEADER-gated: no fixed level for a specialist to exploit; replays computed (estimate NORMAL) |
+| L4 | `replay_hunter_gate_v2` | level_k_gate plus replays of eight adaptive L2/L3 learners from their seat, every rotation, LEADER-gated; replays computed (estimate NORMAL) |
+| L4 | `replay_hunter_wide_v2` | replay_hunter_gate plus replays of mirror_bandit, dropswitch_matcher, smartbot_wide and rps4_lite (our seat); replays computed (estimate NORMAL) |
 | Oracle | `oracle_smartbot_sims`, `oracle_anti_smartbot_sims`, `oracle_gate_edge`, `oracle_gate_anti_first` | pure Oracles: calibrated win chances per level, drawn with `pool.mocks` |
 | Oracle | `oracle_arm_gate_edge`, `oracle_arm_gate_anti_first` | gatekeepers whose anti expert is an Oracle arm |
 

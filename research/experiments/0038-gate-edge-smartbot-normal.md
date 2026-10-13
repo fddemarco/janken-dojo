@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l3/gate_edge_smartbot_v1.yaml`
 - **Run:** `20261013-021719_0038-gate-edge-smartbot-normal`
 - **Verdict:** keep
+- **Species:** `gate_edge_smartbot_v2` (promoted over `gate_edge_smartbot_v1`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of gate_edge_smartbot_v1: l5_priority 0.0%, anti_smartbot_v1 0.
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: gate_edge_smartbot_normal - gate_edge_smartbot_v1 = +2.2 pts [-4.2, +9.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: gate_edge_smartbot_normal - gate_edge_smartbot_v1 = +2.2 pts [-4.2, +9.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-021719_0038-gate-edge-smartbot-normal`) paired it with gate_edge_smartbot_v1: +2.2 pts [-4.2, +9.2]; no significant difference, and 13.7x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `gate_edge_smartbot_v1` | L3 | 76.5% |
+| `gate_bandit_period_v1` | L3 | 68.3% |
+| `leader_hunter_v2` | L3 | 65.5% |
+| `naive_bayes_markov_v1` | L3 | 62.8% |
+| `predator_v1` | L3 | 62.5% |

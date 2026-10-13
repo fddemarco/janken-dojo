@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l3/leader_hunter_v1.yaml`
 - **Run:** `20261013-021452_0037-leader-hunter-normal`
 - **Verdict:** keep
+- **Species:** `leader_hunter_v2` (promoted over `leader_hunter_v1`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of leader_hunter_v1: multiscale_council_v1 0.0%, l2_council_v1 
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: leader_hunter_normal - leader_hunter_v1 = +2.2 pts [-5.8, +10.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: leader_hunter_normal - leader_hunter_v1 = +2.2 pts [-5.8, +10.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-021452_0037-leader-hunter-normal`) paired it with leader_hunter_v1: +2.2 pts [-5.8, +10.2]; no significant difference, and 15.2x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `leader_hunter_v1` | L3 | 77.1% |
+| `gate_main_first_backoff_v1` | L3 | 69.3% |
+| `smartbot_sims_v2` | L3 | 67.0% |
+| `smartbot_wide_v1` | L3 | 66.3% |
+| `naive_bayes_markov_v1` | L3 | 66.2% |

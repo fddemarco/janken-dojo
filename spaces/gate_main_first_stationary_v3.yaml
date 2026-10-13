@@ -1,4 +1,4 @@
-bot: bots/l4/gate_main_first_normal.yaml
+bot: bots/l4/gate_main_first_stationary_v3.yaml
 weight: 1.0
 params:
   EDGE: {type: float, low: 0.0, high: 1.0, grid: [0.0, 0.3333, 0.6667, 1.0]}

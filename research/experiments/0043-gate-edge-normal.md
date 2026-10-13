@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l4/gate_edge_v2.yaml`
 - **Run:** `20261013-023206_0043-gate-edge-normal`
 - **Verdict:** keep
+- **Species:** `gate_edge_v3` (promoted over `gate_edge_v2`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of gate_edge_v2: gate_main_first_stationary_normal 0.0%, level_
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: gate_edge_normal - gate_edge_v2 = +4.8 pts [-2.0, +11.5] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: gate_edge_normal - gate_edge_v2 = +4.8 pts [-2.0, +11.5] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-023206_0043-gate-edge-normal`) paired it with gate_edge_v2: +4.8 pts [-2.0, +11.5]; no significant difference, and 13.9x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `gate_edge_v2` | L4 | 76.2% |
+| `gate_main_first_v3` | L4 | 76.0% |
+| `gate_main_first_stationary_v3` | L4 | 69.8% |
+| `level_k_gate_v2` | L4 | 66.4% |
+| `replay_hunter_gate_v1` | L4 | 65.4% |

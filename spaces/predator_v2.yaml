@@ -1,4 +1,4 @@
-bot: bots/l3/predator_normal.yaml
+bot: bots/l3/predator_v2.yaml
 weight: 1.0
 params:
   DECAY: {type: float, low: 0.45, high: 1.0, grid: [0.45, 0.6333, 0.8167, 0.9, 1.0]}

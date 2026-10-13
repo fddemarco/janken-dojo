@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l3/anti_smartbot_sims_v2.yaml`
 - **Run:** `20261013-020828_0036-anti-smartbot-sims-normal`
 - **Verdict:** keep
+- **Species:** `anti_smartbot_sims_v3` (promoted over `anti_smartbot_sims_v2`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of anti_smartbot_sims_v2: level_k_gate_v1 0.0%, replay_hunter_w
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: anti_smartbot_sims_normal - anti_smartbot_sims_v2 = -0.5 pts [-7.8, +6.8] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: anti_smartbot_sims_normal - anti_smartbot_sims_v2 = -0.5 pts [-7.8, +6.8] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-020828_0036-anti-smartbot-sims-normal`) paired it with anti_smartbot_sims_v2: -0.5 pts [-7.8, +6.8]; no significant difference, and 17.0x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `anti_smartbot_sims_v2` | L3 | 93.7% |
+| `gate_bandit_period_v1` | L3 | 53.7% |
+| `gate_edge_smartbot_v1` | L3 | 52.2% |
+| `gate_fast_hold_v1` | L3 | 50.6% |
+| `leader_hunter_v1` | L3 | 47.8% |

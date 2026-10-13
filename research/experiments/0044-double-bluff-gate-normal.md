@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l4/double_bluff_gate_v1.yaml`
 - **Run:** `20261013-023506_0044-double-bluff-gate-normal`
 - **Verdict:** keep
+- **Species:** `double_bluff_gate_v2` (promoted over `double_bluff_gate_v1`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of double_bluff_gate_v1: l5_level_k 0.0%, gate_main_first_stati
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: double_bluff_gate_normal - double_bluff_gate_v1 = +1.0 pts [-7.8, +10.0] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: double_bluff_gate_normal - double_bluff_gate_v1 = +1.0 pts [-7.8, +10.0] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-023506_0044-double-bluff-gate-normal`) paired it with double_bluff_gate_v1: +1.0 pts [-7.8, +10.0]; no significant difference, and 12.8x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `double_bluff_gate_v1` | L4 | 71.5% |
+| `level_k_gate_v2` | L4 | 69.1% |
+| `gate_main_first_v3` | L4 | 66.6% |
+| `replay_hunter_gate_v1` | L4 | 66.6% |
+| `replay_hunter_wide_v1` | L4 | 65.8% |

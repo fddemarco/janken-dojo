@@ -1,4 +1,4 @@
-bot: bots/l4/double_bluff_gate_normal.yaml
+bot: bots/l4/double_bluff_gate_v2.yaml
 weight: 1.0
 params:
   EDGE: {type: float, low: 0.03, high: 0.12, grid: [0.03, 0.06, 0.09, 0.12]}

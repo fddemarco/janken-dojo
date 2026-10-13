@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l3/gate_bandit_period_v1.yaml`
 - **Run:** `20261013-021945_0039-gate-bandit-period-normal`
 - **Verdict:** keep
+- **Species:** `gate_bandit_period_v2` (promoted over `gate_bandit_period_v1`)
 
 ## Hypothesis
 
@@ -42,4 +43,18 @@ Weakest matchups of gate_bandit_period_v1: replay_hunter_gate_normal 0.0%, preda
 
 ## Verdict
 
-**keep**. No significant difference at 10 round robins: gate_bandit_period_normal - gate_bandit_period_v1 = +2.8 pts [-5.0, +10.5] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.
+**keep**. No significant difference at 10 round robins: gate_bandit_period_normal - gate_bandit_period_v1 = +2.8 pts [-5.0, +10.5] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; classify decides from this paired run (species.promote_on_evaluation).
+
+## Species
+
+**promote**: its evaluation (run `20261013-021945_0039-gate-bandit-period-normal`) paired it with gate_bandit_period_v1: +2.8 pts [-5.0, +10.5]; no significant difference, and 13.9x faster.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `gate_bandit_period_v1` | L3 | 77.4% |
+| `gate_edge_smartbot_v2` | L3 | 69.5% |
+| `leader_hunter_v2` | L3 | 64.5% |
+| `leader_new_l2_v1` | L3 | 63.4% |
+| `predator_v1` | L3 | 62.9% |

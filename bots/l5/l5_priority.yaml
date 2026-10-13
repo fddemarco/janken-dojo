@@ -3,7 +3,7 @@ description: |
 
   smartbot_sims_v2's main bandit; gated experts: the shared experts,
   smartbot_sims_v2 from both seats and the four L4 gatekeepers from their seat,
-  replay_hunter_wide_v1's last (its BEAT only). LEADER_PRIORITY: once a gated
+  replay_hunter_wide_v2's last (its BEAT only). LEADER_PRIORITY: once a gated
   expert plays, only the main bandit or that last expert can take over, so a
   lucky streak of one near-chance arm can't hand play around.
 
@@ -11,7 +11,7 @@ description: |
   beaten, undecayed and decayed 0.97: a biased coin), and counters to the samplers
   (transition_matrix's model at four decays, geometry's at three alphas,
   sampled_markov's likeliest move by its unsampled twin sampled_markov_mode).
-  L4s are replayed as their gatekeeper plays (inner replays at 32 draws).
+  L4s are replayed as their gatekeeper plays (every replay, inner ones included, computes its likely move: estimate NORMAL).
 defaults:
   EDGE: 0.03
   GATE_DECAY: 1.0
@@ -24,13 +24,13 @@ blueprint:
         - {bot: frequency_v1, arms: 2, space: {DECAY: [1.0, 0.97]}}
         - {bot: ngram, arms: 4, side: OPP, space: {ORDER: 1, CTX: OPP, DECAY: [0.6, 0.8, 0.95, 1.0]}, rotations: [BEAT, BEAT_BEAT]}
         - {bot: geometry, arms: 3, side: OPP, space: {ALPHA: [0.02, 0.05, 0.15], MAX_LEN: 20, SAMPLE: 0}, rotations: [BEAT, BEAT_BEAT]}
-        - {bot: sampled_markov_mode, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT]}
-        - {bot: smartbot_sims_v2, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
-        - {bot: smartbot_sims_v2, side: MY, draws: 64, rotations: [COPY, BEAT, BEAT_BEAT]}
-        - {bot: replay_hunter_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
-        - {bot: level_k_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
-        - {bot: double_bluff_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
-        - {bot: replay_hunter_wide_v1, side: OPP, draws: 64, inner_draws: 32}
+        - {bot: sampled_markov_mode, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT]}
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: replay_hunter_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: level_k_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: double_bluff_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_wide_v2, side: OPP, estimate: NORMAL}
       rule: LEADER_PRIORITY
       edge: $EDGE
       decay: $GATE_DECAY

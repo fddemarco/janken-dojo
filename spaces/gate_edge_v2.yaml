@@ -1,6 +1,0 @@
-bot: bots/l4/gate_edge_v2.yaml
-weight: 1.0
-params:
-  EDGE: {type: float, low: 0.0, high: 0.2, grid: [0.0, 0.03, 0.06, 0.1, 0.15]}
-  GATE_DECAY: {type: float, low: 0.95, high: 1.0, grid: [0.95, 0.98, 0.99, 1.0]}
-  WARMUP: {type: int, low: 0, high: 60, grid: [0, 10, 20, 40, 60]}

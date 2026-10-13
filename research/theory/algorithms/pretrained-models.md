@@ -71,6 +71,11 @@ beats 5 by +7.3 pts on whole-field variants (note 0078), and weights 0.25-1 play
 identically, since a single count then outweighs the prior: the prior is a **cold
 start** for unseen contexts, which is what generalises; a heavier prior overrules the
 match and loses. Training on L1-L4 data instead of L1-L2 adds nothing (note 0079).
+A longer context sharpens the cold start: the 4-move table (`pretrained_context_v3`,
+note 0080) beats the 3-move one by +7.9 pts. Its export is a 290 KB stdlib script
+(19,683 knobs inlined) that plays a 1000-round match in 1.7 s of plain Python
+(1.7 ms per round): a 5-move table (59 k contexts) would be about 2.5 MB, still far
+under the 200 MB cap and the per-move time budget.
 
 ## Ideas
 

@@ -117,3 +117,9 @@ A claim with no possible refutation isn't a claim.
   the opponent's own moves, note 0081); CTW should forget (decay 0.81: +8.2 pts,
   `context_mixture_v2`, notes 0082-0083), but not faster (0.72 didn't confirm, notes
   0084-0085).
+- **2026-10-13, unknown L3-L4s.** A held-out benchmark: outsiders, L3-L4s built from
+  components no field L4 replays. The best L4 wins 80-85% of matches vs the field's
+  L3-L4 variants but only 61-65% vs outsiders, where it's no better than its main
+  alone (notes 0086-0095): overfitted to architectures, not parameters. Nine changes
+  (new experts, mains, gate edge and decay, learner councils) all tied or lost. Next:
+  a second outsider family, and logging which experts lead vs outsiders.

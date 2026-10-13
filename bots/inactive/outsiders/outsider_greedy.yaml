@@ -1,0 +1,16 @@
+description: |
+  Research opponent (not in the field): an iocaine-style greedy bandit over this session's learners from both seats (repeat_mirror played and replayed, context_mixture, pretrained_context, pattern_memory), decayed net scores.
+  It stands in for an unknown L3 built from public components.
+defaults:
+  DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: repeat_mirror_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: repeat_mirror_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: context_mixture_v2, arms: 2, space: {OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pretrained_context_v3, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pattern_memory_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

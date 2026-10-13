@@ -1,0 +1,12 @@
+# The ten L3-L4s of the field replay_hunter_wide_v2 beats least, played as parameter variants
+# (notes 0086-0088, 600 matches pooled: margins -1 to +12 rounds per match, 55-72% won).
+bots/l3/multiscale_council_v1.yaml
+bots/l4/level_k_gate_v2.yaml
+bots/l4/replay_hunter_gate_v2.yaml
+bots/l4/double_bluff_gate_v2.yaml
+bots/l3/sicilian_meta_v1.yaml
+bots/l3/leader_hunter_v2.yaml
+bots/l3/counter_council_v1.yaml
+bots/l3/gate_main_first_backoff_v1.yaml
+bots/l3/l2_council_v1.yaml
+bots/l4/gate_edge_v3.yaml

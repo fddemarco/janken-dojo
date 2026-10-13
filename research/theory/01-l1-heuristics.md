@@ -44,7 +44,8 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    choice, so it should fall to its mirror counter. _Prediction:_ CTW on our moves,
    BEAT_BEAT, wins > 40% of rounds vs it. Forgetting helps it vs the field: KT counts
    decayed by 0.81 beat undecayed ones by +8.2 pts [+4.7, +11.8] (notes 0082, 0083:
-   `context_mixture_v2`), with the tuned optimum at the space's lower bound.
+   `context_mixture_v2`). A second tuning down to 0.5 found a lead at 0.72 that
+   didn't confirm (-1.4 pts, notes 0084, 0085): the optimum is near 0.8.
 1. **A pre-trained prior generalises across parameters.** _supported._ A k=3
    joint-context table trained on the move dataset's default-parameter matches and
    refined online (`pretrained_context_v1`, stage `PriorTable`) beats

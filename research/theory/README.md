@@ -113,3 +113,7 @@ A claim with no possible refutation isn't a claim.
   +7.9 pts on whole-field variants (note 0080). Next: the prior inside the strong
   online learners as their cold start (CTW's KT counts, the repeat followers' empty
   matches), and k = 5 with a hashed table.
+- **2026-10-13, end of session.** More loop steps: one-sided models stay weak (CTW over
+  the opponent's own moves, note 0081); CTW should forget (decay 0.81: +8.2 pts,
+  `context_mixture_v2`, notes 0082-0083), but not faster (0.72 didn't confirm, notes
+  0084-0085).

@@ -1,0 +1,11 @@
+description: |
+  Models the opponent's next move given OUR last two moves, and beats it (idea #63: L1 diversity).
+  An order-2 n-gram whose context is our moves and whose target is theirs: how they respond to what we played, where transition_matrix models their own sequence.
+defaults:
+  DECAY: 0.95
+blueprint:
+  guards:
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
+    - {Opening: {rounds: 2, move: RANDOM_MOVE}}
+  core:
+    Heuristic: {signal: {NGram: {order: 2, ctx: MY, of: OPP, decay: $DECAY}}, rotation: BEAT}

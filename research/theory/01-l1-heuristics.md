@@ -52,14 +52,21 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    _Prediction:_ an L2 holding the strong L1s and their mirror counters as arms beats
    an L2 holding the strong L1s alone vs a pool of L1s and L2s. _Unresolved:_ +2.8
    pts [-4.0, +9.5] (note 0063).
+1. **Reactions to us and rotations are one family.** _supported._ A rotation model
+   conditioned on the last outcome is the same from either reference: once the
+   outcome is known, our last move and theirs determine each other, so `Relative`
+   with `ref: MY` agrees 100% with `rotation_outcome` (`ref: OPP`). A reply model on
+   our moves alone (`response_markov`, an order-2 n-gram of our moves predicting
+   theirs) is distinct but weak: -12.4 pts vs `markov2_joint` (note 0070).
 1. **Nash is the floor, not a strategy.** _supported._ `nash_v1` wins 50% of its
    matches at +0 rounds: unexploitable, never exploiting.
 
 ## Open questions
 
 - Which strategy families are still missing at L1? Kit signals with no species:
-  rarest, relative, score state (their nearest species exist: `balancer_hunter`,
-  `rotation_outcome`, `score_reader`); families with no signal yet: lag-k copy,
+  rarest, score state (their nearest species exist: `balancer_hunter`,
+  `score_reader`); reactions to us are covered by rotations (claim above); families
+  with no signal yet: lag-k copy,
   reactions to our last move given the outcome.
 - How much of each learner's strength is its parameters? The atlas used defaults.
 - What can no L1 do that L2 must add? Two candidates: knowing which of its

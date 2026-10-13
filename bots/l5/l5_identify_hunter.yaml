@@ -1,0 +1,40 @@
+description: |
+  l5_hunter plus parameter-variant replays of the species where identifying the opponent pays (idea #51).
+  As l5_hunter, with 8 Latin-hypercube variants each (their core parameters, drawn from their space files) of rps4_lite, outcome_reader, iocaine_lite and period_bandit replayed from their seat and beaten, as gated experts under the same LEADER gate: the kit form of janken lab identify's switch branch (+12.3 pts over l5_hunter after round 150 vs these species' variants, no loss vs held-out species).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: backoff_family_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: mirror_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_matcher_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_wide_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: multiscale_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_wide_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: level_k_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: double_bluff_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, arms: 8, side: OPP, draws: 0, rotations: [BEAT], space: {DECAY: [0.593, 0.559, 0.97, 0.694, 0.776, 0.827, 0.652, 0.887], TABLE_DECAY: [0.911, 0.762, 0.978, 0.815, 0.71, 0.961, 0.777, 0.886]}}
+        - {bot: outcome_reader_v1, arms: 8, side: OPP, draws: 0, rotations: [BEAT], space: {TABLE_DECAY: [0.822, 0.907, 0.788, 0.614, 0.544, 0.682, 0.691, 0.961], P_RESET: [0.915, 0.824, 0.535, 0.325, 0.69, 0.646, 0.195, 0.349]}}
+        - {bot: iocaine_lite_v1, arms: 8, side: OPP, draws: 0, rotations: [BEAT], space: {DECAY: [0.679, 0.574, 0.963, 0.927, 0.843, 0.518, 0.766, 0.745], MAX_LEN: [13, 16, 12, 7, 10, 4, 18, 3]}}
+        - {bot: period_bandit_v1, arms: 8, side: OPP, estimate: NORMAL, rotations: [BEAT], space: {ARM_DECAY: [0.852, 0.539, 0.573, 0.937, 0.697, 0.754, 0.633, 0.889], PERIOD_DECAY: [0.919, 0.944, 0.835, 0.782, 0.883, 0.771, 0.709, 0.967], TABLE_DECAY: [0.515, 0.837, 0.728, 0.962, 0.675, 0.773, 0.883, 0.621]}}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

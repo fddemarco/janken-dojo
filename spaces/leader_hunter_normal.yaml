@@ -1,0 +1,5 @@
+bot: bots/l3/leader_hunter_normal.yaml
+weight: 1.0
+params:
+  EDGE: {type: float, low: 0.025, high: 0.1, grid: [0.025, 0.05, 0.075, 0.1]}
+  WARMUP: {type: int, low: 10, high: 40, grid: [10, 20, 30, 40]}

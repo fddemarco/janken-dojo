@@ -1,0 +1,5 @@
+bot: bots/l4/double_bluff_gate_normal.yaml
+weight: 1.0
+params:
+  EDGE: {type: float, low: 0.03, high: 0.12, grid: [0.03, 0.06, 0.09, 0.12]}
+  WARMUP: {type: int, low: 10, high: 40, grid: [10, 20, 30, 40]}

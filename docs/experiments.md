@@ -83,7 +83,8 @@ The field holds **one bot per species**, its current **version**:
 1. Below `species.agreement` for every species of its level: a **new species**. It is
    named (`--name`) and renamed `<name>_v1`.
 1. Otherwise a **paired run** against the closest species' current version
-   (`species.round_robins` round robins, stored as `species-NNNN`):
+   (`species.round_robins` round robins in `species.mode`, candidates by default, since
+   only the two candidates' matches are read; stored as `species-NNNN`):
    - **Alike results.** The per-opponent scores of the two must correlate at least
      `species.profile_correlation`. Below it: a new species after all.
    - **Next version** when it **dominates**: no matchup's 95% CI below 0, and at least
@@ -96,6 +97,11 @@ The field holds **one bot per species**, its current **version**:
      `species.speed_matches` self-play matches on one thread, best of
      `species.speed_repeats`.
    - Otherwise a **variant**.
+   - **Stopping early.** With `species.sequential`, the run grows in `species.looks`
+     steps. It stops at the first one where the two are alike in profile and the
+     challenger is worse on some matchup at the alpha that step spends (O'Brien-Fleming
+     over 0.05, so stricter than the final 95%). That makes it a variant whatever the
+     remaining round robins show. A promotion always plays every step.
 1. **Acting on it.** A next version is renamed `<species>_v{N+1}` and the old version
    moves to `bots/<species.legacy_dir>` (out of every pool); a variant moves there itself.
    Space files follow the bot. The note gets a `Species` field and section.

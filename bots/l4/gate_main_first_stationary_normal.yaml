@@ -1,0 +1,18 @@
+description: |
+  gate_main_first plus a stationary expert: a third gated arm for fixed-distribution bots (idea #36) (NORMAL replays).
+  As gate_main_first_stationary_v2, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: frequency_v1}
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT]}
+      rule: LEADER_PRIORITY
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

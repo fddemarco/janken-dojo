@@ -1,0 +1,13 @@
+description: |
+  period_bandit and an anti-smartbot replay, chosen by a two-armed bandit (NORMAL replays).
+  As gate_bandit_period_v1, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+defaults:
+  DECAY: 1.0
+blueprint:
+  core:
+    Gate:
+      main: {bot: period_bandit_v1}
+      experts:
+        - {bot: smartbot_v1, side: OPP, estimate: NORMAL, rotations: [BEAT]}
+      rule: BANDIT
+      decay: $DECAY

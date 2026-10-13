@@ -38,6 +38,7 @@ OUTCOMES = (NEW, PROMOTE, VARIANT)
 HEAD_TO_HEAD = "(head-to-head)"
 MOVES = 3  # predictions outside 0..2 are abstentions
 BOOTSTRAP_REPS = 20000  # the Bonferroni tails are far out: they need many draws
+WORSE_ALPHA = 0.05  # a matchup is worse when its 95% CI is below 0
 
 
 @dataclasses.dataclass(frozen=True)
@@ -162,7 +163,11 @@ def _head_to_head(lf: pl.DataFrame, a: str, b: str) -> pl.Series:
 
 
 def matchups(
-    lf: pl.DataFrame, a: str, b: str, config: settings.SpeciesConfig
+    lf: pl.DataFrame,
+    a: str,
+    b: str,
+    config: settings.SpeciesConfig,
+    worse_alpha: float = WORSE_ALPHA,
 ) -> list[Matchup]:
     """The challenger `a` minus the incumbent `b`, per matchup, weakest first.
 
@@ -173,6 +178,8 @@ def matchups(
         a: the challenger's label.
         b: the incumbent's label.
         config: the species settings (the minimum matches and alpha).
+        worse_alpha: the "worse" test's CI is at 1 - worse_alpha (an early look
+            of a sequential run spends less: sequential.py).
     """
     counts = _counts(lf, a, b)
     opponents = sorted(o for o, n in counts.items() if n >= config.min_matchup_matches)
@@ -183,7 +190,9 @@ def matchups(
     found = []
     for opp in opponents:
         part = lf.filter(pl.col("opp_stem") == opp)
-        loose = analyze.paired_diff(part, a, b, reps=BOOTSTRAP_REPS)
+        loose = analyze.paired_diff(
+            part, a, b, reps=BOOTSTRAP_REPS, level=1 - worse_alpha
+        )
         tight = analyze.paired_diff(part, a, b, reps=BOOTSTRAP_REPS, level=strict)
         if loose is None or tight is None:
             continue
@@ -199,13 +208,29 @@ def matchups(
         )
     if with_h2h:
         score, n = float(h2h.to_numpy().mean()), h2h.len()
-        lo, hi = analyze.wilson(score, n)
+        z_worse = statistics.NormalDist().inv_cdf(1 - worse_alpha / 2)
+        lo, hi = analyze.wilson(score, n, z_worse)
         z = statistics.NormalDist().inv_cdf(1 - (1 - strict) / 2)
         strict_lo, _ = analyze.wilson(score, n, z)
         found.append(
             Matchup(HEAD_TO_HEAD, n, score - 0.5, lo - 0.5, hi - 0.5, strict_lo - 0.5)
         )
     return sorted(found, key=lambda x: (x.mean, x.opponent))
+
+
+def settled_variant(
+    lf: pl.DataFrame,
+    a: str,
+    b: str,
+    config: settings.SpeciesConfig,
+    worse_alpha: float,
+) -> bool:
+    """Whether a paired run already settles the challenger `a` as a variant of
+    `b`: alike in profile and worse on some matchup at 1 - worse_alpha. A CI at
+    a smaller alpha holds the 95% one, so the decision at the end agrees."""
+    if profile_correlation(lf, a, b) < config.profile_correlation:
+        return False
+    return any(m.worse for m in matchups(lf, a, b, config, worse_alpha))
 
 
 def as_good(compared: Sequence[Matchup]) -> bool:

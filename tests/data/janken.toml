@@ -209,6 +209,13 @@ export = true
 agreement = 0.8
 profile_correlation = 0.7
 round_robins = 40
+# Sequential: the paired run grows in `looks` steps and stops at the first one where the
+# challenger is alike in profile and worse on some matchup at the alpha that look spends
+# (O'Brien-Fleming over 0.05): a variant then, whatever more round robins would show.
+sequential = true
+looks = 3
+# Classify reads only the two candidates' matches: pool vs pool would cost ~5x more.
+mode = "candidates"
 min_matchup_matches = 10
 alpha = 0.05
 split = "test"

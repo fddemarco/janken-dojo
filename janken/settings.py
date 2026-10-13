@@ -356,6 +356,16 @@ class SpeciesConfig:
         "round robins of the paired run against the species' current version",
         minimum=1,
     )
+    sequential: bool = setting(
+        "the paired run grows in looks and stops once the challenger is a variant"
+        " (worse on a matchup at the alpha a look spends)"
+    )
+    looks: int = setting("looks spread over the paired run's round robins", minimum=1)
+    mode: str = setting(
+        "the paired run's mode: candidates (classify reads only the two candidates'"
+        " matches) or full (pool vs pool too)",
+        MODES,
+    )
     min_matchup_matches: int = setting(
         "paired matches a matchup needs to count in the dominance test", minimum=2
     )

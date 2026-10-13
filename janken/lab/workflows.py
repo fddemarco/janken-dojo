@@ -547,10 +547,16 @@ def compare(
 
 
 def _species_run(
-    note: notes.Note, specs_: list[BotSpec], how: Plan
+    note: notes.Note,
+    specs_: list[BotSpec],
+    how: Plan,
+    config: settings.SpeciesConfig,
 ) -> tuple[str, notes.Note]:
     """The paired run of the candidate and the incumbent: played, resumed, or the
-    stored one (`species-NNNN`); its id goes in the note before it plays."""
+    stored one (`species-NNNN`); its id goes in the note before it plays.
+
+    With `config.sequential` a new run grows in `config.looks` steps and stops
+    once the candidate is settled as a variant (classify.settled_variant)."""
     from .experiment import resume_experiment, run_experiment
 
     runs = RunStore.at(how.workspace)
@@ -575,12 +581,17 @@ def _species_run(
             started[0], notes.with_field(started[0].text, "Species run", f"`{run_id}`")
         )
 
+    looks = (
+        sequential.ladder(how.round_robins, config.looks)
+        if config.sequential
+        else [how.round_robins]
+    )
     run_id = run_experiment(
         specs_,
         bots_dir=how.bots_dir,
         pool_size=how.pool_size,
         rounds=how.rounds,
-        round_robins=how.round_robins,
+        round_robins=looks[0],
         seed=how.seed,
         mode=how.mode,
         name=name,
@@ -592,6 +603,25 @@ def _species_run(
         flush_s=how.flush_s,
         cache=how.cache,
     )
+    fractions = [k / looks[-1] for k in looks]
+    alphas = sequential.look_alphas(fractions, classify.WORSE_ALPHA)
+    challenger, incumbent = specs_[0].label, specs_[1].label
+    for k in range(len(looks) - 1):
+        lf = analyze.long_form(runs.matches(run_id))
+        if classify.settled_variant(lf, challenger, incumbent, config, alphas[k]):
+            progress.log(
+                f"species run settled at {looks[k]} round robin(s): {challenger} is"
+                f" worse than {incumbent} on some matchup (alpha {alphas[k]:.4f})"
+            )
+            break
+        resume_experiment(
+            run_id,
+            how.workspace,
+            how.workers or None,
+            round_robins=looks[k + 1],
+            flush_s=how.flush_s,
+            cache=how.cache,
+        )
     return run_id, started[0]
 
 
@@ -674,7 +704,7 @@ def classify_note(
     if same and classify.needs_run(same[0], level, config):
         nearest = same[0]
         run_id, note = _species_run(
-            note, [spec, make_spec(field.paths[nearest.stem])], how
+            note, [spec, make_spec(field.paths[nearest.stem])], how, config
         )
         _, _, df = RunStore.at(how.workspace).load_run(run_id)
         lf = analyze.long_form(df)

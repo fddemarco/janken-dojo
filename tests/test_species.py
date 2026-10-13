@@ -179,6 +179,23 @@ class TestMatchups:
         assert classify.profile_correlation(run(apart), "a", "b") == 0.0
         assert classify.profile_correlation(run(EVEN), "a", "b") == pytest.approx(1.0)
 
+    def test_a_clearly_lost_matchup_settles_a_variant_early(self) -> None:
+        lost = run({**EVEN, "o4": (0.5, 1.0)})  # alike, but loses o4
+        assert classify.settled_variant(lost, "a", "b", CONFIG, worse_alpha=0.005)
+        assert not classify.settled_variant(run(EVEN), "a", "b", CONFIG, 0.005)
+
+    def test_a_different_profile_is_never_settled_as_a_variant(self) -> None:
+        # Worse everywhere, so the profiles don't correlate: a new species maybe.
+        apart = {"o1": (0.0, 1.0), "o2": (0.5, 0.5), "o3": (1.0, 0.0)}
+        assert not classify.settled_variant(run(apart), "a", "b", CONFIG, 0.005)
+
+    def test_a_smaller_alpha_widens_the_worse_test(self) -> None:
+        loose = classify.matchups(run(EVEN, h2h=0.3), "a", "b", CONFIG)
+        tight = classify.matchups(run(EVEN, h2h=0.3), "a", "b", CONFIG, 1e-6)
+        (h2h_loose,) = [m for m in loose if m.opponent == classify.HEAD_TO_HEAD]
+        (h2h_tight,) = [m for m in tight if m.opponent == classify.HEAD_TO_HEAD]
+        assert h2h_tight.hi > h2h_loose.hi
+
 
 def matchup(mean: float, lo: float, hi: float, strict_lo: float) -> classify.Matchup:
     return classify.Matchup("o", 20, mean, lo, hi, strict_lo)

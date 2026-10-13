@@ -61,7 +61,7 @@ def classify(
     """
     from ..lab import workflows
 
-    how = plan_for(lab, CFG.evaluation.mode)
+    how = plan_for(lab, CFG.species.mode)
     if not {"round_robins", "effort"} & lab.passed:
         how = dataclasses.replace(how, round_robins=CFG.species.round_robins)
     done = workflows.classify_note(

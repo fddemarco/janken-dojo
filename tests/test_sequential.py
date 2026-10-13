@@ -94,4 +94,5 @@ class TestLook:
     def test_conditional_power_follows_the_effect(self) -> None:
         weak = sequential.conditional_power(0.2, 0.5, 1.96)
         strong = sequential.conditional_power(3.0, 0.5, 1.96)
-        assert weak < 0.1 < 0.9 < strong
+        assert weak < 0.1
+        assert strong > 0.9

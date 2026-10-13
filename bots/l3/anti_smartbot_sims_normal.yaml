@@ -1,0 +1,7 @@
+description: |
+  A specialist against smartbot_sims: replay it exactly, beat its likeliest move (NORMAL replays).
+  As anti_smartbot_sims_v2, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+blueprint:
+  core:
+    Heuristic:
+      signal: {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL}

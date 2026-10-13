@@ -104,6 +104,7 @@ def experiment(
         use_mocks=lab.use_mocks,
         variants=lab.variants,
         spaces_dir=lab.spaces_dir,
+        pool_list=lab.pool_list,
         root=lab.workspace,
         flush_s=CFG.execution.flush_s,
         cache=CFG.runs.match_cache,

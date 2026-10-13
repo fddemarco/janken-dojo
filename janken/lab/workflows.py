@@ -69,6 +69,7 @@ class Plan:
     allow_small: bool
     use_mocks: bool
     variants: float  # the share of pool members played at a variant
+    pool_list: tuple[str, ...]  # list files pools are drawn from (none: the bots dir)
     spaces_dir: str
     workers: int
     mode: str
@@ -177,6 +178,7 @@ def evaluate(
             use_mocks=how.use_mocks,
             variants=how.variants,
             spaces_dir=how.spaces_dir,
+            pool_list=how.pool_list,
             root=how.workspace,
             on_start=remember,
             flush_s=how.flush_s,
@@ -246,6 +248,7 @@ def _command(note: notes.Note, run_id: str, runs: RunStore) -> str:
     small = "--allow-small-pool" if cfg.get("allow_small") else "--no-allow-small-pool"
     mocks = "--mocks" if cfg.get("mocks") else "--no-mocks"
     varied = f" --variants {cfg['variants']}" if cfg.get("variants") else ""
+    varied += "".join(f" --pool-list {f}" for f in cfg.get("pool_list") or ())
     return (
         f"uv run janken lab experiment {cands} --rounds {cfg['rounds']}"
         f" --round-robins {cfg['round_robins']} --pool-size {cfg['pool_size']}"
@@ -648,6 +651,7 @@ def _species_run(
         use_mocks=how.use_mocks,
         variants=how.variants,
         spaces_dir=how.spaces_dir,
+        pool_list=how.pool_list,
         root=how.workspace,
         on_start=remember,
         flush_s=how.flush_s,

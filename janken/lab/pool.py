@@ -1,6 +1,8 @@
 """Opponent pools: random draws from the bots directory.
 
-A pool member plays at its defaults (the bot as submitted), unless the pool is
+A pool is drawn from the bots dir, or from the specs of a list file
+(`sample_listed`: a gauntlet list of hard opponents, say). A pool member plays at
+its defaults (the bot as submitted), unless the pool is
 varied (`vary`): then a share of its members play a parameter variant, drawn
 uniformly from their space files, so a bot tuned to the field's exact defaults
 can't win by knowing them. Candidates' own files are never in their pool, so a
@@ -15,7 +17,7 @@ from collections.abc import Iterable, Sequence
 from .. import mocks
 from ..engine.registry import discover
 from ..match import bot_name
-from ..spec import BotSpec, make_spec
+from ..spec import BotSpec, make_spec, parse_spec
 from . import gauntlet
 from . import space as spaces
 
@@ -49,6 +51,39 @@ def sample_pool(
             )
         size = len(paths)
     return [make_spec(p) for p in sorted(rng.sample(paths, size))]
+
+
+def read_list(path: str) -> list[str]:
+    """The specs of a list file (a gauntlet list: one spec per line, `#` comments)."""
+    with open(path, encoding="utf-8") as lines:
+        found = [line.split("#")[0].strip() for line in lines]
+    return [f for f in found if f]
+
+
+def sample_listed(
+    texts: Sequence[str],
+    size: int,
+    rng: random.Random,
+    exclude_stems: Iterable[str] = (),
+    allow_small: bool = False,
+) -> list[BotSpec]:
+    """A pool drawn from the specs of a list (`read_list`), parameter overrides
+    included, rather than from the bots dir: candidates' stems excluded.
+
+    Raises:
+        SystemExit: the list has fewer eligible specs than the pool needs, unless
+            `allow_small`.
+    """
+    skip = set(exclude_stems)
+    specs = [s for s in map(parse_spec, texts) if s.stem not in skip]
+    if len(specs) < size:
+        if not allow_small:
+            raise SystemExit(
+                f"pool needs {size} bots but the list has only {len(specs)} eligible"
+                " (candidates excluded); pass --allow-small-pool"
+            )
+        size = len(specs)
+    return sorted(rng.sample(specs, size), key=lambda s: s.label)
 
 
 def vary(

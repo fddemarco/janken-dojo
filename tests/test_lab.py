@@ -498,3 +498,59 @@ class TestInsightEvidence:
                 False,
             ),
         ]
+
+
+class TestListedPools:
+    """pool.lists: pools drawn from the specs of list files, not the bots dir."""
+
+    def write_list(self, tmp_path: pathlib.Path, lines: list[str]) -> str:
+        path = tmp_path / "hard.txt"
+        path.write_text("# a hard list\n" + "\n".join(lines) + "\n", encoding="utf-8")
+        return str(path)
+
+    def test_the_pools_come_from_the_list_its_overrides_included(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        listed = [
+            data.bot("rock_v1"),
+            data.bot("cycler_v1"),
+            data.bot("frequency_v1") + ":DECAY=0.7",
+        ]
+        rrs = build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            3,
+            2,
+            seed=3,
+            pool_list=(self.write_list(tmp_path, listed),),
+        )
+        for rr in rrs:
+            assert sorted(format_spec(p) for p in rr["pool"]) == sorted(
+                format_spec(parse_spec(t)) for t in listed
+            )
+
+    def test_a_candidate_never_meets_itself_from_the_list(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        listed = [data.bot("rock_v1"), data.bot("wsls_v1"), data.bot("cycler_v1")]
+        (rr,) = build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            2,
+            1,
+            seed=3,
+            pool_list=(self.write_list(tmp_path, listed),),
+        )
+        assert "wsls_v1" not in [p.stem for p in rr["pool"]]
+
+    def test_a_short_list_needs_allow_small(self, tmp_path: pathlib.Path) -> None:
+        listed = [data.bot("rock_v1")]
+        with pytest.raises(SystemExit, match="only 1 eligible"):
+            build_schedule(
+                [make_spec(data.bot("wsls_v1"))],
+                data.BOTS_DIR,
+                3,
+                1,
+                seed=3,
+                pool_list=(self.write_list(tmp_path, listed),),
+            )

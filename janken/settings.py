@@ -134,6 +134,10 @@ class PoolConfig:
         " space file (0: every member at its defaults)",
         minimum=0,
     )
+    lists: tuple[str, ...] = setting(
+        "list files of specs (one per line, gauntlet lists) to draw pools from"
+        " instead of the bots dir (none: the bots dir)"
+    )
 
 
 @dataclasses.dataclass(frozen=True)

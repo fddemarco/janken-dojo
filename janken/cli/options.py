@@ -253,6 +253,18 @@ COMMON: tuple[tuple[str, Any, Any], ...] = (
         CFG.pool.variants,
     ),
     (
+        "pool_list",
+        Annotated[
+            list[str],
+            typer.Option(
+                help=about("pool.lists") + " (repeatable)",
+                rich_help_panel=EVIDENCE,
+                default_factory=lambda: list(CFG.pool.lists),
+            ),
+        ],
+        inspect.Parameter.empty,  # a list: its default comes from the factory
+    ),
+    (
         "workers",
         Annotated[
             int,
@@ -314,6 +326,7 @@ class Lab:
     allow_small: bool
     use_mocks: bool
     variants: float
+    pool_list: tuple[str, ...]
     workers: int
     format: str
     quiet: bool
@@ -375,6 +388,7 @@ def make_lab(command: str, raw: Mapping[str, Any], passed: frozenset[str]) -> La
         allow_small=bool(raw["allow_small_pool"]),
         use_mocks=bool(raw["mocks"]),
         variants=float(raw["variants"]),
+        pool_list=tuple(raw["pool_list"]),
         workers=int(raw["workers"]),
         format=str(raw["format"]),
         quiet=bool(raw["quiet"]),

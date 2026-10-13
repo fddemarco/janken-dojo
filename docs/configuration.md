@@ -13,7 +13,7 @@ checks its type, its allowed values and its minimum.
 | `workspace` | where the workspace (`dir`), the notebook, the bots and the spaces live |
 | `execution` | `workers`; `flush_s`, how often the matches finished so far are logged and stored while a batch plays |
 | `match` | `rounds` per match |
-| `pool` | pool `size`, `allow_small`, `mocks`, and `variants` (the share of members played at a parameter variant drawn from their space file, so a bot tuned to the exact defaults shows it) |
+| `pool` | pool `size`, `allow_small`, `mocks`, `lists` (list files to draw pools from instead of the bots dir: hard opponents, say), and `variants` (the share of members played at a parameter variant drawn from their space file, so a bot tuned to the exact defaults shows it) |
 | `effort` | the `default` effort, and the budgets `effort.quick` / `.standard` / `.thorough`: round robins, tuning round robins, trials, validation top K and round robins, predictor trials |
 | `evaluation` | `mode` (full or candidates), `seed` (-1: fresh); sequential stopping: `sequential`, `looks`, `alpha`, `futility` |
 | `tuning` | `sampler`, `prune`, `seed`, `sampler_seed`, `export_every`, `timeout_s` |

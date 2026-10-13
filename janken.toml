@@ -52,6 +52,9 @@ mocks = false
 # from their space file, instead of their defaults: a bot that only beats the
 # field's exact defaults shows it (janken/lab/pool.py).
 variants = 0.0
+# Draw pools from these list files' specs (one per line, gauntlet lists such as
+# research/gauntlet/hard_l4.txt) instead of the bots dir: none uses the bots dir.
+lists = []
 
 [calibration]
 # Matches a bot plays vs each opponent when it is calibrated for its Oracle.

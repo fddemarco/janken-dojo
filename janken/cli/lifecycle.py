@@ -61,6 +61,7 @@ def plan_for(lab: Lab, mode: str, sequential: bool = False):
         use_mocks=lab.use_mocks,
         variants=lab.variants,
         spaces_dir=lab.spaces_dir,
+        pool_list=lab.pool_list,
         workers=lab.workers,
         mode=mode,
         flush_s=CFG.execution.flush_s,

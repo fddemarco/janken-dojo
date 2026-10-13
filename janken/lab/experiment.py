@@ -38,7 +38,7 @@ from ..match import MatchResult, bot_name
 from ..spec import BotSpec, make_spec, to_dict
 from . import store
 from .match_cache import MatchCache
-from .pool import sample_pool, vary
+from .pool import read_list, sample_listed, sample_pool, vary
 from .runs_db import COMPLETE, INTERRUPTED, RUNNING, RunStore
 
 MODES = ("full", "candidates")
@@ -55,12 +55,15 @@ def build_schedule(
     use_mocks: bool = False,
     variants: float = 0.0,
     spaces_dir: str = "",
+    pool_list: tuple[str, ...] = (),
 ):
     """[{rr, pool: [BotSpec], pairs: [(BotSpec, BotSpec)], seeds: [int]}, ...]
 
     With `variants`, that share of each pool's members play a variant drawn
     from their space file (pool.vary), from a stream of their own: the pool's
-    bots and the match seeds stay those of the same run without variants."""
+    bots and the match seeds stay those of the same run without variants. With
+    `pool_list`, pools are drawn from those list files' specs instead of the
+    bots dir (pool.sample_listed)."""
     if mode not in MODES:
         raise ValueError(f"unknown mode {mode!r}")
     labels = [c.label for c in candidates]
@@ -72,14 +75,18 @@ def build_schedule(
     schedule = []
     for rr in range(round_robins):
         rng = random.Random("{}:{}:{:d}".format(seed, ",".join(stems), rr))
-        pool = sample_pool(
-            bots_dir,
-            pool_size,
-            rng,
-            exclude_stems=stems,
-            allow_small=allow_small,
-            use_mocks=use_mocks,
-        )
+        if pool_list:
+            texts = [t for path in pool_list for t in read_list(path)]
+            pool = sample_listed(texts, pool_size, rng, stems, allow_small)
+        else:
+            pool = sample_pool(
+                bots_dir,
+                pool_size,
+                rng,
+                exclude_stems=stems,
+                allow_small=allow_small,
+                use_mocks=use_mocks,
+            )
         if variants > 0:
             key = "{}:{}:{:d}:variants".format(seed, ",".join(stems), rr)
             pool = vary(pool, spaces_dir, variants, random.Random(key))
@@ -239,6 +246,7 @@ def run_experiment(
     use_mocks: bool = False,
     variants: float = 0.0,
     spaces_dir: str = "",
+    pool_list: tuple[str, ...] = (),
     root: str | None = None,
     extra: dict | None = None,
     on_batch: Callable[[int], None] = _no_hook,
@@ -265,6 +273,7 @@ def run_experiment(
         use_mocks,
         variants,
         spaces_dir,
+        pool_list,
     )
     n = sum(len(rr["pairs"]) for rr in schedule)
     manifest = {
@@ -285,6 +294,7 @@ def run_experiment(
             "mocks": use_mocks,
             "variants": variants,
             "spaces_dir": spaces_dir,
+            "pool_list": list(pool_list),
         },
         "candidates": [to_dict(c) for c in candidates],
         "pools": [[p.label for p in rr["pool"]] for rr in schedule],
@@ -363,6 +373,7 @@ def resume_experiment(
         config.get("mocks", False),
         config.get("variants", 0.0),
         config.get("spaces_dir", ""),
+        tuple(config.get("pool_list") or ()),
     )
     pools = [[p.label for p in rr["pool"]] for rr in schedule]
     if pools[: len(manifest["pools"])] != manifest["pools"]:

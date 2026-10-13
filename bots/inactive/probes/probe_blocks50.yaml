@@ -1,0 +1,18 @@
+description: |
+  Probe (research only, never in the field): 50 rocks, 50 papers, 50 scissors, repeated (period 150): how fast a bot re-adapts after a switch; an undecayed frequency counter (Brainy) needs about as long as the block to switch.
+  It ignores the opponent; its final scores vs each bot are a fingerprint of that bot (research/probes.md).
+defaults: {}
+blueprint:
+  core:
+    Heuristic:
+      # moves: 0 rock, 1 paper, 2 scissors
+      signal:
+        Script:
+          moves: [
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+          ]
+      rotation: COPY

@@ -17,6 +17,7 @@ known strength and a known weakness.
 | [online-learning.md](online-learning.md) | Hedge / EXP3, context-tree weighting and PPM, online logistic and cost-sensitive regression | candidates (VW tried in the arena) |
 | [pretrained-models.md](pretrained-models.md) | small pre-trained models: lookup tables, MLPs, tiny RNNs, decision trees | candidates |
 | [statistical-methods.md](statistical-methods.md) | change-point detection, sequential tests, randomness and predictability tests, model selection, multiple comparisons | evaluation: yes; inside bots: candidates |
+| [probing.md](probing.md) | black-box fingerprinting: scripted probes read from final scores, opening probes read in the match | yes: the `Script` signal, `janken lab gauntlet fingerprint`; in-match: research |
 
 ## The size budget
 

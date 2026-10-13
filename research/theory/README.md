@@ -129,3 +129,8 @@ A claim with no possible refutation isn't a claim.
   `smartbot_sims_v2` 61%) and the replay-built bots last. Next: confirm
   `sicilian_meta_v1` on fresh seeds (idea #90), then build the next gate on the
   winner as its main, judged on outsiders and the field together.
+- **2026-10-13, probing the tournament.** The competition's exports hold scores only,
+  so five scripted probes (the `Script` signal: a cycle, De Bruijn sequences of order
+  2-4, switching blocks) turn final scores into fingerprints: how far back a bot looks
+  and how fast it forgets. In the lab they separate families cleanly, and every fleet
+  core beats each by 200+ rounds (research/probes.md, `janken lab gauntlet fingerprint`).

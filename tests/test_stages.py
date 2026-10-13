@@ -231,6 +231,21 @@ class TestSignal:
         assert win_stay.last([R], [S]) == R  # won: stay
         assert win_stay.last([R], [P]) == P  # lost: shift by 1
 
+    def test_a_script_plays_its_moves_in_order_and_repeats(self) -> None:
+        runner = signal_bot(bot.Script(moves=(R, R, S)))
+        assert runner.moves([P] * 4, [P] * 4) == [R, R, S, R, R]
+
+    def test_a_script_ignores_the_opponent(self) -> None:
+        script = bot.Script(moves=(P, S, R))
+        assert signal_bot(script).last([R, P], [S, S]) == R
+        assert signal_bot(script).last([S, S], [P, R]) == R
+
+    def test_a_script_needs_valid_moves(self) -> None:
+        with pytest.raises(blueprint.BlueprintError, match="at least one move"):
+            bot.Script(moves=()).validate()
+        with pytest.raises(blueprint.BlueprintError, match="must be 0"):
+            bot.Script(moves=(R, 3)).validate()
+
     def test_rarest_predicts_the_least_frequent_move(self) -> None:
         assert signal_bot(bot.Rarest(bot.OPP)).last([R] * 3, [R, R, P]) == S
         assert signal_bot(bot.Rarest(bot.MY)).last([P, P, S], [R] * 3) == R

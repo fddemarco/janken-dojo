@@ -478,7 +478,10 @@ class GauntletConfig:
     reports those under `threshold`; with `sequential`, a pairing stops once its
     share is clear of the threshold (after `min_seeds`, at `stop_alpha` spent
     over the seeds: janken/lab/sequential.py). `nash` settles a bot after one
-    match when a probe already skews it by `nash_decisive`.
+    match when a probe already skews it by `nash_decisive`. `fingerprint` reads
+    tournament exports for each bot's margins over `fingerprint_probes` (scripted
+    probes, research/probes.md) and names the `fingerprint_nearest` lab bots with
+    the closest margins.
     """
 
     dir: str = setting("where gauntlet logs go, in the workspace")
@@ -513,6 +516,13 @@ class GauntletConfig:
     nash_decisive: float = setting(
         "rounds won minus lost in one match vs a probe that settles a bot as not"
         " Nash-like at once (a Nash-like bot's match is about 0.05 off, one sd)"
+    )
+    fingerprint_probes: tuple[str, ...] = setting(
+        "the scripted probes a fingerprint reads (lab paths; a tournament bot is a"
+        " probe when its name contains a probe's stem)"
+    )
+    fingerprint_nearest: int = setting(
+        "lab bots listed per fingerprinted bot, closest first", minimum=1
     )
 
 

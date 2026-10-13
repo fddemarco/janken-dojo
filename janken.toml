@@ -316,6 +316,11 @@ nash_skew = 0.10
 # A bot whose first match vs some probe is already this skewed is settled (not
 # Nash-like) without the other seeds: a Nash-like bot's match is about 0.05 off.
 nash_decisive = 0.25
+# `fingerprint`: margins over these scripted probes (research/probes.md), read from
+# tournament exports and compared with the lab's (a gauntlet log with the probes as
+# candidates); the closest fingerprint_nearest lab bots are listed.
+fingerprint_probes = ["bots/inactive/probes/probe_cycle3.yaml", "bots/inactive/probes/probe_debruijn2.yaml", "bots/inactive/probes/probe_debruijn3.yaml", "bots/inactive/probes/probe_debruijn4.yaml", "bots/inactive/probes/probe_blocks50.yaml"]
+fingerprint_nearest = 3
 
 [arena]
 # `janken lab arena`: an experimental learner (janken/experimental/: third-party

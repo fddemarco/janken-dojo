@@ -173,7 +173,7 @@ The grammar lives in `janken/kit/declare.py`.
 | --- | --- | --- |
 | guards | answer the round first, in order | `Opening`, `Noise`, `OnInvalid` |
 | view | models see only rounds where both moves are valid | (always) |
-| signals | each proposes a symbol, or none (an L1's `Heuristic` plays one) | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `Rarest`, `Period`, `ScoreState`, `CTW`, `PriorTable`, `Constant`, `Cycle`, `Biased`, `WinStay` |
+| signals | each proposes a symbol, or none (an L1's `Heuristic` plays one) | `LastMove`, `Frequency`, `NGram`, `Backoff`, `LongestMatch`, `SecondMatch`, `Relative`, `React`, `Geometry`, `Rarest`, `Period`, `ScoreState`, `CTW`, `PriorTable`, `Constant`, `Cycle`, `Script` (a fixed move sequence: the probes, research/probes.md), `Biased`, `WinStay` |
 | aggregators | bots made of bots, named | `Bandit` (scorer + selector over arms), `Gate` (main bandit vs gated experts), `NaiveBayes` (over the other arms) |
 | rotations | each arm plays its bot's move turned | `COPY`, `BEAT`, `BEAT_BEAT` |
 | scorer | every arm's record, counterfactually | `Dirichlet`, `DecayedNet`, `DropSwitch` (+ a random arm: `RA_SCORED` / `RA_PINNED`) |

@@ -407,6 +407,8 @@ def predict(
         return a
     if kind == c.S_CYCLE:
         return (n * int(kn[kk])) % 3
+    if kind == c.S_SCRIPT:
+        return int(kn[kk + n % a])
     if kind == c.S_BIASED:
         u = random.random()
         if u < kn[kk]:

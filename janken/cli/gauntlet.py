@@ -266,3 +266,55 @@ def run(
             )
             lab.say(f"after {len(looked)} seeds: {len(open_)} pairings still close")
     report(lab, _done(lab, log), cand, opps, ladder, threshold)
+
+
+@app.command("fingerprint")
+@lab_command("lab gauntlet fingerprint")
+def fingerprint(
+    lab: Lab,
+    exports: Annotated[
+        list[str], typer.Argument(help="tournament exports (CSV), one or more")
+    ],
+    name: Annotated[
+        str,
+        typer.Option(
+            help="the gauntlet log in which the probes played the lab's bots, as"
+            " candidates (janken lab gauntlet run LIST --cand PROBE ...)"
+        ),
+    ],
+    probes: Annotated[
+        list[str],
+        typer.Option(
+            "--probe",
+            help=about("gauntlet.fingerprint_probes") + " (repeatable)",
+            default_factory=lambda: list(CFG.gauntlet.fingerprint_probes),
+        ),
+    ],
+    nearest: Annotated[
+        int, typer.Option(help=about("gauntlet.fingerprint_nearest"))
+    ] = CFG.gauntlet.fingerprint_nearest,
+) -> None:
+    """Fingerprint tournament bots by their margins over scripted probes.
+
+    Reads every match of the exports, takes each bot's mean margin over each
+    probe it met ((rounds won - lost) / rounds played), and names the lab bots
+    whose margins over the same probes, in the gauntlet log, are closest
+    (research/probes.md)."""
+    from ..lab import fingerprint as fp
+
+    for path in exports:
+        if not os.path.isfile(path):
+            raise fail(f"no export file {path}")
+    matches = [m for path in exports for m in fp.read_export(path)]
+    seen = fp.competition(matches, probes)
+    library = fp.lab(_done(lab, _log(lab, name)), probes)
+    if not library:
+        raise fail(f"the gauntlet log {name} holds no match of these probes")
+    data, text = {}, []
+    for bot, prints in sorted(seen.items()):
+        close = fp.nearest(prints, library, nearest)
+        data[bot] = {"fingerprint": prints, "nearest": close}
+        margins = ", ".join(f"{fp.stem(p)} {v:+.0%}" for p, v in sorted(prints.items()))
+        text.append(f"{bot}: {margins}")
+        text += [f"  {d:.0%} from {other}" for other, d in close]
+    lab.emit(data, "\n".join(text) or "no bot of the exports met a probe")

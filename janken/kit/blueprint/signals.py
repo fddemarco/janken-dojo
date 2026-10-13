@@ -261,6 +261,29 @@ class Cycle(Signal):
 
 
 @dataclasses.dataclass(frozen=True)
+class Script(Signal):
+    """A fixed sequence of moves, played in order and repeated: `moves[n %
+    len(moves)]` at round n, whatever the opponent does. A probe: against a script
+    an opponent's final score reads one property of it (research/probes.md)."""
+
+    kind: ClassVar[int] = c.S_SCRIPT
+    moves: tuple[Value, ...] = (ROCK,)
+
+    def knobs(self) -> tuple[Value, ...]:
+        return self.moves
+
+    def params(self) -> tuple[int, ...]:
+        return (len(self.moves),)
+
+    def validate(self) -> None:
+        check(len(self.moves) >= 1, "Script needs at least one move")
+        check(
+            all(isinstance(m, str) or m in MOVES for m in self.moves),
+            "Script moves must be 0 (rock), 1 (paper) or 2 (scissors)",
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class Biased(Signal):
     """A weighted coin: rock `p_rock`, paper `p_paper`, scissors the rest."""
 

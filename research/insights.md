@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: Context-tree weighting should forget: KT counts decayed by about 0.8 per round beat undecayed ones by about 8 pts against the field
+
+- **Evidence:** experiments/0083-context-mixture-decayed-vs-context-mixture-v1.md (run 20261013-164709_0083-context-mixture-decayed-vs-context-mixture-v1): `context_mixture_decayed - context_mixture_v1 = +8.2 pts [+4.7, +11.8]` over 480 shared matches: context_mixture_decayed better; experiments/0082-tuning-of-context-mixture-v1.md (study 0082-tuning-of-context-mixture-v1): context_mixture_v1@e70b18 vs defaults +5.0 pts [+0.2, +9.8] (validation run 20261013-164348_validate-0082-tuning-of-context-mixture-v1); context_mixture_v1@c4beb0 vs defaults +6.0 pts [+1.0, +10.8] (validation run 20261013-164348_validate-0082-tuning-of-context-mixture-v1); context_mixture_v1@41e5d8 vs defaults +5.2 pts [+0.5, +10.0] (validation run 20261013-164348_validate-0082-tuning-of-context-mixture-v1); context_mixture_v1@cba441 vs defaults +5.8 pts [+0.8, +10.5] (validation run 20261013-164348_validate-0082-tuning-of-context-mixture-v1)
+- **Mechanism:** most of the field's bots adapt as they learn us, so the opponent's habits drift within a match; undecayed counts keep voting for habits it has dropped, a decay of ~0.81 keeps roughly the last 5 occurrences of each context; validated in tuning (+5.0 to +6.0 pts, all five configurations at the space's lower bound) and confirmed on fresh seeds (+8.2 pts [+4.7, +11.8], 480 matches)
+- **Implication:** tune CTW's decay below 0.8 (the optimum may lie lower), and decay the other learners' count tables likewise (frequency rows, n-grams, the pre-trained table's online counts)
+
 ## 2026-10-13: Context-tree weighting joins L1's strong tier as its own mechanism: it ties the longest-repeat follower on matches and wins the widest margins of any L1
 
 - **Evidence:** experiments/0071-context-mixture-vs-pattern-memory-v1.md (run 20261013-154436_0071-context-mixture-vs-pattern-memory-v1): tentative, no 95% CI excludes 0: `context_mixture - pattern_memory_v1 = -4.7 pts [-10.5, +0.8]` over 190 shared matches: no significant difference

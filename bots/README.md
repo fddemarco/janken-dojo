@@ -75,7 +75,7 @@ bots/
 | L1 | `transition_matrix_v1` | order-1 opponent transitions, sampled |
 | L1 | `markov2_joint_v1` | order-2 Markov model on the joint history |
 | L1 | `pattern_memory_v1` | longest earlier repeat of the joint history |
-| L1 | `context_mixture_v1` | context-tree weighting: a Bayesian mixture of every joint context up to 3 moves |
+| L1 | `context_mixture_v2` | context-tree weighting: a Bayesian mixture of every joint context up to 3 moves, KT counts decayed by 0.81 |
 | L1 | `pretrained_context_v3` | a table over the last 4 joint moves pre-trained on the move dataset (prior worth 1 observation per context, a cold start), refined online |
 | L1 | `second_repeat_v1` | second-longest earlier repeat of the joint history (an opponent that dodges the longest) |
 | L1 | `rotation_outcome_v1` | learned win-stay/lose-shift (rotation by outcome) |

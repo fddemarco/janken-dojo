@@ -1,0 +1,11 @@
+description: |
+  Context-tree weighting with KT counts decayed by 0.81 per round (idea #82, the tuned configuration of note 0082).
+  As context_mixture_v1, but forgetting: the validated tuning found +5 to +6 pts on fresh pools at DECAY ~0.81.
+defaults:
+  DEPTH: 3
+  CTX: JOINT
+  OF: OPP
+  DECAY: 0.81
+blueprint:
+  core:
+    Heuristic: {signal: {CTW: {depth: $DEPTH, ctx: $CTX, of: $OF, decay: $DECAY}}, rotation: BEAT}

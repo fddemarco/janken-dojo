@@ -42,7 +42,9 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    per match of any L1 (+121 vs +112), with 74% core agreement: a new species (note
    0071). Like the repeat followers it loses to `geometry` and plays a deterministic
    choice, so it should fall to its mirror counter. _Prediction:_ CTW on our moves,
-   BEAT_BEAT, wins > 40% of rounds vs it.
+   BEAT_BEAT, wins > 40% of rounds vs it. Forgetting helps it vs the field: KT counts
+   decayed by 0.81 beat undecayed ones by +8.2 pts [+4.7, +11.8] (notes 0082, 0083:
+   `context_mixture_v2`), with the tuned optimum at the space's lower bound.
 1. **A pre-trained prior generalises across parameters.** _supported._ A k=3
    joint-context table trained on the move dataset's default-parameter matches and
    refined online (`pretrained_context_v1`, stage `PriorTable`) beats

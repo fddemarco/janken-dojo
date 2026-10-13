@@ -8,6 +8,7 @@ package is where an idea is tried first with whatever library makes it quick (th
     arena.py     matches between a Python player and kit bots, round by round
     features.py  what a learner sees of a match: history tokens, experts' moves
     vw.py        an online Vowpal Wabbit learner as a player
+    identify.py  a particle posterior over opponents' parameters, and its study
 
 `janken lab arena` plays a learner against a gauntlet's opponents (the field's
 bots and their parameter variants) and scores it like `janken lab gauntlet run`,

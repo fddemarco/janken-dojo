@@ -8,6 +8,7 @@ CLI command) imports it or its third-party libraries.
 import ast
 import os
 import pathlib
+from collections.abc import Sequence
 
 import numpy as np
 import pytest
@@ -15,7 +16,7 @@ import pytest
 import janken
 from janken import botfile, export, library
 from janken.engine import play_pairs
-from janken.experimental import arena, features, vw
+from janken.experimental import arena, features, identify, vw
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
 from janken.spec import make_spec
 
@@ -44,7 +45,7 @@ blueprint:
 LEARNER = vw.Settings("--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet", 2, 0.0)
 MAX_ROUNDS = 64
 # What may import the experimental package or its libraries (repo-relative).
-ALLOWED = ("janken/experimental/", "janken/cli/arena.py")
+ALLOWED = ("janken/experimental/", "janken/cli/arena.py", "janken/cli/identify.py")
 EXPERIMENTAL_LIBRARIES = ("vowpalwabbit",)
 
 
@@ -108,7 +109,10 @@ class TestArena:
         rounds = 40
         (engine,) = play_pairs([(a, b)], rounds, [seed])
         played = arena.play_match(
-            arena.KitBot(a, arena.SIDE_A), arena.KitBot(b, arena.SIDE_B), rounds, seed
+            arena.KitBot.of(a, arena.SIDE_A),
+            arena.KitBot.of(b, arena.SIDE_B),
+            rounds,
+            seed,
         )
         assert played == arena.gauntlet.Played(
             engine.wins_a / rounds, engine.wins_b / rounds
@@ -157,7 +161,9 @@ class TestLearner:
         assert vw.label(ROCK) == "1:1 2:0 3:2"
 
     def test_it_learns_to_beat_a_constant_bot(self, tmp_path) -> None:
-        rocky = arena.KitBot(make_spec(write(tmp_path, "rocky", ROCKY)), arena.SIDE_B)
+        rocky = arena.KitBot.of(
+            make_spec(write(tmp_path, "rocky", ROCKY)), arena.SIDE_B
+        )
         played = arena.play_match(vw.VWPlayer(LEARNER), rocky, 60, 1)
         assert played.won > 0.8
 
@@ -198,3 +204,174 @@ def test_only_the_experimental_package_imports_it_or_its_libraries() -> None:
                 ):
                     offenders.append(f"{relative}: {module}")
     assert offenders == []
+
+
+# --- identifying an opponent's parameters (janken/experimental/identify.py) --------
+
+LAST = """\
+defaults: {OF: OPP}
+blueprint:
+  core: {Heuristic: {signal: {LastMove: {of: $OF}}, rotation: BEAT}}
+"""
+BOARD = """\
+description: a greedy bandit over the last move, turned three ways
+defaults: {DECAY: 0.9}
+blueprint:
+  core:
+    Bandit:
+      predictors: [{bot: last, rotations: [COPY, BEAT, BEAT_BEAT]}]
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: Greedy
+"""
+TALLY = BOARD.replace("DecayedNet: {decay: $DECAY}", "Dirichlet: {decay: $DECAY}")
+SPACE = """\
+bot: {path}
+weight: 1.0
+params:
+  DECAY: {{type: float, low: 0.1, high: 0.99}}
+"""
+IDENTIFY_ROUNDS = 40
+
+
+class Stub:
+    """A particle that predicts one fixed move."""
+
+    def __init__(self, move: int) -> None:
+        self.at: int = move
+
+    def reset(self, seed: int, rounds: int) -> None:
+        del seed, rounds
+
+    def move(self, my: np.ndarray, opp: np.ndarray, n: int) -> int:
+        del my, opp, n
+        return self.at
+
+
+def posterior(*moves: int, stems: tuple[str, ...] = ()) -> identify.Posterior:
+    found = [
+        identify.Hypothesis(stems[k] if stems else f"s{k}", {"X": k})
+        for k in range(len(moves))
+    ]
+    built = identify.Posterior(found, [Stub(m) for m in moves], 0.5)
+    built.reset(1, 10, "")
+    return built
+
+
+def observed(post: identify.Posterior, theirs: Sequence[int]) -> None:
+    empty = np.zeros(0, np.int64)
+    for n, move in enumerate(theirs):
+        post.step(empty, empty, n)
+        post.observe(move)
+
+
+class TestPosterior:
+    def test_the_particle_that_names_their_moves_wins(self) -> None:
+        post = posterior(R, P, S)
+        observed(post, [P, P, R, P])
+        assert post.best().params == {"X": 1}
+        assert post.weights().sum() == pytest.approx(1.0)
+        assert post.vote() == P
+
+    def test_a_miss_lowers_a_particle_without_killing_it(self) -> None:
+        post = posterior(R, P)
+        observed(post, [R, R, P])
+        assert 0 < post.weights()[1] < post.weights()[0]
+
+    def test_pruning_keeps_the_best_particle(self) -> None:
+        post = posterior(R, P, S)
+        observed(post, [S] * 8)
+        post.prune(1e-2)
+        assert post.alive.tolist() == [False, False, True]
+        assert post.best().params == {"X": 2}
+
+    def test_an_excluded_species_never_lives(self) -> None:
+        post = posterior(R, P, stems=("a", "b"))
+        post.reset(1, 10, "a")
+        observed(post, [R, R, R])
+        assert post.best().stem == "b"
+        with pytest.raises(ValueError, match="no hypothesis"):
+            posterior(R, stems=("a",)).reset(1, 10, "a")
+
+    def test_moves_that_arent_moves_get_no_vote(self) -> None:
+        post = posterior(INVALID, P)
+        observed(post, [P])
+        assert post.vote() == P
+
+
+def test_a_particle_replays_the_bot_from_the_opponents_seat() -> None:
+    data = identify.particle_data(identify.Hypothesis("board", {"DECAY": 0.5}), True)
+    signal = {
+        "bot": "board",
+        "side": "OPP",
+        "rotations": ["COPY"],
+        "space": {"DECAY": 0.5},
+        "estimate": "NORMAL",
+    }
+    assert data == {"core": {"Heuristic": {"signal": signal, "rotation": "COPY"}}}
+
+
+class TestStudy:
+    @pytest.fixture(autouse=True)
+    def _field(self, tmp_path: pathlib.Path) -> None:
+        bots = tmp_path / "bots"
+        write(bots / "blocks", "last", LAST)
+        self.board = write(bots / "l2", "board", BOARD)
+        self.tally = write(bots / "l2", "tally", TALLY)
+        self.probe = write(bots / "l1", "noisy", NOISY)
+        self.spaces = tmp_path / "spaces"
+        for path in (self.board, self.tally):
+            write(self.spaces, pathlib.Path(path).stem, SPACE.format(path=path))
+
+    def setup_for(self, leave_one_out: bool) -> identify.Setup:
+        return identify.Setup(
+            hypotheses=(self.board, self.tally),
+            spaces_dir=str(self.spaces),
+            particles=3,
+            sampler_seed=0,
+            eps=0.5,
+            commit=20,
+            every=10,
+            prune_ratio=1e-6,
+            near=0.1,
+            probe=self.probe,
+            rounds=IDENTIFY_ROUNDS,
+            leave_one_out=leave_one_out,
+        )
+
+    def test_a_match_logs_its_checkpoints_and_three_branches(self) -> None:
+        setup = self.setup_for(False)
+        drawn = identify.field(setup).hypotheses[1]
+        opponent = f"{self.board}:DECAY={drawn.params['DECAY']}"
+        row = identify.study(setup, opponent, 3)
+        assert row["prefix_agrees"]
+        assert [c["round"] for c in row["checkpoints"]] == [10, 20, 30]
+        last = row["checkpoints"][-1]
+        assert last["correct"] and last["param_error"] == pytest.approx(0.0)
+        for branch in identify.BRANCHES:
+            won, lost = row[branch]["won"], row[branch]["lost"]
+            assert 0 <= won + lost <= 1
+
+    def test_leave_one_out_never_names_the_opponents_species(self) -> None:
+        row = identify.study(self.setup_for(True), self.board, 3)
+        assert {c["map"] for c in row["checkpoints"]} == {"tally"}
+
+
+def test_curves_and_gains_average_matches() -> None:
+    def row(exploit: float, correct: bool) -> dict:
+        point = {"round": 25, "correct": correct, "species_mass": 1.0}
+        point |= {"near_mass": 0.5, "hit": 0.5, "alive": 4}
+        if correct:
+            point["param_error"] = 0.2
+        return {
+            "checkpoints": [point],
+            "exploit": {"won": exploit, "lost": 0.0},
+            "keep": {"won": 0.1, "lost": 0.0},
+            "oracle": {"won": 0.5, "lost": 0.0},
+        }
+
+    rows = [row(0.3, True), row(0.5, False)]
+    (point,) = identify.curve(rows)
+    assert (point.correct, point.param_error, point.matches) == (0.5, 0.2, 2)
+    exploit = identify.gains(rows)[0]
+    assert exploit.vs_keep == pytest.approx(0.3)
+    assert exploit.half_width > 0

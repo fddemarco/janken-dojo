@@ -529,6 +529,53 @@ class ArenaConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class IdentifyConfig:
+    """`lab identify`: can an opponent bandit's parameters be told from its moves?
+    (janken/experimental/identify.py, research only).
+
+    Each of the `hypotheses` (bots, by stem) gets `particles` parameter vectors
+    drawn from its space file (seeded by `seed`), each replayed from the
+    opponent's seat; a particle's weight is (1 - eps) for every round it names the
+    opponent's move, eps / 2 for every round it misses. Every `checkpoint_every`
+    rounds the posterior is scored and the particles under `prune_ratio` of the
+    best one's weight are dropped. We play `probe` until `commit_round`, then the
+    move that beats the posterior's vote; a parameter is "near" the truth within
+    `near` of its space range. With `leave_one_out`, the opponent's own species
+    is never a hypothesis (its architecture is unknown).
+    """
+
+    dir: str = setting("where identification logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    hypotheses: tuple[str, ...] = setting(
+        "the bots (stems) whose parameter vectors are the particles"
+    )
+    particles: int = setting("parameter vectors drawn per hypothesis", minimum=1)
+    eps: float = setting(
+        "a particle's chance of missing the opponent's move (sets the posterior's"
+        " sharpness)",
+        minimum=0,
+    )
+    commit_round: int = setting(
+        "the round from which we exploit the posterior", minimum=1
+    )
+    checkpoint_every: int = setting(
+        "rounds between scorings of the posterior (and prunings)", minimum=1
+    )
+    prune_ratio: float = setting(
+        "a particle under this share of the best one's weight is dropped", minimum=0
+    )
+    near: float = setting(
+        "the share of a parameter's range within which an estimate counts as near",
+        minimum=0,
+    )
+    probe: str = setting("the bot (stem) we play until the commit round")
+    leave_one_out: bool = setting(
+        "never count the opponent's own species among the hypotheses"
+    )
+    seed: int = setting("the particles' sampler seed")
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -555,6 +602,7 @@ class Config:
     profile: ProfileConfig = setting("profiling and the optimization budget")
     gauntlet: GauntletConfig = setting("gauntlets: every opponent on its own")
     arena: ArenaConfig = setting("experimental learners vs a gauntlet's opponents")
+    identify: IdentifyConfig = setting("identifying opponents' parameters")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""

@@ -25,6 +25,13 @@ def arena(
     lab: Lab,
     opponents: Annotated[str, typer.Argument(help=LIST_HELP)],
     name: Annotated[str, typer.Option(help=LOG_HELP)],
+    expert: Annotated[
+        list[str],
+        typer.Option(
+            help=about("arena.experts") + " (repeatable)",
+            default_factory=lambda: list(CFG.arena.experts),
+        ),
+    ],
     seeds: Annotated[int, typer.Option(help=about("arena.seeds"))] = CFG.arena.seeds,
     vw_args: Annotated[
         str, typer.Option(help=about("arena.vw_args"))
@@ -35,9 +42,6 @@ def arena(
     explore: Annotated[
         float, typer.Option(help=about("arena.explore"))
     ] = CFG.arena.explore,
-    expert: Annotated[
-        list[str], typer.Option(help=about("arena.experts") + " (repeatable)")
-    ] = list(CFG.arena.experts),
     no_experts: Annotated[
         bool, typer.Option(help="play without experts: history features only")
     ] = False,

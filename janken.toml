@@ -11,7 +11,7 @@
 jit = true
 # Commands that keep numba's compiled code on disk (the compute-intensive ones); the
 # rest compile in memory. --cache / --no-cache or $JANKEN_NUMBA_CACHE override.
-cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab arena", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
+cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab arena", "lab identify", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
 
 [output]
 # Progress bars on long commands: "auto" (only on an interactive terminal), "on" or
@@ -324,3 +324,27 @@ vw_args = "--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet"
 history = 3
 explore = 0.05
 experts = ["frequency_v1", "smartbot_fast_v1", "backoff_family_v1", "period_bandit_v1", "iocaine_lite_v1", "geometry_ensemble_v1"]
+
+[identify]
+# `janken lab identify` (research only, janken/experimental/identify.py): can an
+# opponent bandit's parameters be told from its moves in time to exploit them? Each
+# hypothesis bot gets `particles` parameter vectors from its space file (seeded by
+# `seed`), each replayed from the opponent's seat and weighted (1 - eps) per round it
+# names the opponent's move, eps / 2 per miss. Logs go to this workspace folder.
+dir = "identify"
+seeds = 5
+hypotheses = ["smartbot_v1", "sampled_markov_v1", "geometry_ensemble_v1", "iocaine_lite_v1", "rps4_lite_v1", "period_bandit_v1", "outcome_reader_v1", "multiscale_council_v1"]
+particles = 32
+eps = 0.5
+# We play `probe` until commit_round, then the move that beats the posterior's vote.
+# Every checkpoint_every rounds the posterior is scored, and the particles under
+# prune_ratio of the best one's weight dropped; an estimate within `near` of a
+# parameter's range counts as near the truth.
+commit_round = 150
+checkpoint_every = 25
+prune_ratio = 1e-6
+near = 0.1
+probe = "l5_hunter"
+# true: the opponent's own species is never a hypothesis (an unknown architecture).
+leave_one_out = false
+seed = 0

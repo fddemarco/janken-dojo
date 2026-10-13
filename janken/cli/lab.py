@@ -13,7 +13,7 @@ from typing import Annotated
 import typer
 
 from .. import settings
-from . import arena, gauntlet, profile
+from . import arena, gauntlet, identify, profile
 from .options import (
     CFG,
     METRIC,
@@ -50,6 +50,7 @@ app.add_typer(dataset_app, name="dataset")
 app.add_typer(profile.app, name="profile")
 app.add_typer(gauntlet.app, name="gauntlet")
 app.command("arena")(arena.arena)
+app.command("identify")(identify.identify)
 
 QUERY_DB = Db(CFG.query.db)
 SPEC_HELP = "bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value"

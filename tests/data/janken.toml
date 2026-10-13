@@ -330,3 +330,27 @@ vw_args = "--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet"
 history = 3
 explore = 0.05
 experts = ["frequency_v1"]
+
+[identify]
+# `janken lab identify` (research only, janken/experimental/identify.py): can an
+# opponent bandit's parameters be told from its moves in time to exploit them? Each
+# hypothesis bot gets `particles` parameter vectors from its space file (seeded by
+# `seed`), each replayed from the opponent's seat and weighted (1 - eps) per round it
+# names the opponent's move, eps / 2 per miss. Logs go to this workspace folder.
+dir = "identify"
+seeds = 5
+hypotheses = ["smartbot_fast_v1", "iocaine_lite_v1"]
+particles = 4
+eps = 0.5
+# We play `probe` until commit_round, then the move that beats the posterior's vote.
+# Every checkpoint_every rounds the posterior is scored, and the particles under
+# prune_ratio of the best one's weight dropped; an estimate within `near` of a
+# parameter's range counts as near the truth.
+commit_round = 150
+checkpoint_every = 25
+prune_ratio = 1e-6
+near = 0.1
+probe = "frequency_v1"
+# true: the opponent's own species is never a hypothesis (an unknown architecture).
+leave_one_out = false
+seed = 0

@@ -26,7 +26,7 @@ fixtures, `pytest.mark.parametrize`.
 | `test_notebook` | ideas, notes, insights (round-trips of the real files) and the loop's next step |
 | `test_cli` | every command and parameter documented; no hard-coded defaults; the `config` commands; the lifecycle end to end; the docs and skills only name commands that exist; the reference is current |
 | `test_progress` | progress bars, Ctrl-C detection, batched play |
-| `test_experimental` | the `experimental` flag and export's refusal, the arena (refereed like the engine), the learners' features, and that nothing else imports the experimental package or its libraries |
+| `test_experimental` | the `experimental` flag and export's refusal, the arena (refereed like the engine), the learners' features, the identification posterior and its study, and that nothing else imports the experimental package or its libraries |
 | `test_telemetry`, `test_profiling` | timing spans and the code fingerprint; hotspots, buckets, profile records, span statistics and the budget rule |
 
 ## Adding a command

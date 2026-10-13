@@ -40,8 +40,9 @@ like a person typed it:
   - `query` (read-only SQL), `space`, `study run | show | list`;
   - `dataset add | info`, `predict`, `predict-tune`;
   - `profile run | bench | list | show | spans` (hotspots, benchmarks, timing spans);
-  - `gauntlet variations | nash | run`, and `arena` (an experimental learner vs a
-    gauntlet's list, research only).
+  - `gauntlet variations | nash | run`, and, research only, `arena` (an experimental
+    learner vs a gauntlet's list) and `identify` (telling opponents' parameters
+    from their moves).
 
 Every lab command shares the same flags (workspace, evidence, execution, output).
 

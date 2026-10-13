@@ -1179,6 +1179,7 @@ $ uv run janken lab [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `arena`: Play an experimental Vowpal Wabbit learner...
+* `identify`: Can an opponent bandit's parameters be...
 * `experiment`: Play candidates against fresh random pools...
 * `resume`: Play the round robins an interrupted run...
 * `report`: Analyze stored runs (finished or not) and...
@@ -1214,13 +1215,61 @@ $ uv run janken lab arena [OPTIONS] {opponents}
 **Options**:
 
 * `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
+* `--expert <str>`: kit bots (stems) whose moves, from either seat, are the learner's features (config: arena.experts) (repeatable)  [default: (dynamic)]
 * `--seeds <int>`: matches per opponent (seeds 1..n) (config: arena.seeds)  [default: 5]
 * `--vw-args <str>`: the learner's Vowpal Wabbit arguments (cost-sensitive) (config: arena.vw_args)  [default: --csoaa 3 --power_t 0 --learning_rate 0.1 --quiet]
 * `--history <int>`: rounds of history the learner's features read (config: arena.history)  [default: 3]
 * `--explore <float>`: the chance the learner plays a random move (config: arena.explore)  [default: 0.05]
-* `--expert <str>`: kit bots (stems) whose moves, from either seat, are the learner's features (config: arena.experts) (repeatable)  [default: frequency_v1, smartbot_fast_v1, backoff_family_v1, period_bandit_v1, iocaine_lite_v1, geometry_ensemble_v1]
 * `--no-experts / --no-no-experts`: play without experts: history features only  [default: no-no-experts]
 * `--threshold <float>`: the share of rounds won a candidate must reach (config: gauntlet.threshold)  [default: 0.36]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+### `uv run janken lab identify`
+
+Can an opponent bandit's parameters be told from its moves in time to pay?
+A particle posterior per match, and the rounds after the commit played three
+ways: exploit it, keep the probe, or the oracle (research only).
+
+**Usage**:
+
+```console
+$ uv run janken lab identify [OPTIONS] {opponents}
+```
+
+**Arguments**:
+
+* `opponents`: a file of bot specs, one per line (bots/l1/x.yaml:NAME=value,...)  [required]
+
+**Options**:
+
+* `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
+* `--hypothesis <str>`: the bots (stems) whose parameter vectors are the particles (config: identify.hypotheses) (repeatable)  [default: (dynamic)]
+* `--seeds <int>`: matches per opponent (seeds 1..n) (config: identify.seeds)  [default: 5]
+* `--particles <int>`: parameter vectors drawn per hypothesis (config: identify.particles)  [default: 32]
+* `--eps <float>`: a particle's chance of missing the opponent's move (sets the posterior's sharpness) (config: identify.eps)  [default: 0.5]
+* `--commit-round <int>`: the round from which we exploit the posterior (config: identify.commit_round)  [default: 150]
+* `--checkpoint-every <int>`: rounds between scorings of the posterior (and prunings) (config: identify.checkpoint_every)  [default: 25]
+* `--prune-ratio <float>`: a particle under this share of the best one's weight is dropped (config: identify.prune_ratio)  [default: 1e-06]
+* `--near <float>`: the share of a parameter's range within which an estimate counts as near (config: identify.near)  [default: 0.1]
+* `--probe <str>`: the bot (stem) we play until the commit round (config: identify.probe)  [default: l5_hunter]
+* `--leave-one-out / --no-leave-one-out`: never count the opponent's own species among the hypotheses (config: identify.leave_one_out)  [default: no-leave-one-out]
+* `--sampler-seed <int>`: the particles' sampler seed (config: identify.seed)  [default: 0]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

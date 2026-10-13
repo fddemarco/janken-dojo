@@ -58,7 +58,7 @@ class Experts:
     def of(cls, specs: Sequence[BotSpec]) -> "Experts":
         """These bots as experts, each sitting in both seats."""
         return cls(
-            [KitBot(s, SIDE_A) for s in specs], [KitBot(s, SIDE_A) for s in specs]
+            [KitBot.of(s, SIDE_A) for s in specs], [KitBot.of(s, SIDE_A) for s in specs]
         )
 
     def __len__(self) -> int:
@@ -77,4 +77,3 @@ class Experts:
             out.append(f"e{k}m={letter(ours.move(my, opp, n))}")
             out.append(f"e{k}o={letter(theirs.move(opp, my, n))}")
         return out
-

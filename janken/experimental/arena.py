@@ -46,20 +46,29 @@ class Player(Protocol):
 
 
 class KitBot:
-    """A kit bot (a spec: its file and parameter overrides), stepped round by
-    round from one seat, drawing from that side's stream of the match seed."""
+    """A compiled blueprint and its parameter vector, stepped round by round from
+    one seat, drawing from that side's stream of the match seed."""
 
-    def __init__(self, spec: BotSpec, side: int) -> None:
+    def __init__(self, compiled: Compiled, prm: np.ndarray, side: int) -> None:
+        self.side: int = side
+        self.compiled: Compiled = compiled
+        self.prm: np.ndarray = prm
+        self.seed: int = 0
+        self.f, self.i = self.compiled.new_state(1)
+
+    @classmethod
+    def of(cls, spec: BotSpec, side: int) -> "KitBot":
+        """The bot a spec names (its file and parameter overrides).
+
+        Raises:
+            ArenaError: a mock, or a bot that isn't a YAML file.
+        """
         if mocks.is_mock(spec.path):
             raise ArenaError(f"{spec.path} is a mock: the arena reveals no moves")
         loaded = build.load_bot(spec.path)
         if not isinstance(loaded, build.BlueprintBot):
             raise ArenaError(f"{spec.path}: the arena plays YAML bots only")
-        self.side: int = side
-        self.compiled: Compiled = loaded.compiled
-        self.prm: np.ndarray = registry.param_vector(spec.path, spec.params)
-        self.seed: int = 0
-        self.f, self.i = self.compiled.new_state(1)
+        return cls(loaded.compiled, registry.param_vector(spec.path, spec.params), side)
 
     def reset(self, seed: int, rounds: int) -> None:
         self.seed = seed
@@ -83,11 +92,18 @@ class KitBot:
 
 def play_match(a: Player, b: Player, rounds: int, seed: int) -> gauntlet.Played:
     """One match of `a` vs `b`: the shares of `rounds` won and lost by `a`."""
+    return shares(outcomes(a, b, rounds, seed), rounds)
+
+
+def outcomes(a: Player, b: Player, rounds: int, seed: int) -> list[int]:
+    """One match of `a` vs `b`: each round's outcome for `a` (+1, 0, -1), as
+    many as were played (a forfeit ends the match early)."""
     a.reset(seed, rounds)
     b.reset(seed, rounds)
     ha = np.zeros(rounds, np.int64)
     hb = np.zeros(rounds, np.int64)
-    won = lost = invalid_a = invalid_b = 0
+    out: list[int] = []
+    invalid_a = invalid_b = 0
     for r in range(rounds):
         ma = a.move(ha, hb, r)
         mb = b.move(hb, ha, r)
@@ -96,12 +112,17 @@ def play_match(a: Player, b: Player, rounds: int, seed: int) -> gauntlet.Played:
         ha[r], hb[r] = ma, mb
         invalid_a += ma == INVALID
         invalid_b += mb == INVALID
-        outcome = score(ma, mb)
-        won += outcome > 0
-        lost += outcome < 0
+        out.append(score(ma, mb))
         if invalid_a >= INVALID_MOVE_LIMIT or invalid_b >= INVALID_MOVE_LIMIT:
             break
-    return gauntlet.Played(won / rounds, lost / rounds)
+    return out
+
+
+def shares(played: Sequence[int], rounds: int) -> gauntlet.Played:
+    """The shares of `rounds` won and lost, given the outcomes of those played."""
+    return gauntlet.Played(
+        sum(o > 0 for o in played) / rounds, sum(o < 0 for o in played) / rounds
+    )
 
 
 def score(mine: int, theirs: int) -> int:
@@ -129,7 +150,7 @@ def run(
         ValueError: an opponent's text doesn't name a bot or its parameters.
         ArenaError: an opponent the arena can't play.
     """
-    bots = {text: KitBot(parse_spec(text), SIDE_B) for text in opponents}
+    bots = {text: KitBot.of(parse_spec(text), SIDE_B) for text in opponents}
     for seed in seeds:
         for text, bot in bots.items():
             job = gauntlet.Job(label, text, seed)

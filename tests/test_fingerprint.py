@@ -11,6 +11,7 @@ from janken.lab import gauntlet
 CYCLE = "bots/inactive/probes/probe_cycle3.yaml"
 BLOCKS = "bots/inactive/probes/probe_blocks50.yaml"
 PROBES = (CYCLE, BLOCKS)
+NO_ALIASES: fp.Aliases = {}
 EXPORT = """﻿When,Kind,Bot A,Bot B,Score,Draws,Forfeit
 2026-10-13 22:22,tournament,Learner,Probe_Cycle3,200–10,40,
 2026-10-13 22:22,tournament,⏸ Probe Blocks50,Learner,50–150,50,
@@ -37,25 +38,48 @@ class TestReadExport:
 
 class TestProbeOf:
     def test_a_name_containing_a_probes_stem_is_that_probe(self) -> None:
-        assert fp.probe_of("Probe_Cycle3", PROBES) == CYCLE
-        assert fp.probe_of("my probe-blocks50 bot", PROBES) == BLOCKS
+        assert fp.probe_of("Probe_Cycle3", PROBES, NO_ALIASES) == CYCLE
+        assert fp.probe_of("my probe-blocks50 bot", PROBES, NO_ALIASES) == BLOCKS
 
     def test_other_names_are_no_probe(self) -> None:
-        assert fp.probe_of("Learner", PROBES) == ""
+        assert fp.probe_of("Learner", PROBES, NO_ALIASES) == ""
+
+
+class TestAliases:
+    def test_an_alias_names_its_probe_by_the_whole_name(self) -> None:
+        known = fp.aliases(["Old Nimbus=probe_cycle3"], PROBES)
+        assert fp.probe_of("old-nimbus", PROBES, known) == CYCLE
+        assert fp.probe_of("Old Nimbus II", PROBES, known) == ""
+
+    def test_stems_still_name_probes_beside_aliases(self) -> None:
+        known = fp.aliases(["Nimbus=probe_cycle3"], PROBES)
+        assert fp.probe_of("Probe_Blocks50", PROBES, known) == BLOCKS
+
+    def test_a_match_vs_an_alias_counts_for_its_probe(self) -> None:
+        known = fp.aliases(["Nimbus=probe_cycle3"], PROBES)
+        seen = fp.competition(
+            [fp.Match("Learner", "Nimbus", 200, 10, 40)], PROBES, known
+        )
+        assert seen == {"Learner": {CYCLE: pytest.approx(190 / 250)}}
+
+    @pytest.mark.parametrize("entry", ["Nimbus", "=probe_cycle3", "Nimbus=probe_x"])
+    def test_rejects_malformed_entries_and_unknown_probes(self, entry: str) -> None:
+        with pytest.raises(ValueError, match="NAME=STEM"):
+            fp.aliases([entry], PROBES)
 
 
 class TestCompetition:
     def test_averages_each_bots_margin_per_round_over_each_probe(
         self, export: str
     ) -> None:
-        seen = fp.competition(fp.read_export(export), PROBES)
+        seen = fp.competition(fp.read_export(export), PROBES, NO_ALIASES)
         assert set(seen) == {"Learner"}  # probes and probe-less bots are left out
         assert seen["Learner"][CYCLE] == pytest.approx((190 / 250 + 170 / 250) / 2)
         assert seen["Learner"][BLOCKS] == pytest.approx(100 / 250)
 
     def test_skips_matches_with_no_round(self) -> None:
         empty = fp.Match("Learner", "Probe_Cycle3", 0, 0, 0)
-        assert fp.competition([empty], PROBES) == {}
+        assert fp.competition([empty], PROBES, NO_ALIASES) == {}
 
 
 class TestLab:

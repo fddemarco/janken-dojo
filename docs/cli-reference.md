@@ -2410,8 +2410,8 @@ $ uv run janken lab gauntlet run [OPTIONS] {opponents}
 
 Fingerprint tournament bots by their margins over scripted probes.
 
-Reads every match of the exports, takes each bot's mean margin over each
-probe it met ((rounds won - lost) / rounds played), and names the lab bots
+Reads every match of the exports (a probe recognised by its alias, or by a
+name containing its stem), takes each bot's mean margin over each probe it met ((rounds won - lost) / rounds played), and names the lab bots
 whose margins over the same probes, in the gauntlet log, are closest
 (research/probes.md).
 
@@ -2429,6 +2429,7 @@ $ uv run janken lab gauntlet fingerprint [OPTIONS] {exports}...
 
 * `--name <str>`: the gauntlet log in which the probes played the lab's bots, as candidates (janken lab gauntlet run LIST --cand PROBE ...)  [required]
 * `--probe <str>`: the scripted probes a fingerprint reads (lab paths; a tournament bot is a probe when its name contains a probe's stem) (config: gauntlet.fingerprint_probes) (repeatable)  [default: (dynamic)]
+* `--alias <str>`: the names the probes are submitted under, NAME=STEM, so other players can't tell them from their names (a name matches whole, ignoring case and punctuation) (config: gauntlet.fingerprint_aliases) (repeatable)  [default: (dynamic)]
 * `--nearest <int>`: lab bots listed per fingerprinted bot, closest first (config: gauntlet.fingerprint_nearest)  [default: 3]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]

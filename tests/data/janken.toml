@@ -326,6 +326,9 @@ nash_decisive = 0.25
 # tournament exports and compared with the lab's (a gauntlet log with the probes as
 # candidates); the closest fingerprint_nearest lab bots are listed.
 fingerprint_probes = ["bots/inactive/probes/probe_cycle3.yaml", "bots/inactive/probes/probe_debruijn2.yaml", "bots/inactive/probes/probe_debruijn3.yaml", "bots/inactive/probes/probe_debruijn4.yaml", "bots/inactive/probes/probe_blocks50.yaml"]
+# The fantasy names the probes are submitted under (NAME=STEM): a tournament bot whose
+# whole name matches one (ignoring case and punctuation) is that probe.
+fingerprint_aliases = []
 fingerprint_nearest = 3
 
 [arena]

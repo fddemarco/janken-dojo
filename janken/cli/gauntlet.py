@@ -290,14 +290,21 @@ def fingerprint(
             default_factory=lambda: list(CFG.gauntlet.fingerprint_probes),
         ),
     ],
+    alias: Annotated[
+        list[str],
+        typer.Option(
+            help=about("gauntlet.fingerprint_aliases") + " (repeatable)",
+            default_factory=lambda: list(CFG.gauntlet.fingerprint_aliases),
+        ),
+    ],
     nearest: Annotated[
         int, typer.Option(help=about("gauntlet.fingerprint_nearest"))
     ] = CFG.gauntlet.fingerprint_nearest,
 ) -> None:
     """Fingerprint tournament bots by their margins over scripted probes.
 
-    Reads every match of the exports, takes each bot's mean margin over each
-    probe it met ((rounds won - lost) / rounds played), and names the lab bots
+    Reads every match of the exports (a probe recognised by its alias, or by a
+    name containing its stem), takes each bot's mean margin over each probe it met ((rounds won - lost) / rounds played), and names the lab bots
     whose margins over the same probes, in the gauntlet log, are closest
     (research/probes.md)."""
     from ..lab import fingerprint as fp
@@ -305,8 +312,12 @@ def fingerprint(
     for path in exports:
         if not os.path.isfile(path):
             raise fail(f"no export file {path}")
+    try:
+        known = fp.aliases(alias, probes)
+    except ValueError as exc:
+        raise fail(str(exc)) from exc
     matches = [m for path in exports for m in fp.read_export(path)]
-    seen = fp.competition(matches, probes)
+    seen = fp.competition(matches, probes, known)
     library = fp.lab(_done(lab, _log(lab, name)), probes)
     if not library:
         raise fail(f"the gauntlet log {name} holds no match of these probes")

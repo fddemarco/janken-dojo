@@ -78,13 +78,30 @@ every probe by 200 rounds or more, so submitting the probes costs the fleet noth
 
 ## How to use it
 
-1. Export the probes (`janken bot export probe_cycle3 --out exports/probes`, and the
-   other four) and submit them under names that contain their stems, such as
-   `Probe_Cycle3` or `Probe DeBruijn4`: a tournament bot is read as a probe when its
-   name, reduced to letters and digits, contains the stem's (`gauntlet.fingerprint_probes`).
+1. Export the probes and make the upload copies, named by their aliases
+   (`gauntlet.fingerprint_aliases`: Nimbus = cycle3, Thistle = debruijn2, Corvina =
+   debruijn3, Marigold = debruijn4, Bramble = blocks50), so other players can't tell
+   from a name what they are. The copies drop the export's header comment, which
+   names and describes the probe; the code is unchanged:
+
+   ```bash
+   for b in probe_cycle3 probe_debruijn2 probe_debruijn3 probe_debruijn4 probe_blocks50; do
+     uv run janken bot export $b --out exports/probes
+   done
+   mkdir -p exports/probes/upload
+   for pair in Nimbus=probe_cycle3 Thistle=probe_debruijn2 Corvina=probe_debruijn3 Marigold=probe_debruijn4 Bramble=probe_blocks50; do
+     awk 'NR==1,/^$/{if (/^#/ || /^$/) next} {print}' exports/probes/${pair#*=}/${pair#*=}.py > exports/probes/upload/${pair%%=*}.py
+   done
+   ```
+
+   Submit each under its alias. A tournament bot is read as a probe when its whole
+   name matches an alias (ignoring case and punctuation), or when its name contains a
+   probe's stem (`Probe_Cycle3`).
+
 1. Play the probes vs the lab's bots once (the lab side; already done in the `probes`
    log):
    `janken lab gauntlet run research/gauntlet/fingerprint_lab.txt --cand bots/inactive/probes/probe_cycle3.yaml ... --name probes --rounds 250 --no-sequential`.
+
 1. After the tournament has played them for a while, export the matches and run
    `janken lab gauntlet fingerprint logs/<export>.csv --name probes`: every bot that
    met a probe, its margins per round, and the `gauntlet.fingerprint_nearest` closest

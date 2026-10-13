@@ -7,6 +7,7 @@ margins over the probes are its fingerprint, readable from final scores alone,
 which is all a tournament's match export gives (research/probes.md).
 
     read_export   a tournament export (CSV): every match's two bots and rounds won
+    aliases       the names the probes are submitted under (NAME=STEM)
     competition   each tournament bot's mean margin over every probe it met
     lab           each lab bot's margin over every probe, from a gauntlet log in
                   which the probes were the candidates
@@ -74,11 +75,37 @@ def key(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def probe_of(name: str, probes: Sequence[str]) -> str:
-    """The probe (a lab path) a tournament bot's name stands for: the one whose
-    stem's key its key contains (`Probe_Cycle3` --> .../probe_cycle3.yaml); empty
-    when it names none."""
-    found = [p for p in probes if key(stem(p)) in key(name)]
+Aliases = dict[str, str]  # a tournament name's key --> the probe stem it stands for
+
+
+def aliases(entries: Sequence[str], probes: Sequence[str]) -> Aliases:
+    """`NAME=STEM` entries as aliases: the names the probes are submitted under,
+    so other players can't tell them from their names.
+
+    Raises:
+        ValueError: an entry isn't NAME=STEM, or its stem isn't one of the probes.
+    """
+    stems = {stem(p) for p in probes}
+    found: Aliases = {}
+    for entry in entries:
+        name, sep, target = entry.partition("=")
+        if not sep or not key(name) or target.strip() not in stems:
+            raise ValueError(f"alias {entry!r}: expected NAME=STEM, STEM a probe")
+        found[key(name)] = target.strip()
+    return found
+
+
+def probe_of(name: str, probes: Sequence[str], known: Aliases) -> str:
+    """The probe (a lab path) a tournament bot's name stands for: the one its
+    alias names (the whole name, compared by key), else the one whose stem's key
+    its key contains (`Probe_Cycle3` --> .../probe_cycle3.yaml); empty when it
+    names none."""
+    aliased = known.get(key(name), "")
+    found = [
+        p
+        for p in probes
+        if (stem(p) == aliased if aliased else key(stem(p)) in key(name))
+    ]
     return max(found, key=lambda p: len(key(stem(p))), default="")
 
 
@@ -89,7 +116,7 @@ def stem(path: str) -> str:
 
 
 def competition(
-    matches: Sequence[Match], probes: Sequence[str]
+    matches: Sequence[Match], probes: Sequence[str], known: Aliases
 ) -> dict[str, Fingerprint]:
     """Each tournament bot's mean margin over every probe it met (matches that
     ended before a round was played are skipped); the probes are left out."""
@@ -99,8 +126,8 @@ def competition(
             (m.a, m.b, m.wins_a, m.wins_b),
             (m.b, m.a, m.wins_b, m.wins_a),
         ):
-            probe = probe_of(rival, probes)
-            if probe and not probe_of(bot, probes):
+            probe = probe_of(rival, probes, known)
+            if probe and not probe_of(bot, probes, known):
                 by_probe = margins.setdefault(bot, {})
                 by_probe.setdefault(probe, []).append((mine - theirs) / m.rounds)
     return {

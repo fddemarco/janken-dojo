@@ -480,7 +480,8 @@ class GauntletConfig:
     over the seeds: janken/lab/sequential.py). `nash` settles a bot after one
     match when a probe already skews it by `nash_decisive`. `fingerprint` reads
     tournament exports for each bot's margins over `fingerprint_probes` (scripted
-    probes, research/probes.md) and names the `fingerprint_nearest` lab bots with
+    probes, research/probes.md, also read under their `fingerprint_aliases`) and
+    names the `fingerprint_nearest` lab bots with
     the closest margins.
     """
 
@@ -520,6 +521,11 @@ class GauntletConfig:
     fingerprint_probes: tuple[str, ...] = setting(
         "the scripted probes a fingerprint reads (lab paths; a tournament bot is a"
         " probe when its name contains a probe's stem)"
+    )
+    fingerprint_aliases: tuple[str, ...] = setting(
+        "the names the probes are submitted under, NAME=STEM, so other players can't"
+        " tell them from their names (a name matches whole, ignoring case and"
+        " punctuation)"
     )
     fingerprint_nearest: int = setting(
         "lab bots listed per fingerprinted bot, closest first", minimum=1

@@ -16,7 +16,7 @@ import pytest
 import janken
 from janken import botfile, export, library
 from janken.engine import play_pairs
-from janken.experimental import arena, features, identify, vw
+from janken.experimental import arena, features, identify, pretrained, vw
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
 from janken.spec import make_spec
 
@@ -389,3 +389,39 @@ def test_a_component_is_read_from_both_seats_at_every_rotation() -> None:
         for rotation in ("COPY", "BEAT", "BEAT_BEAT")
     }
     assert {h.stem for h in read} == {"ngram"} and all(not h.params for h in read)
+
+
+class TestPretrainedTable:
+    """janken/experimental/pretrained.py: a context table, pre-trained or not."""
+
+    def test_context_reads_the_last_k_joint_moves(self) -> None:
+        my = np.array([R, P, S], np.int64)
+        opp = np.array([S, R, P], np.int64)
+        assert pretrained.context(my, opp, 3, 2) == (P * 3 + R) * 9 + (S * 3 + P)
+
+    def test_counts_skip_rounds_next_to_invalid_moves(self) -> None:
+        table = np.zeros((9, 3))
+        my = np.array([R, R, R, R], np.int64)
+        opp = np.array([P, X, P, P], np.int64)
+        pretrained._count(table, my, opp, 1)
+        assert table.sum() == 1 and table[R * 3 + P, P] == 1
+
+    def test_a_prior_plays_its_belief_from_the_first_context(self) -> None:
+        prior = np.zeros((9, 3))
+        prior[R * 3 + R] = [0.0, 0.0, 1.0]  # after (R, R) they play scissors
+        player = pretrained.Table(prior, 1, 5.0)
+        player.reset(1, 4)
+        my = np.array([R, R], np.int64)
+        opp = np.array([R, R], np.int64)
+        assert player.move(my, opp, 1) == R  # beats scissors
+
+    def test_without_a_prior_it_learns_the_match(self) -> None:
+        rocky = arena.KitBot.of(
+            make_spec(write(pathlib.Path(self.tmp), "rocky", ROCKY)), arena.SIDE_B
+        )
+        player = pretrained.Table(np.zeros((9, 3)), 1, 0.0)
+        assert arena.play_match(player, rocky, 60, 1).won > 0.8
+
+    @pytest.fixture(autouse=True)
+    def _tmp(self, tmp_path: pathlib.Path) -> None:
+        self.tmp = str(tmp_path)

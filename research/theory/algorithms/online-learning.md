@@ -64,6 +64,15 @@ SGD's lag after a switch; an opponent can feed it a pattern then break it.
 **Cost.** Features x 3 multiply-adds per move: cheap in plain Python up to a few
 thousand features.
 
+## First probes (2026-10-13)
+
+On 93 held-out parameter variants of the L1/L2 field (3 seeds x 250 rounds, paired
+by opponent and seed), VW's cost-sensitive learner over the predictions of the four
+strong L1s (`pattern_memory`, `second_repeat`, `geometry`, `context_mixture`) nets
++23.8% of rounds: level with `repeat_mirror_v1` (+1.6 +- 1.9 pts, n.s.), above
+`context_mixture_v1` (+2.9 +- 2.3). An online linear combiner is a contender for the
+kit (idea #73).
+
 ## Ideas
 
 - A CTW signal and block, then a CTW L1 species (diversify at L1).

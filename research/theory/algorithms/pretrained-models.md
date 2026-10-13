@@ -48,6 +48,17 @@ the binding limit is the plain-Python inference time, not the size. A model of
 - Training is research code (`janken/experimental/`, third-party libraries allowed);
   only the frozen weights cross into the kit.
 
+## First probe (2026-10-13)
+
+`janken/experimental/pretrained.py`: a k = 3 joint-context table trained on the
+grown move dataset (2811 matches, both seats, training split), refined online. On
+93 held-out parameter variants of the L1/L2 field (3 seeds x 250 rounds, paired),
+a prior worth 5 observations per context adds +6.6 pts of net rounds +- 1.6 over the
+same table learned online from zero (+20.8% vs +14.3% net), which puts a plain table
+level with `context_mixture_v1` (+20.8%); a prior worth 20 adds less (+2.6 +- 1.8),
+since it must give way to the match's own evidence. The prior generalises to
+parameters it never saw. Ideas #72, #74, #75 build on it.
+
 ## Ideas
 
 - A k = 5 lookup table of the opponent's next move given the joint context, trained

@@ -2,6 +2,7 @@
 
 import contextlib
 import dataclasses
+import datetime
 import io
 import math
 import os
@@ -19,7 +20,7 @@ import optuna
 
 from janken import mocks
 from janken.engine import play_pairs, registry
-from janken.lab import analyze, space
+from janken.lab import analyze, space, workflows
 from janken.lab.experiment import build_schedule, resume_experiment, run_experiment
 from janken.lab.pool import sample_pool
 from janken.lab.runs_db import COMPLETE, INTERRUPTED, RunStore
@@ -452,3 +453,48 @@ class TestVariantPools:
     def test_the_draws_are_reproducible(self) -> None:
         labels = [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]
         assert labels == [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]
+
+
+class TestInsightEvidence:
+    """What an insight cites of a note: its significant results, else all of them,
+    marked tentative."""
+
+    def test_the_significant_results_are_cited_alone(self) -> None:
+        found = workflows.weigh([("a +3 [+1, +5]", True), ("b +1 [-2, +4]", False)])
+        assert found == workflows.Evidence(("a +3 [+1, +5]",), True)
+        assert found.text() == "a +3 [+1, +5]"
+
+    def test_without_one_every_result_is_cited_as_tentative(self) -> None:
+        found = workflows.weigh([("a +1 [-2, +4]", False), ("b -1 [-3, +1]", False)])
+        assert not found.significant
+        assert found.text() == (f"{workflows.TENTATIVE}: a +1 [-2, +4]; b -1 [-3, +1]")
+
+    def test_no_result_leaves_nothing_to_cite(self) -> None:
+        assert workflows.weigh([]).results == ()
+
+    def test_an_insight_cites_at_least_one_note(self, tmp_path) -> None:
+        with pytest.raises(workflows.WorkflowError, match="at least one note"):
+            workflows.learn(
+                str(tmp_path), [], "f", "m", "i", str(tmp_path), datetime.date.today()
+            )
+
+    def test_a_note_whose_run_is_gone_is_read_from_its_recorded_comparisons(
+        self,
+    ) -> None:
+        text = (
+            "## Results\n\n"
+            "- `a - b = +3.7 pts [+0.9, +6.6]` over 600 shared matches: a better\n"
+            "- `a - c = +0.1 pts [-2.2, +2.5]` over 680 shared matches:"
+            " no significant difference\n"
+            "- not a comparison\n"
+        )
+        assert workflows.recorded(text) == [
+            ("`a - b = +3.7 pts [+0.9, +6.6]` over 600 shared matches: a better", True),
+            (
+                (
+                    "`a - c = +0.1 pts [-2.2, +2.5]` over 680 shared matches:"
+                    " no significant difference"
+                ),
+                False,
+            ),
+        ]

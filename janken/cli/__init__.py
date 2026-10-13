@@ -12,7 +12,8 @@ Two levels, in the lab's ubiquitous language (docs/cli.md):
       tune      a bot or fleet's space --> study --> validation, with a note
       verdict   close a note: keep, drop or iterate
       species   a kept bot: new species, next version or variant; compare, census
-      insight   add (only with evidence that meets the bar), list, supersede
+      insight   add (citing notes' stored results; tentative when no CI excludes 0),
+                list, supersede
       tournament  the whole field: standings, ratings, titles
       config    every default: show, get, set, unset, path, check
 

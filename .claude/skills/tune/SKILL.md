@@ -61,5 +61,5 @@ the tuned bot's defaults:
 uv run janken bot new <bot>_tuned --from <bot> --description "..."
 ```
 
-Then set the new bot's defaults, and `/evaluate` it against the original. A validated
-difference whose CI excludes 0 goes to `/learn`.
+Then set the new bot's defaults, and `/evaluate` it against the original. A kept result
+goes to `/learn` (its insight is tentative when no validated CI excludes 0).

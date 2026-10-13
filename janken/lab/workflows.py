@@ -8,7 +8,8 @@ They compose the lab (experiments, tuning, the runs database) with the notebook
                   results into the note
     tune          a note's study: spaces, trials, validation, results into the note
     close         a note's verdict, and its idea's status
-    learn         an insight from a note, only if the note's evidence meets the bar
+    learn         an insight from one or more notes, citing their stored results
+                  (marked tentative when no 95% CI of theirs excludes 0)
     classify      a kept candidate's species: a new one, the next version, or a
                   variant (janken/lab/classify.py decides; this moves the files)
 
@@ -348,65 +349,107 @@ def close(
     return note
 
 
-def evidence(note: notes.Note, workspace: str) -> list[str]:
-    """The note's results that meet the insight bar: a paired comparison (or a
-    validated difference from the defaults) whose 95% CI excludes 0."""
+TENTATIVE = "tentative, no 95% CI excludes 0"
+
+
+@dataclasses.dataclass(frozen=True)
+class Evidence:
+    """A note's stored results, as an insight cites them: its significant ones
+    (a 95% CI that excludes 0), else all of them, marked tentative."""
+
+    results: tuple[str, ...]
+    significant: bool
+
+    def text(self) -> str:
+        body = "; ".join(self.results)
+        return body if self.significant else f"{TENTATIVE}: {body}"
+
+
+def weigh(results: Sequence[tuple[str, bool]]) -> Evidence:
+    """The results (text, whether its CI excludes 0) an insight cites: the
+    significant ones if any, else every one, tentative."""
+    found = tuple(text for text, significant in results if significant)
+    if found:
+        return Evidence(found, True)
+    return Evidence(tuple(text for text, _ in results), False)
+
+
+_RECORDED = re.compile(r"^- (`.+ = [+-]\d.* pts \[.+\]` over \d+ shared matches: .+)$")
+NOT_SIGNIFICANT = "no significant difference"
+
+
+def recorded(text: str) -> list[tuple[str, bool]]:
+    """The paired comparisons a note's text records (as `janken evaluate` writes
+    them), and whether each CI excludes 0."""
+    found = [m.group(1) for m in map(_RECORDED.match, text.splitlines()) if m]
+    return [(line, not line.endswith(NOT_SIGNIFICANT)) for line in found]
+
+
+def evidence(note: notes.Note, workspace: str) -> Evidence:
+    """The note's stored results, weighed (`weigh`): its paired comparisons, or
+    for a tuning note its validated differences from the defaults. A run no
+    longer in the workspace is read from the comparisons its note records."""
     runs = RunStore.at(workspace)
     if note.kind == notes.TUNING:
         rows = runs.validations("tune_validations", note.study)
         if not rows.height:
-            return []
-        found = rows.filter(
-            (pl.col("trial") >= 0)
-            & ((pl.col("vs_defaults_lo") > 0) | (pl.col("vs_defaults_hi") < 0))
+            return weigh([])
+        return weigh(
+            [
+                (
+                    "{} vs defaults {:+.1f} pts [{:+.1f}, {:+.1f}] (validation run {})".format(
+                        r["champion"],
+                        100 * r["vs_defaults"],
+                        100 * r["vs_defaults_lo"],
+                        100 * r["vs_defaults_hi"],
+                        r["run_id"],
+                    ),
+                    r["vs_defaults_lo"] > 0 or r["vs_defaults_hi"] < 0,
+                )
+                for r in rows.filter(pl.col("trial") >= 0).iter_rows(named=True)
+            ]
         )
-        return [
-            "{} vs defaults {:+.1f} pts [{:+.1f}, {:+.1f}] (validation run {})".format(
-                r["champion"],
-                100 * r["vs_defaults"],
-                100 * r["vs_defaults_lo"],
-                100 * r["vs_defaults_hi"],
-                r["run_id"],
-            )
-            for r in found.iter_rows(named=True)
-        ]
     known = [r for r in note.run_ids if r in runs.run_ids()]
     if not known:
-        return []
+        return weigh(recorded(note.text))
     summary = analyze.analyze_run(known[-1], workspace, write=False)
-    return [analyze.comparison_text(c) for c in analyze.significant(summary)]
+    significant = analyze.significant(summary)
+    return weigh(
+        [(analyze.comparison_text(c), c in significant) for c in summary["comparisons"]]
+    )
 
 
 def learn(
     notebook: str,
-    ref: str,
+    refs: Sequence[str],
     finding: str,
     mechanism: str,
     implication: str,
     workspace: str,
     today: datetime.date,
 ) -> insights.Insight:
-    """Add an insight from note `ref`, if its evidence meets the bar.
+    """Add an insight citing the notes `refs` and their stored results (each
+    marked tentative when none of its CIs excludes 0).
 
     Raises:
-        WorkflowError: the note has no result whose CI excludes 0.
+        WorkflowError: no note given, or one has no stored result to cite.
     """
-    note = notes.find(notebook, ref)
-    found = evidence(note, workspace)
-    if not found:
-        raise WorkflowError(
-            f"note {note.number:04d} has no paired comparison or validated difference"
-            " whose 95% CI excludes 0: that's a result, not an insight. Add an idea"
-            " to confirm it instead (`janken idea add`)."
+    if not refs:
+        raise WorkflowError("an insight cites at least one note")
+    cited = []
+    for ref in refs:
+        note = notes.find(notebook, ref)
+        found = evidence(note, workspace)
+        if not found.results:
+            raise WorkflowError(
+                f"note {note.number:04d} has no stored result (a paired comparison"
+                " or a validated tuning) for an insight to cite"
+            )
+        where = f"run {note.run_ids[-1]}" if note.run_ids else f"study {note.study}"
+        cited.append(
+            f"experiments/{note.number:04d}-{note.slug}.md ({where}): {found.text()}"
         )
-    where = f"run {note.run_ids[-1]}" if note.run_ids else f"study {note.study}"
-    insight = insights.Insight(
-        today,
-        finding,
-        f"experiments/{note.number:04d}-{note.slug}.md ({where}): " + "; ".join(found),
-        mechanism,
-        implication,
-    )
+    insight = insights.Insight(today, finding, "; ".join(cited), mechanism, implication)
     file = insights.path(notebook)
     with open(file, encoding="utf-8") as f:
         text = f.read()

@@ -26,8 +26,8 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 1. **Classify a kept bot:** `janken species classify NNNN` (`/classify`). It becomes a
    new species (`<name>_v1`), the next version of its level's closest species (the old
    version retires), or a variant (it retires): one bot per species in the field.
-1. **Record insights** that hold up: `janken insight add --note NNNN ...` (`/learn`). It
-   refuses evidence below the bar.
+1. **Record insights**: `janken insight add --note NNNN [--note MMMM ...] ...` (`/learn`).
+   It cites the notes' stored results, marked tentative when no 95% CI excludes 0.
 
 `/lab-loop` runs this loop on its own, one commit per step.
 

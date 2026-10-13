@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Promote a confirmed janken lab finding into research/insights.md with `janken insight add` (which refuses evidence below the bar), strike insights that later results contradict, and turn implications into new ideas. Use after a keep verdict, when `janken status` says learn, or when the user says "write this down".
+description: Record a janken lab finding in research/insights.md with `janken insight add` (citing one or more notes' stored results, marked tentative when no CI excludes 0), strike insights that later results contradict, and turn implications into new ideas. Use after a keep verdict, when `janken status` says learn, or when the user says "write this down".
 ---
 
 # Learn
@@ -8,27 +8,32 @@ description: Promote a confirmed janken lab finding into research/insights.md wi
 `research/insights.md` is the lab's long-term memory. Every design starts from it, so it
 stays **true** and **short**. Run every command as `uv run janken ...`.
 
-## The bar
+## The evidence
 
-`janken insight add` writes the evidence line from the note's stored numbers. It refuses
-a note unless one of these has a **95% CI that excludes 0**:
+`janken insight add` writes the evidence line from the cited notes' stored numbers:
+each note's paired comparisons (for a tuning note, its validated differences from the
+defaults) whose **95% CI excludes 0**, or, when none does, all of them marked
+**tentative**. A note whose run is no longer in the workspace is read from the
+comparisons its text records. A note with no result at all can't be cited.
 
-- a paired comparison in its run;
-- for a tuning note, a validated difference from the defaults.
+- **Significant** (a CI excludes 0): the insight stands on it.
+- **Tentative** (every CI includes 0): still worth recording when it steers future bots,
+  for example "equal and N times cheaper", or one finding repeated across several notes.
+  Say so in the finding ("about as good as", "no worse than"), and add a confirming idea
+  when it matters (`janken idea add`, citing the note).
+- **One finding, several notes:** repeat `--note` (`--note 0035 --note 0036 ...`), so
+  the insight cites them all, and `janken status` stops asking about each.
 
-Even then, an insight must be **general enough to steer future bots**:
+Either way, an insight must be **general enough to steer future bots**:
 
 - not an insight: "bot X with DECAY 0.8 scored 91%";
 - an insight: "sampling from confidence-scaled probabilities beats argmax against the
   metabots".
 
-When the evidence is suggestive but short of the bar, add a confirming idea instead
-(`janken idea add`, citing the note).
-
 ## Record it
 
 ```bash
-uv run janken insight add --note NNNN \
+uv run janken insight add --note NNNN [--note MMMM ...] \
   --finding "the general claim, one line" \
   --mechanism "why we think it works (say if it's a hypothesis)" \
   --implication "what to build or try next"

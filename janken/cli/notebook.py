@@ -115,7 +115,10 @@ def idea_drop(
 def insight_add(
     lab: Lab,
     note: Annotated[
-        str, typer.Option(help="the note whose evidence backs it (number or NNNN-name)")
+        list[str],
+        typer.Option(
+            help="a note whose results back it (number or NNNN-name; repeatable)"
+        ),
     ],
     finding: Annotated[
         str, typer.Option(help="the one-line finding, general enough to steer bots")
@@ -127,11 +130,12 @@ def insight_add(
         str, typer.Option(help="what to build or try next (add it as an idea too)")
     ],
 ) -> None:
-    """Record an insight, if the note's evidence meets the bar.
+    """Record an insight citing one or more notes' stored results.
 
-    The bar: a paired comparison (or a validated difference from a tuned bot's
-    defaults) whose 95% CI excludes 0. The evidence line is written from the note's
-    stored numbers.
+    The evidence line is written from each note's stored numbers: its paired
+    comparisons (or a tuning's validated differences from the defaults) whose 95%
+    CI excludes 0, else all of them, marked tentative. A note with no stored
+    result can't be cited.
     """
     from ..lab import workflows
 

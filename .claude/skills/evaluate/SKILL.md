@@ -92,5 +92,5 @@ uv run janken verdict NNNN keep|drop|iterate \
   follow-up as a new note: a sharper test (a pool where the effect lives) or a
   variant, not more round robins of the same.
 
-Next: a `keep` whose CI excludes 0 goes to `/learn`. A kept bot with tunable defaults may
+Next: a `keep` goes to `/learn` (an insight is tentative when no CI excludes 0). A kept bot with tunable defaults may
 go to `/tune`.

@@ -59,7 +59,7 @@ status --> idea --> bot new / check --> evaluate --> verdict --> species classif
 | `janken species compare BOT / census / list` | how alike a bot's core is to each species; the field's alike pairs and species per level; the lineage (`research/species.md`) |
 | `janken species variants LIST OUT` | which parameter variants of field bots (a list of specs) agree with no species of their level: new bots by the species rule |
 | `janken verdict NOTE keep\|drop\|iterate --summary ...` | close the note; its idea becomes done, dropped or stays open |
-| `janken insight add --note NOTE ...` | record an insight, **only** if the note's evidence meets the bar |
+| `janken insight add --note NOTE [--note NOTE ...] ...` | record an insight citing the notes' stored results (tentative when no 95% CI excludes 0; a note with no stored result is refused) |
 | `janken insight list / supersede` | read, or strike a contradicted insight |
 | `janken tournament` | the whole field: standings, Glicko-2 ratings, titles |
 | `janken config show / get / set / unset / path / check` | every default ([Configuration](configuration.md)) |
@@ -155,5 +155,5 @@ uv run janken lab match bots/l2/bayes_combiner.yaml bots/l1/geometry_v1.yaml --r
 ## Errors and exit status
 
 - **A refused step** prints `error: ...` and exits with status 2. Examples: a missing note,
-  a reused bot stem, an insight below the bar, a bad config value.
+  a reused bot stem, an insight citing a note with no stored result, a bad config value.
 - **Ctrl-C** exits with status 130; whatever was already committed stays stored.

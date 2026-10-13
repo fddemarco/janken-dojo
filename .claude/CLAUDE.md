@@ -56,7 +56,8 @@ The skills drive the self-improvement loop through the high-level commands:
 - `/tune`: a bot's or fleet's study and its validated verdict (`janken tune`).
 - `/classify`: a kept bot becomes a new species, the next version of one, or a variant
   (`janken species classify`).
-- `/learn`: insights that meet the bar, and follow-up ideas (`janken insight add`).
+- `/learn`: insights citing the notes behind them (tentative when no CI excludes 0),
+  and follow-up ideas (`janken insight add`).
 - `/profile`: a bottleneck slowing the loop is profiled, judged against the optimization
   budget, and fixed only if a benchmark proves it (`janken lab profile`). Sparingly: only
   when something is slow, and never twice on unchanged code.

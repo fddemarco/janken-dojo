@@ -951,17 +951,18 @@ $ uv run janken insight [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `add`: Record an insight, if the note's evidence...
+* `add`: Record an insight citing one or more...
 * `list`: Every insight's title, newest first.
 * `supersede`: Strike an insight a later result...
 
 ### `uv run janken insight add`
 
-Record an insight, if the note's evidence meets the bar.
+Record an insight citing one or more notes' stored results.
 
-The bar: a paired comparison (or a validated difference from a tuned bot's
-defaults) whose 95% CI excludes 0. The evidence line is written from the note's
-stored numbers.
+The evidence line is written from each note's stored numbers: its paired
+comparisons (or a tuning's validated differences from the defaults) whose 95%
+CI excludes 0, else all of them, marked tentative. A note with no stored
+result can't be cited.
 
 **Usage**:
 
@@ -971,7 +972,7 @@ $ uv run janken insight add [OPTIONS]
 
 **Options**:
 
-* `--note <str>`: the note whose evidence backs it (number or NNNN-name)  [required]
+* `--note <str>`: a note whose results back it (number or NNNN-name; repeatable)  [required]
 * `--finding <str>`: the one-line finding, general enough to steer bots  [required]
 * `--mechanism <str>`: why it works (say so if it's a hypothesis)  [required]
 * `--implication <str>`: what to build or try next (add it as an idea too)  [required]

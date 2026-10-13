@@ -127,6 +127,7 @@ when:
 - The CLI writes the hypothesis before the run, and you never edit a hypothesis
   afterwards.
 - Every evaluated bot has a note, and every note ends with a verdict.
-- Insights only through `janken insight add`, which refuses evidence below the bar.
+- Insights only through `janken insight add`, which cites the notes' stored results
+  (tentative when no CI excludes 0) and refuses a note with none.
 - Ideas are never silently dropped: `janken verdict` or `janken idea drop --reason`.
 - Never delete stored runs, and never change a bot's logic under its filename.

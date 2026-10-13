@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: Identifying an opponent's family pays when done by records, not by a scripted probe: a gate over every family's natural counter beats a probe-then-switch, but an L3 holding them only ties the field's L3 council
+
+- **Evidence:** experiments/0074-family-counters-vs-repeat-mirror-v1.md (run 20261013-160748_0074-family-counters-vs-repeat-mirror-v1): `family_counters - repeat_mirror_v1 = +12.2 pts [+4.2, +20.2]` over 200 shared matches: family_counters better; experiments/0075-family-counters-vs-l2-council-v1.md (run 20261013-160825_0075-family-counters-vs-l2-council-v1): tentative, no 95% CI excludes 0: `family_counters - l2_council_v1 = -1.9 pts [-10.9, +6.9]` over 160 shared matches: no significant difference
+- **Mechanism:** an oracle that knows the family and switches to its counter gains +10 to +12 rounds per match, but a 24-round probe classifies the family only ~50% right and a wrong switch costs more than a right one gains; decayed counterfactual records over all the counters converge on the right one without the probe's cost (+18 rounds per match over repeat_mirror in the arena, +12.2 pts in the kit), and the field's L3 council already reaches the same level (-1.9 pts [-10.9, +6.9])
+- **Implication:** use the atlases' natural counters as arms of any council, skip scripted probes, and look for gains above L2 on hard pools or in new kinds of aggregators, not in more L3 councils
+
 ## 2026-10-13: A move table pre-trained on the field's matches beats the best online L1 against parameter variants it never saw: pre-training generalises across parameters
 
 - **Evidence:** experiments/0073-pretrained-context-vs-context-mixture-v1.md (run 20261013-155311_0073-pretrained-context-vs-context-mixture-v1): `pretrained_context - context_mixture_v1 = +9.8 pts [+5.6, +14.4]` over 320 shared matches: pretrained_context better; experiments/0072-pretrained-context-vs-context-mixture-v1.md (run 20261013-155257_0072-pretrained-context-vs-context-mixture-v1): `pretrained_context - context_mixture_v1 = +6.8 pts [+1.8, +12.0]` over 200 shared matches: pretrained_context better

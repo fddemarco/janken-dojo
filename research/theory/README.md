@@ -97,3 +97,8 @@ A claim with no possible refutation isn't a claim.
   learner, adaptive L2+) 80% of the time vs held-out variants, 21 pts above a random
   opening; families and species stay unreliable (52%, 43% at 48 rounds). It costs
   about 2.8 rounds per match; whether knowing the class pays is next (ideas #77, #78).
+- **2026-10-13, probes answered.** Knowing an opponent's family is worth +10 to +12
+  rounds per match (oracle), but a probe's classifier loses it on mistakes; a gate
+  over every family's natural counter identifies by record and gains most (+18 rounds
+  per match over `repeat_mirror` in the arena). In the kit that gate is an L3 that ties
+  the field's L3 council (notes 0074, 0075): a fourth L3 design at the same score.

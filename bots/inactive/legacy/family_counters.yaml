@@ -1,0 +1,17 @@
+description: |
+  The natural counter of each family the atlases found, beside repeat_mirror, picked by decayed counterfactual records (idea #79).
+  frequency (fixed play), rotation_outcome (reactive rules), pattern_memory (counting rules), anti_smartbot (adaptive bandits), geometry_ensemble (replay counters) and repeat_mirror (the rest): the opponent's family is identified by which counter's record leads, with no scripted probe (research/probe_study.md).
+defaults:
+  DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: repeat_mirror_v1, rotations: [COPY]}
+        - {bot: anti_smartbot_v2, rotations: [COPY]}
+        - {bot: geometry_ensemble_v1, rotations: [COPY]}
+        - {bot: frequency_v1, rotations: [BEAT]}
+        - {bot: rotation_outcome_v1, rotations: [BEAT]}
+        - {bot: pattern_memory_v1, rotations: [BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_FIRST}}

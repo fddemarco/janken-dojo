@@ -46,8 +46,27 @@ Majority class (coarse): 65%. Chance (species): about 2%.
 
 ## Is it worth it?
 
-Not shown yet. The probe pays only if knowing the class wins back more than its cost
-(about 3 rounds, plus what normal play would have earned in those rounds) over the
-rest of the match. The next experiment bounds it from above first: with the class
-known exactly (an oracle), how much does switching to the class's natural counter
-gain over `repeat_mirror_v1` (ideas #77, #78)?
+On the same 230 held-out variants (seeds 4-5, 460 paired matches, 250 rounds, vs
+`repeat_mirror_v1` for the whole match, net share of rounds):
+
+| player | vs repeat_mirror | rounds per match |
+|---|---|---|
+| oracle: true family, probe then that family's counter | +5.0 +- 1.2 | +12.4 |
+| oracle: true coarse class, probe then its counter | +4.1 +- 1.2 | +10.2 |
+| probe, classify coarse, switch to its counter | +0.9 +- 1.7 | +2.2 |
+| probe, classify family, switch | -1.5 +- 1.7 | -3.8 |
+| probe, classify coarse, then a gate (counter vs repeat_mirror, decayed records) | +3.0 +- 1.1 | +7.5 |
+| **no probe: a gate over repeat_mirror and every family's counter** | **+7.2 +- 1.3** | **+18.1** |
+
+- **Knowing the family is worth a lot** (the oracle bounds), but a hard switch on the
+  classifier's guess loses most of it to misclassification.
+- **A counterfactual gate makes the probe safe** (+3.0), as it did for parameter
+  identification (`janken lab identify`).
+- **The probe adds nothing beyond the gate**: holding every family's natural counter
+  and letting decayed records pick among them identifies the opponent implicitly, at
+  no scripted cost, and gains the most (+7.2).
+- **In the kit** that gate is an L3 bandit (`family_counters`, notes 0074, 0075): +12.2
+  pts [+4.2, +20.2] over `repeat_mirror_v1` on whole-field variant pools, but -1.9
+  [-10.9, +6.9] vs the field's L3 council `l2_council_v1`: the gain is the L3-over-L2
+  effect, which the field already has. A scripted probe is not worth its rounds here;
+  the families' counters are good arms for any council.

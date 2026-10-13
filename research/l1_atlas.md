@@ -55,3 +55,36 @@ Rounds won minus lost per match, row vs column.
   sit within 10 rounds per match, which 10 matches per pair can't order.
 - **Next (ideas #61-63):** more matches per pair for the close learner pairs, the
   mechanism behind each matchup, and the strategy families the level lacks.
+
+## The learners' order, settled (100 matches per pair)
+
+Source: `janken tournament` on the six learners only, 100 matches per pair x 250
+rounds, seed 61 (`experiments/l1_learners.json`). Rounds won minus lost per match,
+row vs column, with the 95% CI half-width; "tie" when the CI covers 0.
+
+| pair | margin |
+|---|---|
+| `pattern_memory` vs `geometry` | +0.8 +- 2.2 (tie) |
+| `pattern_memory` vs `markov2_joint` | +32.8 +- 1.6 |
+| `pattern_memory` vs `period_detector` | +3.9 +- 2.4 |
+| `pattern_memory` vs `transition_matrix` | +5.8 +- 2.6 |
+| `pattern_memory` vs `rotation_outcome` | +55.1 +- 3.9 |
+| `geometry` vs `markov2_joint` | +6.4 +- 2.4 |
+| `geometry` vs `period_detector` | +3.1 +- 2.3 |
+| `geometry` vs `transition_matrix` | +0.9 +- 2.6 (tie) |
+| `geometry` vs `rotation_outcome` | +20.3 +- 2.2 |
+| `markov2_joint` vs `period_detector` | +2.2 +- 2.1 |
+| `markov2_joint` vs `transition_matrix` | +1.0 +- 2.7 (tie) |
+| `markov2_joint` vs `rotation_outcome` | +26.6 +- 3.2 |
+| `period_detector` vs `transition_matrix` | +3.8 +- 2.6 |
+| `period_detector` vs `rotation_outcome` | -14.1 +- 5.5 |
+| `transition_matrix` vs `rotation_outcome` | -1.9 +- 2.1 (tie) |
+
+- **Top pair:** `pattern_memory` and `geometry` tie each other and beat the rest
+  (`geometry` ties `transition_matrix`).
+- **A cycle in the middle:** `markov2_joint` > `period_detector` > `transition_matrix`
+  ~ `markov2_joint`, all within 4 rounds per match.
+- **`rotation_outcome`** is last among the learners, yet the only one that beats
+  `period_detector` (+14.1): a non-transitive niche.
+- **Few strong strategies:** two at the top, four close behind. A small set like this
+  is where a specialist per strong strategy can pay (research/theory/README.md).

@@ -1,0 +1,57 @@
+# Theory: the lab's model of rock-paper-scissors
+
+`insights.md` records findings one at a time. This folder holds the **theory** they add
+up to: what we believe about how RPS bots win and lose, paradigm by paradigm, what
+would refute it, and what we're doing about it. An experiment either confirms a claim,
+refutes it, or opens a question. The theory is rewritten as that happens; the history
+stays in the journal below and in git.
+
+## The cycle: diversify, specialise, diversify
+
+The lab alternates two phases, at every level of bots (research/README.md, Research
+direction: bottom up, by level):
+
+1. **Diversify.** Widen the field before narrowing it: new strategy families, the
+   kit's unused signals, variants of parameters. A field of near-copies teaches
+   nothing, and a bot tuned against it overfits it.
+1. **Specialise (overfit, on purpose).** When the level's strong strategies are
+   **few** (a handful win most matchups), a specialist per strong strategy can pay: a
+   replay or counter of each, gated. When they are many, specialists dilute (one
+   opponent is one pool slot in ~40: insight of 2026-10-13), and generalists win.
+1. **Diversify again**, against the specialists: the counters of the counters, until
+   the field's strong set changes. Then specialise again.
+
+Before specialising, check the condition: how many strategies win most matchups at
+this level, and do they stay strong across their parameter variants (`pool.variants`)?
+A specialist for a strategy that isn't in the strong set, or that only exists at one
+parameter setting, is overfitting by accident.
+
+## The scientific lifecycle of a claim
+
+Each paradigm file states claims with a status:
+
+- **conjecture**: believed, not yet tested;
+- **supported**: an experiment could have refuted it and didn't (with its notes or
+  runs);
+- **refuted**: an experiment contradicted it (struck through, kept, with the
+  evidence);
+- **open question**: what we don't know and how we'd find out.
+
+Every claim names the observation behind it and a **prediction** that would test it.
+A claim with no possible refutation isn't a claim.
+
+## Paradigms
+
+| file | paradigm | phase |
+|---|---|---|
+| [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | diversify (just started) |
+| [02-meta-strategies.md](02-meta-strategies.md) | aggregation: bandits, gates, replays (L2 and up) | specialised; to revisit bottom up |
+
+## Journal
+
+- **2026-10-13.** Theory started. After a day of top-down work (identification of
+  opponent parameters, L5 bots, gate tuning, wider experts), the evidence says the top
+  bots' remaining gains are narrow, a few points that pools can't resolve. The user
+  set the direction: bottom up by level, diversify and specialise in turn. First step:
+  the L1 atlas (research/l1_atlas.md), which finds L1's strong set small (two
+  learners at the top, four close behind).

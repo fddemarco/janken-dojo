@@ -222,7 +222,8 @@ last resort use an inline `# noqa` / `# type: ignore` comment. Say so in the han
   `bots/inactive/` the bots out of the field: `fleets/` and `legacy/` (discovery reads
   only the level folders, so neither ever enters a pool). `spaces/` holds one space file per tunable
   bot of the field.
-- `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `species.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
+- `research/` holds `README.md` (protocol), `ideas.md`, `insights.md`, `theory/` (the model
+  the insights add up to, paradigm by paradigm), `species.md`, `sources/` (one card per external resource), `experiments/NNNN-*.md`
   and `rps_kaggle.md`.
 - `janken/engine/` compiles bots and referees matches. `janken/kit/` holds the bot
   anatomy: `blueprint/` (the stage catalogue, the predictor tree and its compiler: one

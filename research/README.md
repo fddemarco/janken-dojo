@@ -39,6 +39,8 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 | `sources/<slug>.md` | one card per external resource: summary, claims vs evidence, relevance, ideas spawned |
 | `ideas.md` | the backlog: ideas with status, priority, and the evidence that motivated them |
 | `insights.md` | findings that held up, each linked to the experiment(s) behind it |
+| `theory/` | the theory the insights add up to: one file per RPS paradigm (L1 heuristics, aggregation, ...), its claims with their status (conjecture, supported, refuted), the diversify/specialise cycle, and a journal |
+| `l1_atlas.md` | the L1 species against each other: who beats whom, the gaps |
 | `species.md` | the field's species: each one's level, current version and lineage, and the variants that didn't beat it |
 | `experiments/NNNN-<slug>.md` | one note per experiment: hypothesis, command, run id, results, verdict |
 | `experiments/TEMPLATE.md` | the note template |

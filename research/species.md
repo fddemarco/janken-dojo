@@ -49,7 +49,7 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `outcome_reader` | L2 | `outcome_reader_v1` | `outcome_reader` (2026-10-12 seeded) --> v1 | |
 | `multiscale` | L2 | `multiscale_v1` | `multiscale` (2026-10-12 seeded) --> v1 | |
 | `sampled_markov` | L2 | `sampled_markov_v1` | `sampled_markov` (2026-10-12 seeded) --> v1 | |
-| `anti_smartbot` | L2 | `anti_smartbot_v1` | `anti_smartbot` (2026-10-12 seeded) --> v1 | |
+| `anti_smartbot` | L2 | `anti_smartbot_v2` | `anti_smartbot` (2026-10-12 seeded) --> v1; `anti_smartbot_normal` ([0035](experiments/0035-anti-smartbot-normal.md)) --> v2 | |
 | `anti_smartbot_sims` | L3 | `anti_smartbot_sims_v2` | `anti_smartbot_sims` (2026-10-11 rename) --> v1; `anti_smartbot_sims_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
 | `smartbot_sims` | L3 | `smartbot_sims_v2` | `smartbot_sims` (2026-10-11 rename) --> v1; `smartbot_sims_v1` minus the word2janken and word2janken_scoreboard sims (2026-10-12) --> v2 | |
 | `l2_council` | L3 | `l2_council_v1` | `l2_council` (2026-10-12 seeded) --> v1 | |

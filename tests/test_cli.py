@@ -565,6 +565,36 @@ class TestSpeciesLifecycle:
         assert "1 of 1 round robin(s)" in note.section("Results")
 
     @pytest.mark.heavy
+    def test_a_bot_evaluated_against_its_species_is_decided_by_that_run(
+        self,
+    ) -> None:
+        stems = [registry.find(self.bots, s) for s in SPECIES_FIELD]
+        self.run_ok("lab", "dataset", "add", *stems)
+        self.run_ok("bot", "new", "twin", "--from", "cycler_v1", "--description", "A.")
+        self.run_ok(
+            "evaluate",
+            registry.find(self.bots, "twin"),
+            "--baseline",
+            registry.find(self.bots, "cycler_v1"),
+            "--hypothesis",
+            "plays like cycler",
+            "--no-sequential",
+        )
+        number = f"{notes.all_notes(self.notebook)[-1].number:04d}"
+        self.run_ok("verdict", number, "keep", "--summary", "kept for the test")
+        decided = self.json_of("species", "classify", number)
+        assert decided["outcome"] == "variant"  # as good, but no faster
+        assert "its evaluation" in decided["reasons"][0]
+        assert not self.runs_named(f"species-{number}")
+
+    def runs_named(self, name: str) -> list[str]:
+        """The stored runs called `name` (none for a decision with no species run)."""
+        from janken.lab.runs_db import RunStore
+
+        runs = RunStore.at(os.path.join(self.root, "experiments")).runs()
+        return [r for r in runs["name"].to_list() if r == name] if runs.height else []
+
+    @pytest.mark.heavy
     def test_a_twin_is_a_variant_and_a_stranger_a_new_species(self) -> None:
         stems = [registry.find(self.bots, s) for s in SPECIES_FIELD]
         self.run_ok("lab", "dataset", "add", *stems)

@@ -705,9 +705,9 @@ def classify_note(
     cache = core_cache(how.workspace, config)
     field = read_field(paths, seqs, cache)
     same = kin = compare(spec.path, field, seqs, cache)
-    declared = _declared_incumbent(note, field)
+    declared = _declared_incumbents(note, field)
     if config.promote_on_evaluation and declared and note.run_ids:
-        found = _by_evaluation(note, spec, declared, kin, how, config)
+        found = _by_evaluation(note, spec, declared[0], kin, how, config)
         return _apply(notebook, found, "", how.bots_dir, spaces_dir, config, level)
     correlation, compared, run_id, speedup = math.nan, (), "", 1.0
     if same and classify.needs_run(same[0], level, config):
@@ -751,13 +751,10 @@ def classify_note(
     return _apply(notebook, found, name, how.bots_dir, spaces_dir, config, level)
 
 
-def _declared_incumbent(note: notes.Note, field: Field) -> BotSpec | None:
-    """The note's first baseline that is a current version of the candidate's
-    level (`field`): the species the candidate means to succeed."""
-    for baseline in specs(note.baselines):
-        if baseline.stem in field.paths and not baseline.params:
-            return baseline
-    return None
+def _declared_incumbents(note: notes.Note, field: Field) -> list[BotSpec]:
+    """The note's baselines that are current versions of the candidate's level
+    (`field`), unchanged: the species the candidate means to succeed."""
+    return [b for b in specs(note.baselines) if b.stem in field.paths and not b.params]
 
 
 def _by_evaluation(

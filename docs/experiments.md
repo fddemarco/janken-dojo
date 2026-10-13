@@ -80,6 +80,15 @@ The field holds **one bot per species**, its current **version**:
    levels. Each core is computed once and kept in the workspace's `species.cores_dir`,
    named after a hash of the bot (and the bots it names), the replay code and the
    histories, so later runs replay only the bots that changed.
+1. **Decided by its evaluation** (`species.promote_on_evaluation`): when the kept note's
+   baseline is the current version of a species of the candidate's level, the
+   evaluation already paired the two, and classify reads that run instead of playing
+   another. Naming the incumbent as the baseline declares the candidate its successor,
+   so no core-agreement bar applies:
+   - worse there (the paired CI below 0): a **variant**;
+   - better (the CI above 0): the **next version**;
+   - neither: the **next version** when more than `species.speed_factor` times faster
+     in self-play, else a **variant**.
 1. Below `species.agreement` for every species of its level: a **new species**. It is
    named (`--name`) and renamed `<name>_v1`.
 1. Otherwise a **paired run** against the closest species' current version

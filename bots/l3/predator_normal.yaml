@@ -1,0 +1,16 @@
+description: |
+  predator_v1 over the next version of anti_smartbot (NORMAL replays).
+  As predator_v1, with its anti_smartbot arm naming anti_smartbot_v2, whose replay computes smartbot's likely move (estimate NORMAL) instead of drawing it 256 times (idea #50).
+defaults:
+  DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: anti_smartbot_v2, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: anti_iocaine_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: anti_rps4_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: zoo_hunter_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

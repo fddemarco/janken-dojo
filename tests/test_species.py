@@ -208,6 +208,28 @@ MARGINAL = matchup(0.1, 0.01, 0.2, -0.03)  # above 0 at 95%, not at Bonferroni
 WORSE = matchup(-0.2, -0.3, -0.1, -0.35)
 
 
+class TestDecideByEvaluation:
+    @pytest.mark.parametrize(
+        ("lo", "hi", "speedup", "outcome"),
+        [
+            (-0.10, -0.01, 9.0, classify.VARIANT),  # worse, however fast
+            (0.01, 0.10, 1.0, classify.PROMOTE),  # better
+            (-0.06, 0.08, 12.0, classify.PROMOTE),  # as good and much faster
+            (-0.06, 0.08, 2.0, classify.VARIANT),  # not more than 2x
+        ],
+        ids=["worse", "better", "faster", "not faster enough"],
+    )
+    def test_the_evaluation_decides(
+        self, lo: float, hi: float, speedup: float, outcome: str
+    ) -> None:
+        paired = {"mean": (lo + hi) / 2, "ci_lo": lo, "ci_hi": hi}
+        decided = classify.decide_by_evaluation(
+            "smartbot_v1", "run-1", paired, CONFIG, speedup
+        )
+        assert decided.outcome == outcome
+        assert "run-1" in decided.reasons[0]
+
+
 class TestDecide:
     @pytest.mark.parametrize(
         ("nearest", "level", "correlation"),

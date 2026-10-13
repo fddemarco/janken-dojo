@@ -267,14 +267,11 @@ def decide_by_evaluation(
         return Decision(
             PROMOTE, (shown, f"no significant difference, and {speedup:.1f}x faster")
         )
-    return Decision(
-        VARIANT,
-        (
-            shown,
-            f"no significant difference; {speedup:.1f}x the speed, below"
-            f" {config.speed_factor:.1f}x",
-        ),
+    slow = (
+        f"no significant difference; {speedup:.1f}x the speed, below"
+        f" {config.speed_factor:.1f}x"
     )
+    return Decision(VARIANT, (shown, slow))
 
 
 def needs_run(nearest: Kin, level: str, config: settings.SpeciesConfig) -> bool:

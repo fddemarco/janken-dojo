@@ -37,6 +37,13 @@ its next version or variant; a bot alike a species of another level is a new spe
 uv run janken species classify NNNN
 ```
 
+- **Its evaluation named the incumbent** (the note's baseline is its level's species'
+  current version; `species.promote_on_evaluation`): classify reads that paired run and
+  plays no other. Worse there: a **variant**. Better: the **next version**. Neither: the
+  **next version** when more than `species.speed_factor` (2x) faster in self-play,
+  else a **variant**. No core-agreement bar: naming the baseline declares the
+  succession. A faster rewrite of a bot (same idea, cheaper machinery) goes this way:
+  evaluate it with the current version as its baseline, `keep` if no worse, classify.
 - **No species of its level is alike** (core agreement below `species.agreement`):
   it's a **new species**, and the command stops and asks for a name.
 - **One is alike:** a paired run against that species' current version

@@ -66,7 +66,11 @@ it). As an L1 (`pretrained_context_v1`) it beats `context_mixture_v1` by +9.8 pt
 [+5.6, +14.4] on parameter variants it never saw (notes 0072, 0073). As one more arm
 of `repeat_mirror` it adds nothing measurable (+1.1 pts [-4.5, +7.0], note 0077):
 **pre-training pays where the learner starts weak**, not beside strong online arms
-that learn the same contexts within the match.
+that learn the same contexts within the match. Its weight: 1 observation per context
+beats 5 by +7.3 pts on whole-field variants (note 0078), and weights 0.25-1 play
+identically, since a single count then outweighs the prior: the prior is a **cold
+start** for unseen contexts, which is what generalises; a heavier prior overrules the
+match and loses. Training on L1-L4 data instead of L1-L2 adds nothing (note 0079).
 
 ## Ideas
 

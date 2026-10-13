@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: Context-tree weighting joins L1's strong tier as its own mechanism: it ties the longest-repeat follower on matches and wins the widest margins of any L1
+
+- **Evidence:** experiments/0071-context-mixture-vs-pattern-memory-v1.md (run 20261013-154436_0071-context-mixture-vs-pattern-memory-v1): tentative, no 95% CI excludes 0: `context_mixture - pattern_memory_v1 = -4.7 pts [-10.5, +0.8]` over 190 shared matches: no significant difference
+- **Mechanism:** a Bayesian mixture of every context length up to 3 joint moves, each context weighted by how well it has predicted, adapts its context length like repeat matching but blends rather than picks: in an L1 pool it is -4.7 pts [-10.5, +0.8] vs pattern_memory_v1 on matches but +121 vs +112 rounds per match, with 74% core agreement; like the repeat followers it loses to geometry and plays a deterministic choice
+- **Implication:** use CTW as a strong online arm and give it a pre-trained cold start (idea #80); expect a mirror counter (CTW on our moves, BEAT_BEAT) to beat it alone, as for the repeat followers
+
 ## 2026-10-13: A pre-trained prior is a cold start, and a longer context sharpens it: a table over the last 4 joint moves beats the 3-move one by about 8 pts against the whole field's variants
 
 - **Evidence:** experiments/0080-pretrained-deep-vs-pretrained-context-v2.md (run 20261013-162753_0080-pretrained-deep-vs-pretrained-context-v2): `pretrained_deep - pretrained_context_v2 = +7.9 pts [+3.4, +12.3]` over 640 shared matches: pretrained_deep better

@@ -1,5 +1,0 @@
-bot: bots/l4/level_k_bandit_normal.yaml
-weight: 1.0
-params:
-  ARM_DECAY: {type: float, low: 0.425, high: 1.0, grid: [0.425, 0.6167, 0.8083, 0.85, 1.0]}
-  SHARP: {type: float, low: 1.5, high: 6.0, grid: [1.5, 3.0, 4.5, 6.0]}

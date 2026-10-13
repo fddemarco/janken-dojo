@@ -8,6 +8,7 @@
 - **Baselines:** `bots/l4/level_k_gate_v2.yaml`
 - **Run:** `20261013-134613_0055-level-k-bandit-normal-vs-level-k-gate-v2`
 - **Verdict:** keep
+- **Species:** `level_k_bandit_normal` (variant of `level_k_gate_v2`)
 
 ## Hypothesis
 
@@ -43,3 +44,17 @@ Seed ladder (evaluate skill's head_to_head.py, threshold 36%, 250 rounds): the b
 ## Verdict
 
 **keep**. Equal vs random pools and simpler: level_k_bandit_normal - level_k_gate_v2 = -0.5 pts [-7.0, +6.0] over 200 paired matches (10 round robins), with two replays and no main bandit. Head to head it meets idea #40's goal vs double_bluff_gate_v2: 37.4% of rounds won [36.7%, 38.1%] over 100 seeds at 250 rounds (85 of 100 matches), where level_k_gate_v2 stays under 36% (34.5% [33.3%, 35.7%], 25 seeds).
+
+## Species
+
+**variant**: its evaluation (run `20261013-134613_0055-level-k-bandit-normal-vs-level-k-gate-v2`) paired it with level_k_gate_v2: -0.5 pts [-7.0, +6.0]; no significant difference; 1.1x the speed, below 2.0x.
+
+Closest species by core agreement (the dataset's histories):
+
+| species (current version) | level | core agreement |
+|---|---|---|
+| `level_k_gate_v2` | L4 | 73.7% |
+| `replay_hunter_gate_v2` | L4 | 71.6% |
+| `replay_hunter_wide_v2` | L4 | 70.4% |
+| `gate_main_first_v3` | L4 | 69.5% |
+| `gate_main_first_stationary_v3` | L4 | 69.4% |

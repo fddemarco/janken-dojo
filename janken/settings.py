@@ -573,6 +573,17 @@ class IdentifyConfig:
         "never count the opponent's own species among the hypotheses"
     )
     seed: int = setting("the particles' sampler seed")
+    forget: float = setting(
+        "each round, the posterior's weight on the evidence so far (1: none forgotten)",
+        minimum=0,
+    )
+    switch_decay: float = setting(
+        "the decay of the switch branch's records of keep and exploit", minimum=0
+    )
+    components: tuple[str, ...] = setting(
+        "blocks (stems) whose moves from either seat, at every rotation, are"
+        " particles too (no whole architecture assumed)"
+    )
 
 
 @dataclasses.dataclass(frozen=True)

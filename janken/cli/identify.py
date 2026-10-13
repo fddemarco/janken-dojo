@@ -74,10 +74,14 @@ def _report(lab: Lab, rows: Sequence[Mapping], condition: str) -> None:
             for g in gains
         ),
         "",
-        "| opponent species | exploit vs keep | oracle vs keep | matches |",
-        "|---|---|---|---|",
+        (
+            "| opponent species | exploit vs keep | switch vs keep | oracle vs keep"
+            " | matches |"
+        ),
+        "|---|---|---|---|---|",
         *(
             f"| {s} | {g[0].vs_keep:+.1%} +- {g[0].half_width:.1%}"
+            f" | {g[3].vs_keep:+.1%} +- {g[3].half_width:.1%}"
             f" | {g[2].vs_keep:+.1%} | {g[0].matches} |"
             for s, g in by_species.items()
         ),
@@ -110,6 +114,13 @@ def identify(
             default_factory=lambda: list(CFG.identify.hypotheses),
         ),
     ],
+    component: Annotated[
+        list[str],
+        typer.Option(
+            help=about("identify.components") + " (repeatable)",
+            default_factory=lambda: list(CFG.identify.components),
+        ),
+    ],
     seeds: Annotated[
         int, typer.Option(help=about("identify.seeds"))
     ] = CFG.identify.seeds,
@@ -138,6 +149,12 @@ def identify(
     sampler_seed: Annotated[
         int, typer.Option(help=about("identify.seed"))
     ] = CFG.identify.seed,
+    forget: Annotated[
+        float, typer.Option(help=about("identify.forget"))
+    ] = CFG.identify.forget,
+    switch_decay: Annotated[
+        float, typer.Option(help=about("identify.switch_decay"))
+    ] = CFG.identify.switch_decay,
 ) -> None:
     """Can an opponent bandit's parameters be told from its moves in time to pay?
     A particle posterior per match, and the rounds after the commit played three
@@ -160,6 +177,9 @@ def identify(
         probe=bot_path(lab, probe),
         rounds=lab.rounds,
         leave_one_out=leave_one_out,
+        forget=forget,
+        switch_decay=switch_decay,
+        components=tuple(bot_path(lab, c) for c in component),
     )
     key = params_hash(dataclasses.asdict(setup))
     log = os.path.join(lab.workspace, CFG.identify.dir, name + ".jsonl")

@@ -20,7 +20,10 @@ weigh the candidates: a particle posterior over (species, parameters).
                 posterior's vote, (keep) the probe still, or (oracle) the move that
                 beats the true opponent's replay. Both sides draw from the
                 engine's streams, so the three agree up to the commit round, and
-                the rounds after it compare the three policies directly.
+                the rounds after it compare the three policies directly. A
+                fourth, (switch), plays whichever of exploit and keep has the
+                better decayed record so far, both scored counterfactually from
+                round 0: it should never fall far below keep.
 
 A study's verdict is in the rounds after the commit: exploit vs keep says whether
 identification pays, oracle says how much more it could.
@@ -44,18 +47,24 @@ from ..lab import space as spaces
 from ..lab.predictor import predictor_params
 from ..match import bot_name
 from ..spec import BotSpec, parse_spec
-from .arena import SIDE_A, SIDE_B, KitBot, Player, outcomes, shares
+from .arena import SIDE_A, SIDE_B, KitBot, Player, outcomes, score, shares
 
 Number = int | float
-BRANCHES = ("exploit", "keep", "oracle")
+BRANCHES = ("exploit", "keep", "oracle", "switch")
+COMPONENT_SIDES = ("OPP", "MY")
+COMPONENT_ROTATIONS = ("COPY", "BEAT", "BEAT_BEAT")
 
 
 @dataclasses.dataclass(frozen=True)
 class Hypothesis:
-    """A candidate opponent: a bot and the parameters its core reads."""
+    """A candidate opponent: a bot, the parameters its core reads, and how its
+    move is read: from the opponent's seat as is (a whole bot), or, for a
+    component (a block), from either seat (`side`) turned by `rotation`."""
 
     stem: str
     params: Mapping[str, Number]
+    rotation: str = "COPY"
+    side: str = "OPP"
 
 
 def particle_data(hypothesis: Hypothesis, estimate: bool) -> dict[str, object]:
@@ -65,8 +74,8 @@ def particle_data(hypothesis: Hypothesis, estimate: bool) -> dict[str, object]:
     needs a Dirichlet scorer); otherwise its best arm plays."""
     signal: dict[str, object] = {
         "bot": hypothesis.stem,
-        "side": "OPP",
-        "rotations": ["COPY"],
+        "side": hypothesis.side,
+        "rotations": [hypothesis.rotation],
     }
     if hypothesis.params:
         signal["space"] = dict(hypothesis.params)
@@ -87,6 +96,17 @@ def particle(hypothesis: Hypothesis, path: str) -> KitBot:
         data = particle_data(hypothesis, False)
         compiled = declare.blueprint_from_data(data, lib, where).compile({})
     return KitBot(compiled, np.zeros(registry.P_MAX), SIDE_A)
+
+
+def components(path: str) -> list[Hypothesis]:
+    """A component (a block, at its defaults) read every way: from both seats,
+    at every rotation, so no whole architecture is assumed."""
+    stem = bot_name(path)
+    return [
+        Hypothesis(stem, {}, rotation, side)
+        for side in COMPONENT_SIDES
+        for rotation in COMPONENT_ROTATIONS
+    ]
 
 
 def core_space(path: str, space: spaces.Space) -> spaces.Space:
@@ -119,12 +139,12 @@ def numbers(values: Mapping[str, object]) -> dict[str, Number]:
     """Parameter values, checked to be numbers.
 
     Raises:
-        ValueError: a value isn't a number.
+        TypeError: a value isn't a number.
     """
     out: dict[str, Number] = {}
     for name, value in values.items():
         if isinstance(value, bool) or not isinstance(value, int | float):
-            raise ValueError(f"parameter {name} must be a number, got {value!r}")
+            raise TypeError(f"parameter {name} must be a number, got {value!r}")
         out[name] = value
     return out
 
@@ -155,7 +175,11 @@ class Posterior:
     """Particles and their log weights, updated round by round."""
 
     def __init__(
-        self, hypotheses: Sequence[Hypothesis], bots: Sequence[Player], eps: float
+        self,
+        hypotheses: Sequence[Hypothesis],
+        bots: Sequence[Player],
+        eps: float,
+        forget: float,
     ) -> None:
         if len(hypotheses) != len(bots) or not bots:
             raise ValueError("a posterior has one bot per hypothesis, and some")
@@ -163,6 +187,7 @@ class Posterior:
             raise ValueError(f"eps must be in (0, 1), got {eps}")
         self.hypotheses: tuple[Hypothesis, ...] = tuple(hypotheses)
         self.bots: tuple[Player, ...] = tuple(bots)
+        self.forget: float = forget  # each round's weight on the evidence so far
         self.hit: float = math.log(1 - eps)
         self.miss: float = math.log(eps / 2)
         self.logw: np.ndarray = np.zeros(len(bots))
@@ -187,6 +212,7 @@ class Posterior:
     def observe(self, theirs: int) -> None:
         """Weigh the last predictions by the opponent's actual move."""
         hits = self.predicted == theirs
+        self.logw *= self.forget
         self.logw += np.where(hits, self.hit, self.miss) * self.alive
 
     def weights(self) -> np.ndarray:
@@ -307,6 +333,40 @@ class Committed:
         return self.probe.move(my, opp, n) if n < self.commit else theirs
 
 
+class Switch:
+    """Keep's move or exploit's, whichever has the better decayed record: both
+    are played every round and scored on what their move would have won (a
+    counterfactual two-armed bandit). Before round `commit`, keep always plays."""
+
+    def __init__(
+        self, probe: Player, after: PosteriorPlayer, commit: int, decay: float
+    ) -> None:
+        self.probe: Player = probe
+        self.after: PosteriorPlayer = after
+        self.commit: int = commit
+        self.decay: float = decay
+        self.scores: list[float] = [0.0, 0.0]  # keep, exploit
+        self.last: tuple[int, int] = (0, 0)
+
+    def reset(self, seed: int, rounds: int) -> None:
+        self.probe.reset(seed, rounds)
+        self.after.reset(seed, rounds)
+        self.scores = [0.0, 0.0]
+
+    def move(self, my: np.ndarray, opp: np.ndarray, n: int) -> int:
+        if n > 0 and opp[n - 1] != INVALID:
+            for k, mine in enumerate(self.last):
+                self.scores[k] = self.decay * self.scores[k] + score(
+                    mine, int(opp[n - 1])
+                )
+        theirs = self.after.move(my, opp, n)
+        ours = self.probe.move(my, opp, n)
+        self.last = (ours, theirs)
+        if n < self.commit or self.scores[0] >= self.scores[1]:
+            return ours
+        return theirs
+
+
 @dataclasses.dataclass(frozen=True)
 class Setup:
     """Everything a study's match depends on but its opponent and seed."""
@@ -323,6 +383,9 @@ class Setup:
     probe: str  # a bot file
     rounds: int
     leave_one_out: bool
+    forget: float
+    switch_decay: float
+    components: tuple[str, ...]  # bot files (blocks), read every way
 
 
 @dataclasses.dataclass(frozen=True)
@@ -352,6 +415,10 @@ def field(setup: Setup) -> Field:
         for h in hypotheses(path, space, setup.particles, setup.sampler_seed):
             found.append(h)
             bots.append(particle(h, path))
+    for path in setup.components:
+        for h in components(path):
+            found.append(h)
+            bots.append(particle(h, path))
     return Field(tuple(found), tuple(bots), by_stem)
 
 
@@ -370,18 +437,26 @@ def study(setup: Setup, opponent: str, seed: int) -> dict:
     probe = KitBot.of(parse_spec(setup.probe), SIDE_A)
     bot = KitBot.of(spec, SIDE_B)
 
-    def committed(posterior: Posterior, out: str) -> tuple[list[int], list[dict]]:
-        player = PosteriorPlayer(posterior, judge, setup.every, setup.prune_ratio, out)
-        played = outcomes(
-            Committed(probe, player, setup.commit), bot, setup.rounds, seed
-        )
-        return played, player.checkpoints
+    def player(posterior: Posterior, out: str) -> PosteriorPlayer:
+        return PosteriorPlayer(posterior, judge, setup.every, setup.prune_ratio, out)
 
-    exploit, checkpoints = committed(
-        Posterior(built.hypotheses, built.bots, setup.eps), excluded
+    def ours() -> Posterior:
+        return Posterior(built.hypotheses, built.bots, setup.eps, setup.forget)
+
+    exploiting = player(ours(), excluded)
+    exploit = outcomes(
+        Committed(probe, exploiting, setup.commit), bot, setup.rounds, seed
     )
-    oracle, _ = committed(Posterior([true], [particle(true, spec.path)], setup.eps), "")
+    checkpoints = exploiting.checkpoints
+    known = Posterior([true], [particle(true, spec.path)], setup.eps, setup.forget)
+    oracle = outcomes(
+        Committed(probe, player(known, ""), setup.commit), bot, setup.rounds, seed
+    )
     keep = outcomes(probe, bot, setup.rounds, seed)
+    switching = Switch(
+        probe, player(ours(), excluded), setup.commit, setup.switch_decay
+    )
+    switch = outcomes(switching, bot, setup.rounds, seed)
     after = setup.rounds - setup.commit
     row: dict[str, object] = {
         "opponent": opponent,
@@ -390,9 +465,10 @@ def study(setup: Setup, opponent: str, seed: int) -> dict:
         "checkpoints": checkpoints,
         "prefix_agrees": exploit[: setup.commit]
         == keep[: setup.commit]
-        == oracle[: setup.commit],
+        == oracle[: setup.commit]
+        == switch[: setup.commit],
     }
-    for name, played in zip(BRANCHES, (exploit, keep, oracle), strict=True):
+    for name, played in zip(BRANCHES, (exploit, keep, oracle, switch), strict=True):
         got = shares(played[setup.commit :], after)
         row[name] = {"won": got.won, "lost": got.lost}
     return row

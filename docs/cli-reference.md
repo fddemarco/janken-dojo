@@ -1260,6 +1260,7 @@ $ uv run janken lab identify [OPTIONS] {opponents}
 
 * `--name <str>`: the log's name in the workspace's gauntlet folder (resumed if it exists)  [required]
 * `--hypothesis <str>`: the bots (stems) whose parameter vectors are the particles (config: identify.hypotheses) (repeatable)  [default: (dynamic)]
+* `--component <str>`: blocks (stems) whose moves from either seat, at every rotation, are particles too (no whole architecture assumed) (config: identify.components) (repeatable)  [default: (dynamic)]
 * `--seeds <int>`: matches per opponent (seeds 1..n) (config: identify.seeds)  [default: 5]
 * `--particles <int>`: parameter vectors drawn per hypothesis (config: identify.particles)  [default: 32]
 * `--eps <float>`: a particle's chance of missing the opponent's move (sets the posterior's sharpness) (config: identify.eps)  [default: 0.5]
@@ -1270,6 +1271,8 @@ $ uv run janken lab identify [OPTIONS] {opponents}
 * `--probe <str>`: the bot (stem) we play until the commit round (config: identify.probe)  [default: l5_hunter]
 * `--leave-one-out / --no-leave-one-out`: never count the opponent's own species among the hypotheses (config: identify.leave_one_out)  [default: no-leave-one-out]
 * `--sampler-seed <int>`: the particles' sampler seed (config: identify.seed)  [default: 0]
+* `--forget <float>`: each round, the posterior's weight on the evidence so far (1: none forgotten) (config: identify.forget)  [default: 1.0]
+* `--switch-decay <float>`: the decay of the switch branch's records of keep and exploit (config: identify.switch_decay)  [default: 0.95]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

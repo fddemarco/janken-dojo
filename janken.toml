@@ -348,3 +348,11 @@ probe = "l5_hunter"
 # true: the opponent's own species is never a hypothesis (an unknown architecture).
 leave_one_out = false
 seed = 0
+# The posterior forgets: each round, its log weights are multiplied by `forget`
+# (1: a match-long record). The switch branch plays keep or exploit, whichever has
+# the better record decayed by switch_decay, both scored counterfactually.
+forget = 1.0
+switch_decay = 0.95
+# Blocks read every way (both seats, every rotation) as particles beside the
+# hypotheses: building blocks most bandits share, not a whole architecture.
+components = []

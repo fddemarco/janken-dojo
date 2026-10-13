@@ -252,7 +252,7 @@ def posterior(*moves: int, stems: tuple[str, ...] = ()) -> identify.Posterior:
         identify.Hypothesis(stems[k] if stems else f"s{k}", {"X": k})
         for k in range(len(moves))
     ]
-    built = identify.Posterior(found, [Stub(m) for m in moves], 0.5)
+    built = identify.Posterior(found, [Stub(m) for m in moves], 0.5, 1.0)
     built.reset(1, 10, "")
     return built
 
@@ -336,6 +336,9 @@ class TestStudy:
             probe=self.probe,
             rounds=IDENTIFY_ROUNDS,
             leave_one_out=leave_one_out,
+            forget=1.0,
+            switch_decay=0.9,
+            components=(),
         )
 
     def test_a_match_logs_its_checkpoints_and_three_branches(self) -> None:
@@ -367,6 +370,7 @@ def test_curves_and_gains_average_matches() -> None:
             "exploit": {"won": exploit, "lost": 0.0},
             "keep": {"won": 0.1, "lost": 0.0},
             "oracle": {"won": 0.5, "lost": 0.0},
+            "switch": {"won": 0.1, "lost": 0.0},
         }
 
     rows = [row(0.3, True), row(0.5, False)]
@@ -375,3 +379,13 @@ def test_curves_and_gains_average_matches() -> None:
     exploit = identify.gains(rows)[0]
     assert exploit.vs_keep == pytest.approx(0.3)
     assert exploit.half_width > 0
+
+
+def test_a_component_is_read_from_both_seats_at_every_rotation() -> None:
+    read = identify.components("bots/blocks/ngram.yaml")
+    assert {(h.side, h.rotation) for h in read} == {
+        (side, rotation)
+        for side in ("OPP", "MY")
+        for rotation in ("COPY", "BEAT", "BEAT_BEAT")
+    }
+    assert {h.stem for h in read} == {"ngram"} and all(not h.params for h in read)

@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: The strongest L1s fall to an L1 mirror counter: their own rule computed on our moves, played BEAT_BEAT, wins about 95% of rounds vs each, but nothing elsewhere
+
+- **Evidence:** experiments/0062-anti-pattern-anti-second-repeat-vs-pattern-memor.md (run 20261013-142536_0062-anti-pattern-anti-second-repeat-vs-pattern-memor): `anti_pattern - pattern_memory_v1 = -27.1 pts [-34.5, -20.3]` over 190 shared matches: pattern_memory_v1 better; `anti_second_repeat - pattern_memory_v1 = -26.1 pts [-33.7, -17.9]` over 190 shared matches: pattern_memory_v1 better
+- **Mechanism:** a repeat follower predicts our next move from the joint history and plays its beat; the same rule on our side (of: MY) names that prediction, and BEAT_BEAT beats their reply, so the counter is exact; it holds no model of anyone else, so it scores 27 pts below the target in an L1 pool and draws or loses vs the other strong L1s
+- **Implication:** the counters of L1's strong set are arms, not bots: an L2 should hold them (longest_match / second_match with OF: MY, rotated BEAT_BEAT) beside the strong L1s and pick by record; the first L2 experiment of the bottom-up direction
+
 ## 2026-10-13: At L1, following an earlier repeat of the joint history beats fixed-order models, and the second-longest repeat is as strong as the longest
 
 - **Evidence:** experiments/0060-second-repeat-vs-markov2-joint-v1.md (run 20261013-141615_0060-second-repeat-vs-markov2-joint-v1): `second_repeat - markov2_joint_v1 = +6.3 pts [+0.3, +12.9]` over 190 shared matches: second_repeat better; experiments/0061-backoff-ngram-vs-pattern-memory-v1.md (run 20261013-141620_0061-backoff-ngram-vs-pattern-memory-v1): tentative, no 95% CI excludes 0: `backoff_ngram - pattern_memory_v1 = -3.7 pts [-9.7, +2.4]` over 190 shared matches: no significant difference

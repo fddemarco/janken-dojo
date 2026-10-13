@@ -44,7 +44,7 @@ A claim with no possible refutation isn't a claim.
 
 | file | paradigm | phase |
 |---|---|---|
-| [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | diversify: atlas and counter map done, one new species |
+| [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | specialise: each strong L1 has an exact L1 counter; next, an L2 holding them |
 | [02-meta-strategies.md](02-meta-strategies.md) | aggregation: bandits, gates, replays (L2 and up) | specialised; to revisit bottom up |
 
 ## Journal
@@ -62,3 +62,7 @@ A claim with no possible refutation isn't a claim.
   re-derived the longest repeat and was dropped (note 0061). Process lesson: a
   diversity candidate's evaluation baseline declares a succession at classify time
   (research/README.md, Research direction, step 3).
+- **2026-10-13, later still.** Conjecture refuted: the strong L1s have exact L1
+  counters, their own rule on our moves turned BEAT_BEAT (about 95% of rounds vs each,
+  note 0062), each useless elsewhere. L1 moves to **specialise**: the counters become
+  arms of an L2 beside the strong L1s.

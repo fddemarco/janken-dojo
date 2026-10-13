@@ -4,9 +4,11 @@ An L1 bot plays one signal turned by one rotation: no memory of how its predicti
 fared, no choice between ideas. Data: research/l1_atlas.md (20 species, every pair;
 the species and their natural counters).
 
-Phase: **diversify** (2026-10-13). Done: the atlas, the counter map, one new species
-(`second_repeat_v1`, note 0060). Next: the families the level lacks, then specialise
-on the strong set, which is small.
+Phase: **specialise** (2026-10-13). Done: the atlas, the counter map, one new species
+(`second_repeat_v1`, note 0060), and an exact mirror counter for each strong repeat
+follower (note 0062). The strong set is small and each member has a counter, so the
+next step is to specialise one level up: an L2 that holds the strong L1s and their
+counters. Still open at L1: the families with no signal, and a counter of `geometry`.
 
 ## Claims
 
@@ -38,12 +40,17 @@ on the strong set, which is small.
    learners (`markov2_joint` > `period_detector` > `transition_matrix` ~
    `markov2_joint`), and `rotation_outcome`, last among the learners, is the only one
    that beats `period_detector` (+14 rounds per match).
-1. **The strong set's counters are not at L1.** _conjecture._ Each top learner is a
-   deterministic rule of the history, so an L1 that computes the same rule from its
-   seat and plays its beat should win by a wide margin, but that is a replay, which
-   the kit makes an L2+ arm. _Prediction:_ a replay-based counter of `pattern_memory`
-   or `geometry` wins more than 40% of rounds vs it (idea #65); if L1 can't host it,
-   the counter of the strong set is the first thing L2 adds.
+1. ~~**The strong set's counters are not at L1.**~~ _refuted_ (note 0062). We
+   conjectured that countering a top learner needs a replay (an L2+ arm). It
+   doesn't: the learner's own rule computed on our moves (`of: MY`) and played
+   BEAT_BEAT is an L1, and it wins about 95% of rounds vs its target.
+1. **Each strong L1 has an exact L1 counter, useless elsewhere.** _supported._
+   `anti_pattern` wins 94.7% of rounds vs `pattern_memory`, `anti_second_repeat`
+   95.0% vs `second_repeat` (10 of 10 matches each), but they score 27 pts below
+   `pattern_memory` in an L1 pool, draw or lose vs the other strong L1s, and fall to
+   `geometry` (note 0062). So the strong set is countered one by one, by specialists.
+   _Prediction:_ an L2 holding the strong L1s and their mirror counters as arms beats
+   an L2 holding the strong L1s alone vs a pool of L1s and L2s.
 1. **Nash is the floor, not a strategy.** _supported._ `nash_v1` wins 50% of its
    matches at +0 rounds: unexploitable, never exploiting.
 

@@ -59,6 +59,15 @@ level with `context_mixture_v1` (+20.8%); a prior worth 20 adds less (+2.6 +- 1.
 since it must give way to the match's own evidence. The prior generalises to
 parameters it never saw. Ideas #72, #74, #75 build on it.
 
+## In the kit (2026-10-13)
+
+The `PriorTable` signal carries the trained table in the bot's knobs (export inlines
+it). As an L1 (`pretrained_context_v1`) it beats `context_mixture_v1` by +9.8 pts
+[+5.6, +14.4] on parameter variants it never saw (notes 0072, 0073). As one more arm
+of `repeat_mirror` it adds nothing measurable (+1.1 pts [-4.5, +7.0], note 0077):
+**pre-training pays where the learner starts weak**, not beside strong online arms
+that learn the same contexts within the match.
+
 ## Ideas
 
 - A k = 5 lookup table of the opponent's next move given the joint context, trained

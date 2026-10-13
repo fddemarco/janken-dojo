@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: An L2 built from L1's strong set (both repeat followers read from both seats, and geometry, every rotation) beats the field's iocaine-style L2 by about 7 pts
+
+- **Evidence:** experiments/0064-mirror-l1-bandit-vs-iocaine-lite-v1.md (run 20261013-142910_0064-mirror-l1-bandit-vs-iocaine-lite-v1): `mirror_l1_bandit - iocaine_lite_v1 = +7.3 pts [+3.0, +11.6]` over 480 shared matches: mirror_l1_bandit better; experiments/0063-mirror-l1-bandit-iocaine-lite-v1-vs-strong-l1-ba.md (run 20261013-142825_0063-mirror-l1-bandit-iocaine-lite-v1-vs-strong-l1-ba): `mirror_l1_bandit - iocaine_lite_v1 = +12.0 pts [+5.8, +18.8]` over 200 shared matches: mirror_l1_bandit better; `iocaine_lite_v1 - strong_l1_bandit = -9.2 pts [-16.5, -2.2]` over 200 shared matches: strong_l1_bandit better
+- **Mechanism:** iocaine_lite holds only the longest repeat (from both seats) and frequency; adding the second-longest repeat and geometry, the other unbeaten L1s, gives the bandit an arm that names the move whenever any member of the strong set would, and every rotation of it covers their counters; confirmed on fresh seeds (+7.3 pts [+3.0, +11.6], 480 matches) after a +12.0 first run
+- **Implication:** build each level from the strong set of the level below, found by its atlas; next at L2: an atlas of the L2s with repeat_mirror in it, and whether the mirror-counter arms add anything (+2.8 pts n.s. over the strong set alone)
+
 ## 2026-10-13: The strongest L1s fall to an L1 mirror counter: their own rule computed on our moves, played BEAT_BEAT, wins about 95% of rounds vs each, but nothing elsewhere
 
 - **Evidence:** experiments/0062-anti-pattern-anti-second-repeat-vs-pattern-memor.md (run 20261013-142536_0062-anti-pattern-anti-second-repeat-vs-pattern-memor): `anti_pattern - pattern_memory_v1 = -27.1 pts [-34.5, -20.3]` over 190 shared matches: pattern_memory_v1 better; `anti_second_repeat - pattern_memory_v1 = -26.1 pts [-33.7, -17.9]` over 190 shared matches: pattern_memory_v1 better

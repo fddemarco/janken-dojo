@@ -4,11 +4,18 @@ An L2+ bot combines bots: a bandit or a gate over arms, where an arm is an L1 si
 or a replay of a whole bot from either seat. This file holds what the top-down work
 taught us, to be revisited level by level from the bottom (research/theory/README.md).
 
-Phase: **specialised** (the field's top is built of replays of named bots). To revisit
-bottom up, after L1.
+Phase: **specialised** at the top (replays of named bots); **bottom up from L2**
+since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror`).
 
 ## Claims
 
+1. **An L2 built from L1's strong set beats the field's L2s.** _supported._
+   `repeat_mirror_v1` (both repeat followers from both seats and `geometry`, every
+   rotation) beats `iocaine_lite_v1` by +7.3 pts [+3.0, +11.6] vs pools of L1s and
+   L2s, confirmed on fresh seeds (notes 0063, 0064). The first result of the bottom-up
+   direction: the L1 atlas named the strong set, and the L2 holding it wins.
+   _Prediction:_ the same holds one level up: an L3 built from the L2 strong set
+   (once an L2 atlas names it) beats the field's L3s vs pools of L1-L3.
 1. **Replaying a named bot beats that bot, and only that bot.** _supported._ An exact
    replay or impostor wins its target outright (in note 0014, 96.8% of rounds vs
    agamemnon) but moves the pool score by about 1 pt, as the target is one pool slot.

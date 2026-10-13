@@ -66,3 +66,7 @@ A claim with no possible refutation isn't a claim.
   counters, their own rule on our moves turned BEAT_BEAT (about 95% of rounds vs each,
   note 0062), each useless elsewhere. L1 moves to **specialise**: the counters become
   arms of an L2 beside the strong L1s.
+- **2026-10-13, end of the bottom-up hour.** First replicated gain of the direction:
+  `repeat_mirror_v1`, an L2 built from L1's strong set, beats `iocaine_lite_v1` by
+  +7.3 pts [+3.0, +11.6] on fresh seeds (notes 0063, 0064). Next: an L2 atlas, to
+  find L2's strong set and its counters, as at L1.

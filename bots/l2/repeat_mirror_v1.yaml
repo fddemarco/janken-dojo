@@ -1,0 +1,15 @@
+description: |
+  strong_l1_bandit plus the mirror counters of L1's strong set as arms (theory: each strong L1 has an exact L1 counter, note 0062).
+  The repeat followers read on our own moves too (OF: MY), at every rotation: BEAT_BEAT of those is the exact counter of pattern_memory and second_repeat.
+defaults:
+  DECAY: 0.9
+blueprint:
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    Bandit:
+      predictors:
+        - {bot: longest_match, arms: 2, space: {MAX_LEN: 10, CTX: JOINT, OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: second_match, arms: 2, space: {MAX_LEN: 12, CTX: JOINT, OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

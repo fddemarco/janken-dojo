@@ -50,7 +50,8 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    `pattern_memory` in an L1 pool, draw or lose vs the other strong L1s, and fall to
    `geometry` (note 0062). So the strong set is countered one by one, by specialists.
    _Prediction:_ an L2 holding the strong L1s and their mirror counters as arms beats
-   an L2 holding the strong L1s alone vs a pool of L1s and L2s.
+   an L2 holding the strong L1s alone vs a pool of L1s and L2s. _Unresolved:_ +2.8
+   pts [-4.0, +9.5] (note 0063).
 1. **Nash is the floor, not a strategy.** _supported._ `nash_v1` wins 50% of its
    matches at +0 rounds: unexploitable, never exploiting.
 

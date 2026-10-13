@@ -101,6 +101,7 @@ bots/
 | L2 | `outcome_reader_v1` | outcome-conditioned rotation and score-state models, DropSwitch |
 | L2 | `multiscale_v1` | frequency and n-grams at four memories, greedy |
 | L2 | `sampled_markov_v1` | sampling n-grams under flattened Thompson (SHARP 0.5) |
+| L2 | `repeat_mirror_v1` | L1's strong set as arms: both repeat followers from both seats and geometry, every rotation (beats iocaine_lite by +7.3 pts) |
 | L3 | `smartbot_sims_v2` | smartbot plus 8 "model of us" sims (replays of the metabots included) |
 | L3 | `anti_smartbot_sims_v3` | replays smartbot_sims exactly and beats its likeliest move; replays computed (estimate NORMAL) |
 | L3 | `l2_council_v1` | four original L2s replayed, three rotations each, Thompson |

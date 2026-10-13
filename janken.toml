@@ -210,6 +210,11 @@ sequential = true
 looks = 3
 # Classify reads only the two candidates' matches: pool vs pool would cost ~5x more.
 mode = "candidates"
+# A kept bot whose evaluation paired it with its level's species' current version (as
+# the baseline) is decided from that evaluation: the next version when not worse there
+# and better, or more than speed_factor times faster; a variant otherwise. No core
+# agreement bar and no species run: naming the incumbent as the baseline declares it.
+promote_on_evaluation = true
 min_matchup_matches = 10
 alpha = 0.05
 split = "test"

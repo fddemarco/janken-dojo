@@ -366,6 +366,11 @@ class SpeciesConfig:
         " matches) or full (pool vs pool too)",
         MODES,
     )
+    promote_on_evaluation: bool = setting(
+        "a kept bot whose evaluation's baseline was its level's species' current"
+        " version is decided from that evaluation: the next version when not worse"
+        " there and better or speed_factor times faster (no agreement bar, no run)"
+    )
     min_matchup_matches: int = setting(
         "paired matches a matchup needs to count in the dominance test", minimum=2
     )

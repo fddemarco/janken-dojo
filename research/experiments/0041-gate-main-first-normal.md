@@ -1,13 +1,13 @@
 # 0041: gate_main_first_normal vs gate_main_first_v2
 
 - **Date:** 2026-10-13
-- **Status:** run
+- **Status:** analyzed
 - **Kind:** evaluation
 - **Idea:** #50
 - **Candidates:** `bots/l4/gate_main_first_normal.yaml`
 - **Baselines:** `bots/l4/gate_main_first_v2.yaml`
 - **Run:** `20261013-022614_0041-gate-main-first-normal`
-- **Verdict:** -
+- **Verdict:** keep
 
 ## Hypothesis
 
@@ -42,4 +42,4 @@ Weakest matchups of gate_main_first_v2: level_k_gate_normal 0.0%, l5_council 0.0
 
 ## Verdict
 
--
+**keep**. No significant difference at 10 round robins: gate_main_first_normal - gate_main_first_v2 = -5.2 pts [-12.0, +1.5] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.

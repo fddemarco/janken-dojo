@@ -1,13 +1,13 @@
 # 0036: anti_smartbot_sims_normal vs anti_smartbot_sims_v2
 
 - **Date:** 2026-10-13
-- **Status:** run
+- **Status:** analyzed
 - **Kind:** evaluation
 - **Idea:** #50
 - **Candidates:** `bots/l3/anti_smartbot_sims_normal.yaml`
 - **Baselines:** `bots/l3/anti_smartbot_sims_v2.yaml`
 - **Run:** `20261013-020828_0036-anti-smartbot-sims-normal`
-- **Verdict:** -
+- **Verdict:** keep
 
 ## Hypothesis
 
@@ -42,4 +42,4 @@ Weakest matchups of anti_smartbot_sims_v2: level_k_gate_v1 0.0%, replay_hunter_w
 
 ## Verdict
 
--
+**keep**. No significant difference at 10 round robins: anti_smartbot_sims_normal - anti_smartbot_sims_v2 = -0.5 pts [-7.8, +6.8] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.

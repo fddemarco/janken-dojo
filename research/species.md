@@ -74,6 +74,6 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `gate_main_first_stationary` | L4 | `gate_main_first_stationary_v2` | `gate_main_first_stationary` (2026-10-11 rename) --> v1; `gate_main_first_stationary_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | |
 | `gate_main_first` | L4 | `gate_main_first_v2` | `gate_main_first` (2026-10-11 rename) --> v1; `gate_main_first_v1` over smartbot_sims_v2 (2026-10-12) --> v2 | `gate_anti_first_v1` (2026-10-12 fused: 93.1% core agreement, -0.6 pts [-4.6, +3.4] vs gate_main_first_v1, 40 pools) |
 | `double_bluff_gate` | L4 | `double_bluff_gate_v1` | `gate_counter_sims` ([0031](experiments/0031-counter-anti-sims-vs-smartbot-sims.md)) --> v1 | |
-| `level_k_gate` | L4 | `level_k_gate_v1` | `level_k_gate` ([0032](experiments/0032-level-k-vs-double-bluff-gate.md)) --> v1 | |
+| `level_k_gate` | L4 | `level_k_gate_v2` | `level_k_gate` ([0032](experiments/0032-level-k-vs-double-bluff-gate.md)) --> v1; `level_k_gate_normal` ([0040](experiments/0040-level-k-gate-normal.md)) --> v2 | |
 | `replay_hunter_gate` | L4 | `replay_hunter_gate_v1` | `replay_hunter_gate` ([0033](experiments/0033-replay-hunter-vs-level-k-gate.md)) --> v1 | |
 | `replay_hunter_wide` | L4 | `replay_hunter_wide_v1` | `replay_hunter_wide` ([0034](experiments/0034-replay-hunter-wide-vs-replay-hunter-gate.md)) --> v1 | |

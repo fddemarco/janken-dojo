@@ -1,13 +1,13 @@
 # 0037: leader_hunter_normal vs leader_hunter_v1
 
 - **Date:** 2026-10-13
-- **Status:** run
+- **Status:** analyzed
 - **Kind:** evaluation
 - **Idea:** #50
 - **Candidates:** `bots/l3/leader_hunter_normal.yaml`
 - **Baselines:** `bots/l3/leader_hunter_v1.yaml`
 - **Run:** `20261013-021452_0037-leader-hunter-normal`
-- **Verdict:** -
+- **Verdict:** keep
 
 ## Hypothesis
 
@@ -42,4 +42,4 @@ Weakest matchups of leader_hunter_v1: multiscale_council_v1 0.0%, l2_council_v1 
 
 ## Verdict
 
--
+**keep**. No significant difference at 10 round robins: leader_hunter_normal - leader_hunter_v1 = +2.2 pts [-5.8, +10.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.

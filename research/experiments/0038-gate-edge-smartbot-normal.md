@@ -1,13 +1,13 @@
 # 0038: gate_edge_smartbot_normal vs gate_edge_smartbot_v1
 
 - **Date:** 2026-10-13
-- **Status:** run
+- **Status:** analyzed
 - **Kind:** evaluation
 - **Idea:** #50
 - **Candidates:** `bots/l3/gate_edge_smartbot_normal.yaml`
 - **Baselines:** `bots/l3/gate_edge_smartbot_v1.yaml`
 - **Run:** `20261013-021719_0038-gate-edge-smartbot-normal`
-- **Verdict:** -
+- **Verdict:** keep
 
 ## Hypothesis
 
@@ -42,4 +42,4 @@ Weakest matchups of gate_edge_smartbot_v1: l5_priority 0.0%, anti_smartbot_v1 0.
 
 ## Verdict
 
--
+**keep**. No significant difference at 10 round robins: gate_edge_smartbot_normal - gate_edge_smartbot_v1 = +2.2 pts [-4.2, +9.2] over 200 shared matches: no significant difference. The copy computes its replays' likely move (estimate NORMAL) instead of drawing it 256 times, which in a 40-seed check of anti_smartbot_sims played about 12x faster and named the same move as 2048 draws in 98% of rounds. Kept as equal and cheaper; species classify's 40-round-robin paired run checks every matchup before it replaces the original.

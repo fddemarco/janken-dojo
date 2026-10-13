@@ -238,6 +238,45 @@ def as_good(compared: Sequence[Matchup]) -> bool:
     return not any(m.worse or m.better for m in compared)
 
 
+def decide_by_evaluation(
+    incumbent: str,
+    run_id: str,
+    paired: Mapping[str, float],
+    config: settings.SpeciesConfig,
+    speedup: float = 1.0,
+) -> Decision:
+    """The next version of `incumbent`'s species, or a variant of it, from the
+    candidate's own evaluation run, which paired it with the incumbent.
+
+    `paired` is analyze.paired_diff's (mean and 95% CI of the score difference).
+    Worse (the CI below 0): a variant. Better (the CI above 0): the next version.
+    Neither: the next version when it plays more than `config.speed_factor`
+    times faster (`speedup`: the incumbent's time over the candidate's), else a
+    variant. No core agreement or species run is asked: naming the incumbent as
+    the evaluation's baseline is what declares the candidate its successor."""
+    shown = (
+        f"its evaluation (run `{run_id}`) paired it with {incumbent}:"
+        f" {100 * paired['mean']:+.1f} pts [{100 * paired['ci_lo']:+.1f},"
+        f" {100 * paired['ci_hi']:+.1f}]"
+    )
+    if paired["ci_hi"] < 0:
+        return Decision(VARIANT, (shown, "worse"))
+    if paired["ci_lo"] > 0:
+        return Decision(PROMOTE, (shown, "better"))
+    if speedup > config.speed_factor:
+        return Decision(
+            PROMOTE, (shown, f"no significant difference, and {speedup:.1f}x faster")
+        )
+    return Decision(
+        VARIANT,
+        (
+            shown,
+            f"no significant difference; {speedup:.1f}x the speed, below"
+            f" {config.speed_factor:.1f}x",
+        ),
+    )
+
+
 def needs_run(nearest: Kin, level: str, config: settings.SpeciesConfig) -> bool:
     """Whether the closest species is close enough to need a paired run."""
     return nearest.level == level and nearest.agreement >= config.agreement

@@ -686,6 +686,11 @@ def classify_note(
       `<species>_v{N+1}`; the current version retires to the legacy folder.
     - Variant (alike, without dominating): it retires to the legacy folder.
 
+    With `config.promote_on_evaluation`, a note whose baseline is its level's
+    species' current version is decided from its own evaluation run instead: next
+    version when not worse there and better or more than `speed_factor` times
+    faster, else a variant (classify.decide_by_evaluation); no species run.
+
     The note gets a Species field and section, and `species.md` the lineage.
 
     Raises:
@@ -700,6 +705,10 @@ def classify_note(
     cache = core_cache(how.workspace, config)
     field = read_field(paths, seqs, cache)
     same = kin = compare(spec.path, field, seqs, cache)
+    declared = _declared_incumbent(note, field)
+    if config.promote_on_evaluation and declared and note.run_ids:
+        found = _by_evaluation(note, spec, declared, kin, how, config)
+        return _apply(notebook, found, "", how.bots_dir, spaces_dir, config, level)
     correlation, compared, run_id, speedup = math.nan, (), "", 1.0
     if same and classify.needs_run(same[0], level, config):
         nearest = same[0]
@@ -740,6 +749,52 @@ def classify_note(
             " species: leave out --name"
         )
     return _apply(notebook, found, name, how.bots_dir, spaces_dir, config, level)
+
+
+def _declared_incumbent(note: notes.Note, field: Field) -> BotSpec | None:
+    """The note's first baseline that is a current version of the candidate's
+    level (`field`): the species the candidate means to succeed."""
+    for baseline in specs(note.baselines):
+        if baseline.stem in field.paths and not baseline.params:
+            return baseline
+    return None
+
+
+def _by_evaluation(
+    note: notes.Note,
+    spec: BotSpec,
+    incumbent: BotSpec,
+    kin: Sequence[classify.Kin],
+    how: Plan,
+    config: settings.SpeciesConfig,
+) -> Classification:
+    """Classify from the note's own run, which paired the candidate with the
+    species' current version (classify.decide_by_evaluation)."""
+    run_id = note.run_ids[-1]
+    matches = RunStore.at(how.workspace).matches(run_id)
+    paired = analyze.paired_diff(
+        analyze.long_form(matches), spec.label, incumbent.label
+    )
+    if paired is None:
+        raise WorkflowError(
+            f"run {run_id} never paired {spec.label} with {incumbent.label}"
+        )
+    tied = paired["ci_lo"] <= 0 <= paired["ci_hi"]
+    speedup = _speedup(spec, incumbent, how, config) if tied else 1.0
+    return Classification(
+        note=note,
+        decision=classify.decide_by_evaluation(
+            incumbent.stem, run_id, paired, config, speedup
+        ),
+        kin=tuple(kin),
+        incumbent=incumbent.stem,
+        correlation=math.nan,
+        matchups=(),
+        speedup=speedup,
+        run_id="",
+        stem=spec.stem,
+        path=spec.path,
+    )
 
 
 def _apply(

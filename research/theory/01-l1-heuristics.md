@@ -52,7 +52,9 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    It still loses to `pattern_memory` and `geometry`. A lighter prior generalises
    further: worth 1 observation per context instead of 5, it gains +7.3 pts
    [+3.3, +11.4] vs pools of the whole field's variants, whose L3-L5 bots the prior
-   never saw (note 0078: `pretrained_context_v2`).
+   never saw (note 0078: `pretrained_context_v2`). Wider training data (L1-L4
+   matches) adds nothing at that weight (-0.3 pts, note 0079): the weight was the
+   lever, not the data's breadth.
 1. **L1 is non-transitive at the margins.** _supported._ A cycle among the middle
    learners (`markov2_joint` > `period_detector` > `transition_matrix` ~
    `markov2_joint`), and `rotation_outcome`, last among the learners, is the only one

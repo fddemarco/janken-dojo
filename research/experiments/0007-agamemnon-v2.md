@@ -3,9 +3,9 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** tuning
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `agamemnon`
-- **Baselines:** —
+- **Baselines:** -
 - **Study:** `0007-agamemnon-v2`
 - **Verdict:** drop
 

@@ -1,0 +1,27 @@
+description: |
+  The EDGE gatekeeper: smartbot_sims's arms, plus anti_smartbot_sims' replay as a gated expert (idea #30).
+
+  v2 (2026-10-12): v1 over smartbot_sims_v2 (no word2janken sims); the figures
+  below were measured on v1.
+
+  The main bandit is smartbot_sims_v2's (at its defaults 0.95, 0.9, 12, Thompson). One more
+  signal, last: anti_smartbot_sims' Replay of that core (256 Thompson draws), played
+  BEAT. The Gatekeeper selector keeps the replay arm's own record, played or not, and
+  plays it while its posterior mean P(win) - P(loss) is above EDGE (from round
+  WARMUP on); otherwise Thompson over smartbot_sims's arms. The gate reads how well
+  the replay predicts the opponent, not how noisy the opponent is: noisiness can't
+  tell word2janken, word2janken_scoreboard or markov2_joint from the metabots, the replay's edge
+  can (about +0.15 vs the smartbot family, 0 vs the zoo, at 40+ rounds).
+defaults:
+  EDGE: 0.06
+  GATE_DECAY: 1.0
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, draws: 256, rotations: [BEAT]}
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

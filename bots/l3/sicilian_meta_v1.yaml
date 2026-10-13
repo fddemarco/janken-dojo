@@ -1,0 +1,19 @@
+description: |
+  Iocaine Powder one level up: sicilian reasoning over two metabots.
+
+  iocaine_lite and rps4_lite, each replayed from our side (what it would play)
+  and from the opponent's (what it would play against us), three rotations each:
+  twelve strategies scored counterfactually with a net score decayed at DECAY;
+  we play the best.
+defaults:
+  DECAY: 0.8
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: iocaine_lite_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: rps4_lite_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: iocaine_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

@@ -2,22 +2,25 @@
 
 import contextlib
 import dataclasses
+import datetime
 import io
 import math
 import os
+import pathlib
 import random
+import re
 import shutil
 import sys
-import tempfile
-import unittest
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import optuna
 
 from janken import mocks
-from janken.engine import play_pairs
-from janken.lab import analyze, space
+from janken.engine import play_pairs, registry
+from janken.lab import analyze, space, workflows
 from janken.lab.experiment import build_schedule, resume_experiment, run_experiment
 from janken.lab.pool import sample_pool
 from janken.lab.runs_db import COMPLETE, INTERRUPTED, RunStore
@@ -30,33 +33,42 @@ from janken.lab.tune import (
     split_params,
 )
 from janken.spec import format_spec, make_spec, parse_spec
+from tests import data
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-BOTS_DIR = os.path.join(ROOT, "bots")
-SPACES_DIR = os.path.join(ROOT, "spaces")
+BOTS_DIR, SPACES_DIR = data.BOTS_DIR, data.SPACES_DIR
 
 
 # Cheap bots: experiments and tuning in these tests play pools of them only.
-LIGHT_BOTS = ("rock", "nash", "cycler", "wsls", "copycat", "reactionary", "biased")
+LIGHT_BOTS = (
+    "rock_v1",
+    "nash_v1",
+    "cycler_v1",
+    "wsls_v1",
+    "copycat_v1",
+    "reactionary_v1",
+    "biased_v1",
+)
 POOL = 4
 
 
-def bot(stem):
-    return os.path.join(BOTS_DIR, stem + ".yaml")
+def bot(stem: str) -> str:
+    return registry.find(BOTS_DIR, stem)
 
 
-class LightBots(unittest.TestCase):
+@pytest.fixture(scope="class")
+def light_bots_dir(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    request.cls.bots_dir = str(tmp_path_factory.mktemp("light_bots"))
+    for stem in LIGHT_BOTS:
+        shutil.copy(bot(stem), request.cls.bots_dir)
+
+
+@pytest.mark.usefixtures("light_bots_dir")
+class LightBots:
     """A bots directory holding copies of LIGHT_BOTS only."""
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.bots_dir = tempfile.mkdtemp()
-        for stem in LIGHT_BOTS:
-            shutil.copy(bot(stem), cls.bots_dir)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        shutil.rmtree(cls.bots_dir)
+    bots_dir: str
 
     @classmethod
     def light(cls, stem: str) -> str:
@@ -71,69 +83,65 @@ def quietly(fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
 
-class SpecTest(unittest.TestCase):
-    def test_default_and_variant_labels(self):
-        self.assertEqual(parse_spec(bot("geometry")).label, "geometry")
-        v = parse_spec(bot("geometry") + ":ALPHA=0.1,MAX_LEN=12")
-        self.assertEqual(v.params, {"ALPHA": 0.1, "MAX_LEN": 12})
-        self.assertRegex(v.label, r"^geometry@[0-9a-f]{6}$")
-        self.assertEqual(parse_spec(format_spec(v)), v)
-        self.assertEqual(
-            v.label, make_spec(bot("geometry"), {"MAX_LEN": 12, "ALPHA": 0.1}).label
+class TestSpec:
+    def test_default_and_variant_labels(self) -> None:
+        assert parse_spec(bot("geometry_v1")).label == "geometry_v1"
+        v = parse_spec(bot("geometry_v1") + ":ALPHA=0.1,MAX_LEN=12")
+        assert v.params == {"ALPHA": 0.1, "MAX_LEN": 12}
+        assert re.search(r"^geometry_v1@[0-9a-f]{6}$", v.label)
+        assert parse_spec(format_spec(v)) == v
+        assert (
+            v.label
+            == make_spec(bot("geometry_v1"), {"MAX_LEN": 12, "ALPHA": 0.1}).label
         )
 
-    def test_unknown_parameter_is_an_error(self):
-        with self.assertRaises(ValueError):
-            parse_spec(bot("geometry") + ":ALHPA=0.1")
-        with self.assertRaises(ValueError):
-            parse_spec(bot("nash") + ":X=1")
+    def test_unknown_parameter_is_an_error(self) -> None:
+        with pytest.raises(ValueError):
+            parse_spec(bot("geometry_v1") + ":ALHPA=0.1")
+        with pytest.raises(ValueError):
+            parse_spec(bot("nash_v1") + ":X=1")
 
-    def test_params_reach_the_bot(self):
-        cycler = make_spec(bot("cycler"), {"STEP": 2, "NOISE": 0.0})
-        (m,) = play_pairs([(cycler, make_spec(bot("rock")))], 4, [1])
-        self.assertEqual(m.moves[0::2], "rspr")
+    def test_params_reach_the_bot(self) -> None:
+        cycler = make_spec(bot("cycler_v1"), {"STEP": 2, "NOISE": 0.0})
+        (m,) = play_pairs([(cycler, make_spec(bot("rock_v1")))], 4, [1])
+        assert m.moves[0::2] == "rspr"
 
 
-class PoolTest(unittest.TestCase):
-    def test_pools_exclude_candidates_and_are_reproducible(self):
-        cand = make_spec(bot("geometry"))
+class TestPool:
+    def test_pools_exclude_candidates_and_are_reproducible(self) -> None:
+        cand = make_spec(bot("geometry_v1"))
         a = build_schedule([cand], BOTS_DIR, 20, 3, seed=5)
         b = build_schedule(
-            [make_spec(bot("geometry"), {"ALPHA": 0.2})], BOTS_DIR, 20, 3, seed=5
+            [make_spec(bot("geometry_v1"), {"ALPHA": 0.2})], BOTS_DIR, 20, 3, seed=5
         )
         for rr_a, rr_b in zip(a, b):
             labels = [p.label for p in rr_a["pool"]]
-            self.assertEqual(len(labels), 20)
-            self.assertNotIn("geometry", labels)
+            assert len(labels) == 20
+            assert "geometry_v1" not in labels
             # same pools and seeds for every variant: common random numbers
-            self.assertEqual(labels, [p.label for p in rr_b["pool"]])
-            self.assertEqual(rr_a["seeds"], rr_b["seeds"])
-        self.assertEqual(len(a[0]["pairs"]), 21 * 20 // 2)
-        self.assertNotEqual(
-            [p.label for p in a[0]["pool"]], [p.label for p in a[1]["pool"]]
-        )
+            assert labels == [p.label for p in rr_b["pool"]]
+            assert rr_a["seeds"] == rr_b["seeds"]
+        assert len(a[0]["pairs"]) == 21 * 20 // 2
+        assert [p.label for p in a[0]["pool"]] != [p.label for p in a[1]["pool"]]
 
-    def test_candidates_mode(self):
-        cands = [make_spec(bot("geometry")), make_spec(bot("rps4_lite"))]
+    def test_candidates_mode(self) -> None:
+        cands = [make_spec(bot("geometry_v1")), make_spec(bot("rps4_lite_v1"))]
         rr = build_schedule(cands, BOTS_DIR, 20, 1, seed=1, mode="candidates")[0]
-        self.assertEqual(len(rr["pairs"]), 1 + 2 * 20)
+        assert len(rr["pairs"]) == 1 + 2 * 20
 
-    def test_small_pool(self):
-        with self.assertRaises(SystemExit):
+    def test_small_pool(self) -> None:
+        with pytest.raises(SystemExit):
             sample_pool(BOTS_DIR, 500, random.Random(1))
-        every = [os.path.join(BOTS_DIR, f) for f in os.listdir(BOTS_DIR)]
-        regular = [p for p in every if p.endswith(".yaml") and not mocks.is_mock(p)]
-        self.assertEqual(
-            len(sample_pool(BOTS_DIR, 500, random.Random(1), allow_small=True)),
-            len(regular),  # mocks only enter pools with use_mocks
-        )
+        regular = [p for p in registry.discover(BOTS_DIR) if not mocks.is_mock(p)]
+        assert len(
+            sample_pool(BOTS_DIR, 500, random.Random(1), allow_small=True)
+        ) == len(regular)
 
 
-class ExperimentTest(LightBots):
-    def setUp(self):
-        self.dir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.dir.cleanup)
-        self.root = self.dir.name
+class TestExperiment(LightBots):
+    @pytest.fixture(autouse=True)
+    def _workspace(self, tmp_path: pathlib.Path) -> None:
+        self.root = str(tmp_path)
         self.runs = RunStore.at(self.root)
 
     def run_exp(self, cands, **kw):
@@ -149,83 +157,124 @@ class ExperimentTest(LightBots):
             **kw,
         )
 
-    def test_store_round_trip_and_reproducibility(self):
+    @pytest.mark.heavy
+    def test_store_round_trip_and_reproducibility(self) -> None:
         cands = [
-            make_spec(self.light("cycler")),
-            make_spec(self.light("wsls"), {"NOISE": 0.1}),
+            make_spec(self.light("cycler_v1")),
+            make_spec(self.light("wsls_v1"), {"NOISE": 0.1}),
         ]
         p1 = self.run_exp(cands, name="one")
         p2 = self.run_exp(cands, name="two")
         _, _, df = self.runs.load_run(p1)
         _, _, df2 = self.runs.load_run(p2)
         players = POOL + len(cands)
-        self.assertEqual(df.height, 2 * (players * (players - 1) // 2))
-        self.assertTrue(df.drop("run_id").equals(df2.drop("run_id")))
-        self.assertNotIn("engine", df.columns)
-        self.assertEqual(self.runs.resolve("latest"), p2)
-        self.assertEqual(self.runs.resolve("one"), p1)
-        self.assertEqual(self.runs.status(p1), COMPLETE)
+        assert df.height == 2 * (players * (players - 1) // 2)
+        assert df.drop("run_id").equals(df2.drop("run_id"))
+        assert "engine" not in df.columns
+        assert self.runs.resolve("latest") == p2
+        assert self.runs.resolve("one") == p1
+        assert self.runs.status(p1) == COMPLETE
 
         summary = analyze.analyze_run(p1, self.root)
-        self.assertIn(p1, self.runs.summaries())
+        assert p1 in self.runs.summaries()
         by_bot = {r["bot"]: r for r in summary["candidates_vs_pool"]}
-        self.assertEqual(set(by_bot), {c.label for c in cands})
+        assert set(by_bot) == {c.label for c in cands}
         for r in by_bot.values():
-            self.assertEqual(r["n"], 2 * POOL)
-            self.assertEqual(r["W"] + r["D"] + r["L"], 2 * POOL)
-            self.assertLessEqual(r["ci_lo"], r["score"])
-            self.assertLessEqual(r["score"], r["ci_hi"])
-        self.assertEqual(len(summary["comparisons"]), 1)
-        self.assertEqual(summary["head_to_head"][0]["n"], 2)
+            assert r["n"] == 2 * POOL
+            assert r["W"] + r["D"] + r["L"] == 2 * POOL
+            assert r["ci_lo"] <= r["score"]
+            assert r["score"] <= r["ci_hi"]
+        assert len(summary["comparisons"]) == 1
+        assert summary["head_to_head"][0]["n"] == 2
 
         board = analyze.leaderboard(self.root)
-        self.assertEqual(set(board["bot"]), {c.label for c in cands})
-        history = analyze.history("cycler", self.root)
-        self.assertEqual(history.height, 2)
-        self.assertEqual(history["library"].n_unique(), 1)
+        assert set(board["bot"]) == {c.label for c in cands}
+        history = analyze.history("cycler_v1", self.root)
+        assert history.height == 2
+        assert history["library"].n_unique() == 1
 
-    def test_identical_behaviour_has_zero_paired_difference(self):
+    def test_identical_behaviour_has_zero_paired_difference(self) -> None:
         same = [
-            make_spec(self.light("cycler")),
-            make_spec(self.light("cycler"), {"NOISE": 0.05}),
+            make_spec(self.light("cycler_v1")),
+            make_spec(self.light("cycler_v1"), {"NOISE": 0.05}),
         ]
         summary = analyze.analyze_run(self.run_exp(same), self.root)
         cmp = summary["comparisons"][0]
-        self.assertEqual((cmp["mean"], cmp["ci_lo"], cmp["ci_hi"]), (0.0, 0.0, 0.0))
+        assert (cmp["mean"], cmp["ci_lo"], cmp["ci_hi"]) == (0.0, 0.0, 0.0)
 
-    def test_a_candidate_outside_the_bots_dir_plays_the_pool(self):
+    def test_a_candidate_outside_the_bots_dir_plays_the_pool(self) -> None:
         path = os.path.join(self.root, "mystery.yaml")
         with open(path, "w") as f:
             f.write("description: uniform random play\nblueprint: {}\n")
-        run = self.run_exp([make_spec(path)], round_robins=1, rounds=30)
+        run = self.run_exp([make_spec(path)], round_robins=1, rounds=6)
         _, manifest, df = self.runs.load_run(run)
-        self.assertEqual(manifest["n_matches"], (POOL + 1) * POOL // 2)
+        assert manifest["n_matches"] == (POOL + 1) * POOL // 2
         mystery = df.filter((df["bot_a"] == "mystery") | (df["bot_b"] == "mystery"))
-        self.assertEqual(mystery.height, POOL)
+        assert mystery.height == POOL
 
-    def test_an_interrupted_run_keeps_its_round_robins_and_resumes(self) -> None:
-        cands = [make_spec(self.light("cycler")), make_spec(self.light("wsls"))]
+    @pytest.mark.heavy
+    def test_an_interrupted_run_keeps_its_matches_and_resumes(self) -> None:
+        cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
 
         def stop_after_the_first(rr: int) -> None:
             if rr == 0:
                 raise KeyboardInterrupt
 
-        with self.assertRaises(KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt):
             self.run_exp(
                 cands, round_robins=3, name="cut", on_batch=stop_after_the_first
             )
         cut = self.runs.resolve("cut")
-        self.assertEqual(self.runs.status(cut), INTERRUPTED)
-        self.assertEqual(self.runs.played_round_robins(cut), {0})
+        assert self.runs.status(cut) == INTERRUPTED
+        assert 0 in self.runs.played_round_robins(cut)
+        with self.runs._transaction() as con:  # cut mid round robin, as a crash would
+            con.execute("DELETE FROM matches WHERE run_id = ? AND k % 2 = 1", [cut])
         partial = analyze.analyze_run(cut, self.root)
-        self.assertEqual(partial["round_robins_played"], 1)
-        self.assertIn("Partial: 1 of 3", analyze.render(partial))
+        assert "Partial" in analyze.render(partial)
 
         quietly(resume_experiment, cut, self.root)
-        self.assertEqual(self.runs.status(cut), COMPLETE)
+        assert self.runs.status(cut) == COMPLETE
         whole = self.run_exp(cands, round_robins=3, name="whole")
         resumed = self.runs.matches(cut).drop("run_id")
-        self.assertTrue(resumed.equals(self.runs.matches(whole).drop("run_id")))
+        assert resumed.equals(self.runs.matches(whole).drop("run_id"))
+
+    def test_a_round_robin_is_stored_before_its_hook_runs(self) -> None:
+        started: list[str] = []
+        stored: dict[int, int] = {}
+
+        def count(rr: int) -> None:
+            matches = self.runs.matches(started[0])
+            stored[rr] = matches.filter(matches["rr"] == rr).height
+
+        run = self.run_exp(
+            [make_spec(self.light("cycler_v1"))],
+            rounds=6,
+            on_start=started.append,
+            on_batch=count,
+        )
+        per_rr = POOL * (POOL + 1) // 2
+        assert stored == {0: per_rr, 1: per_rr}
+        assert len(self.runs.played_matches(run)) == 2 * per_rr
+
+    def test_a_run_grows_into_the_run_planned_at_its_new_size(self) -> None:
+        cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
+        grown = self.run_exp(cands, round_robins=1, rounds=6, name="grown")
+        quietly(resume_experiment, grown, self.root, round_robins=2)
+        whole = self.run_exp(cands, round_robins=2, rounds=6, name="whole")
+        assert self.runs.played_round_robins(grown) == {0, 1}
+        assert self.runs.status(grown) == COMPLETE
+        assert self.runs.manifest(grown)["pools"] == self.runs.manifest(whole)["pools"]
+        assert (
+            self.runs.matches(grown)
+            .drop("run_id")
+            .equals(self.runs.matches(whole).drop("run_id"))
+        )
+
+    def test_a_run_never_shrinks(self) -> None:
+        cands = [make_spec(self.light("cycler_v1"))]
+        run = self.run_exp(cands, round_robins=2, rounds=6, name="two")
+        with pytest.raises(SystemExit):
+            quietly(resume_experiment, run, self.root, round_robins=1)
 
     def test_a_resume_refuses_a_changed_bot(self) -> None:
         path = os.path.join(self.root, "mystery.yaml")
@@ -235,127 +284,273 @@ class ExperimentTest(LightBots):
         def stop(rr: int) -> None:
             raise KeyboardInterrupt
 
-        with self.assertRaises(KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt):
             self.run_exp([make_spec(path)], name="m", on_batch=stop)
         with open(path, "w") as f:
             f.write("description: something else now\nblueprint: {}\n")
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             quietly(resume_experiment, "m", self.root)
 
 
-class WilsonTest(unittest.TestCase):
-    def test_bounds(self):
+class TestWilson:
+    def test_bounds(self) -> None:
         lo, hi = analyze.wilson(0.5, 100)
-        self.assertAlmostEqual(lo, 0.4038, places=3)
-        self.assertAlmostEqual(hi, 0.5962, places=3)
-        self.assertAlmostEqual(analyze.wilson(1.0, 10)[1], 1.0)
+        assert lo == pytest.approx(0.4038, rel=0, abs=0.5e-3)
+        assert hi == pytest.approx(0.5962, rel=0, abs=0.5e-3)
+        assert analyze.wilson(1.0, 10)[1] == pytest.approx(1.0, rel=0, abs=0.5e-7)
 
 
-class TuneTest(LightBots):
+class TestTune(LightBots):
     def space_for(self, stem: str, weight: float = 1.0) -> space.Space:
         """The project's space file for `stem`, pointed at the light copy."""
         found = space.load(os.path.join(SPACES_DIR, stem + ".yaml"))
         return dataclasses.replace(found, bot=self.light(stem), weight=weight)
 
-    def setUp(self) -> None:
-        self.dir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.dir.cleanup)
+    @pytest.fixture(autouse=True)
+    def _workspace(self, tmp_path: pathlib.Path) -> None:
+        self.dir = str(tmp_path)
         self.setup = Setup(
-            rounds=20,
+            rounds=6,
             round_robins=1,
             pool_size=POOL,
             seed=1,
             bots_dir=self.bots_dir,
-            root=self.dir.name,
+            root=self.dir,
         )
 
     def tune(self, spaces: list[space.Space], name: str, **search) -> optuna.Study:
         search.setdefault("sampler_seed", 1)
         return quietly(run_tune, spaces, name, self.setup, Search(**search))
 
+    @pytest.mark.heavy
     def test_tiny_study_runs_and_resumes(self) -> None:
-        study = self.tune([self.space_for("rock")], "t", trials=3)
-        self.assertEqual(len(study.trials), 3)
-        self.assertEqual(study.trials[0].params, {"rock.NOISE": 0.0})  # baseline
-        study = self.tune([self.space_for("rock")], "t", trials=1)
-        self.assertEqual(len(study.trials), 4)
-        self.assertTrue(
-            os.path.exists(os.path.join(self.dir.name, "tuning", "t", "trials.parquet"))
-        )
-        grid = self.tune([self.space_for("wsls")], "g", sampler="grid")
-        self.assertEqual(len(grid.trials), 4)  # SHIFT 2 x NOISE 2
-        self.setup = dataclasses.replace(self.setup, rounds=50)
-        with self.assertRaises(SystemExit):  # different setup
-            self.tune([self.space_for("rock")], "t", trials=1)
+        study = self.tune([self.space_for("rock_v1")], "t", trials=3)
+        assert len(study.trials) == 3
+        assert study.trials[0].params == {"rock_v1.NOISE": 0.0}  # baseline
+        study = self.tune([self.space_for("rock_v1")], "t", trials=1)
+        assert len(study.trials) == 4
+        assert os.path.exists(os.path.join(self.dir, "tuning", "t", "trials.parquet"))
+        grid = self.tune([self.space_for("wsls_v1")], "g", sampler="grid")
+        assert len(grid.trials) == 4  # SHIFT 2 x NOISE 2
+        self.setup = dataclasses.replace(self.setup, rounds=9)
+        with pytest.raises(SystemExit):  # different setup
+            self.tune([self.space_for("rock_v1")], "t", trials=1)
 
+    @pytest.mark.heavy
     def test_bots_tune_together_on_a_weighted_objective(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         study = self.tune(spaces, "fleet", trials=2)
         first = study.trials[0]
-        self.assertEqual(
-            first.params,
-            {
-                "cycler.STEP": 1,
-                "cycler.NOISE": 0.05,
-                "wsls.SHIFT": 1,
-                "wsls.NOISE": 0.0,
-            },
-        )
+        assert first.params == {
+            "cycler_v1.STEP": 1,
+            "cycler_v1.NOISE": 0.05,
+            "wsls_v1.SHIFT": 1,
+            "wsls_v1.NOISE": 0.0,
+        }
         bots = first.user_attrs["bots"]
-        self.assertEqual(set(bots), {"cycler", "wsls"})
-        self.assertEqual(bots["cycler"]["n"], POOL + 1)  # the pool and wsls
-        self.assertEqual(first.value, bots["cycler"]["score"])  # wsls weighs 0
+        assert set(bots) == {"cycler_v1", "wsls_v1"}
+        assert bots["cycler_v1"]["n"] == POOL + 1  # the pool and wsls
+        assert first.value == bots["cycler_v1"]["score"]  # wsls weighs 0
         grid = self.tune(spaces, "fleet-grid", sampler="grid")
         sizes = [len(v) for v in grid_space(spaces).values()]
-        self.assertEqual(len(sizes), 4)
-        self.assertEqual(len(grid.trials), math.prod(sizes))  # every combination
+        assert len(sizes) == 4
+        assert len(grid.trials) == math.prod(sizes)  # every combination
 
     def test_split_params_and_baseline(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls")]
-        self.assertEqual(
-            split_params({"cycler.STEP": 2, "wsls.NOISE": 0.1}, spaces),
-            {"cycler": {"STEP": 2}, "wsls": {"NOISE": 0.1}},
-        )
-        self.assertEqual(baseline(spaces)["wsls.SHIFT"], 1)
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1")]
+        assert split_params({"cycler_v1.STEP": 2, "wsls_v1.NOISE": 0.1}, spaces) == {
+            "cycler_v1": {"STEP": 2},
+            "wsls_v1": {"NOISE": 0.1},
+        }
+        assert baseline(spaces)["wsls_v1.SHIFT"] == 1
 
     def test_a_study_needs_weight_and_distinct_bots(self) -> None:
-        with self.assertRaises(SystemExit):
-            self.tune([self.space_for("rock", weight=0.0)], "zero", trials=1)
-        with self.assertRaises(ValueError):
+        with pytest.raises(SystemExit):
+            self.tune([self.space_for("rock_v1", weight=0.0)], "zero", trials=1)
+        with pytest.raises(ValueError):
             self.tune(
-                [self.space_for("rock"), self.space_for("rock")], "twice", trials=1
+                [self.space_for("rock_v1"), self.space_for("rock_v1")],
+                "twice",
+                trials=1,
             )
 
+    @pytest.mark.heavy
     def test_validation_replays_each_fleet_on_its_own(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "v", trials=2)
         study = self.tune(
             spaces, "v", trials=0, validate_top=1, validate_round_robins=1
         )
-        self.assertEqual(len(study.trials), 2)  # validation only: no new trials
-        stored = RunStore.at(self.dir.name)
+        assert len(study.trials) == 2  # validation only: no new trials
+        stored = RunStore.at(self.dir)
         runs = stored.run_ids()
-        self.assertEqual(len(runs), 2)  # the defaults, then the best trial
+        assert len(runs) == 2  # the defaults, then the best trial
         for run in runs:
             _, manifest, _ = stored.load_run(run)
-            self.assertEqual(len(manifest["candidates"]), 2)
-            self.assertEqual(manifest["tuning"]["study"], "v")
-        self.assertEqual(sorted(study.user_attrs["validations"][-1]["runs"]), runs)
+            assert len(manifest["candidates"]) == 2
+            assert manifest["tuning"]["study"] == "v"
+        assert sorted(study.user_attrs["validations"][-1]["runs"]) == runs
 
+    @pytest.mark.heavy
     def test_validation_results_are_recorded(self) -> None:
-        spaces = [self.space_for("cycler"), self.space_for("wsls", weight=0.0)]
+        spaces = [self.space_for("cycler_v1"), self.space_for("wsls_v1", weight=0.0)]
         self.tune(spaces, "rec", trials=3, validate_top=2, validate_round_robins=1)
-        rows = RunStore.at(self.dir.name).validations("tune_validations", "rec")
-        self.assertGreaterEqual(rows.height, 2)
+        rows = RunStore.at(self.dir).validations("tune_validations", "rec")
+        assert rows.height >= 2
         first = rows.row(0, named=True)
-        self.assertEqual(first["trial"], -1)  # the defaults come first
-        self.assertTrue(first["champion"].startswith("cycler"))
-        self.assertEqual(first["vs_defaults"], 0.0)
-        self.assertEqual(first["n"], POOL)
-        self.assertEqual(len(set(rows["run_id"])), rows.height)  # one run each
-        text = analyze.render_validations("rec", self.dir.name)
-        self.assertIn("vs defaults", text)
+        assert first["trial"] == -1  # the defaults come first
+        assert first["champion"].startswith("cycler_v1")
+        assert first["vs_defaults"] == 0.0
+        assert first["n"] == POOL
+        assert len(set(rows["run_id"])) == rows.height  # one run each
+        text = analyze.render_validations("rec", self.dir)
+        assert "vs defaults" in text
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestVariantPools:
+    """pool.variants: a share of each pool's members play a parameter variant."""
+
+    def schedule(self, variants: float) -> list[dict]:
+        return build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            6,
+            3,
+            seed=11,
+            allow_small=True,
+            variants=variants,
+            spaces_dir=data.SPACES_DIR,
+        )
+
+    def test_no_share_leaves_every_member_at_its_defaults(self) -> None:
+        for rr in self.schedule(0.0):
+            assert all(not p.params for p in rr["pool"])
+
+    def test_variants_keep_the_pools_bots_and_the_match_seeds(self) -> None:
+        plain, varied = self.schedule(0.0), self.schedule(1.0)
+        for a, b in zip(plain, varied, strict=True):
+            assert [p.path for p in a["pool"]] == [p.path for p in b["pool"]]
+            assert a["seeds"] == b["seeds"]
+
+    def test_a_member_with_a_space_plays_a_variant_inside_it(self) -> None:
+        spaced = {
+            space.load(os.path.join(data.SPACES_DIR, f)).stem: space.load(
+                os.path.join(data.SPACES_DIR, f)
+            )
+            for f in os.listdir(data.SPACES_DIR)
+        }
+        varied = [p for rr in self.schedule(1.0) for p in rr["pool"]]
+        for member in varied:
+            found = spaced.get(member.stem)
+            if found is None:
+                assert not member.params
+                continue
+            assert set(member.params) == set(found.params)
+            for name, value in member.params.items():
+                assert found.params[name].contains(value)
+        assert any(p.params for p in varied)
+
+    def test_the_draws_are_reproducible(self) -> None:
+        labels = [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]
+        assert labels == [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]
+
+
+class TestInsightEvidence:
+    """What an insight cites of a note: its significant results, else all of them,
+    marked tentative."""
+
+    def test_the_significant_results_are_cited_alone(self) -> None:
+        found = workflows.weigh([("a +3 [+1, +5]", True), ("b +1 [-2, +4]", False)])
+        assert found == workflows.Evidence(("a +3 [+1, +5]",), True)
+        assert found.text() == "a +3 [+1, +5]"
+
+    def test_without_one_every_result_is_cited_as_tentative(self) -> None:
+        found = workflows.weigh([("a +1 [-2, +4]", False), ("b -1 [-3, +1]", False)])
+        assert not found.significant
+        assert found.text() == (f"{workflows.TENTATIVE}: a +1 [-2, +4]; b -1 [-3, +1]")
+
+    def test_no_result_leaves_nothing_to_cite(self) -> None:
+        assert workflows.weigh([]).results == ()
+
+    def test_an_insight_cites_at_least_one_note(self, tmp_path) -> None:
+        with pytest.raises(workflows.WorkflowError, match="at least one note"):
+            workflows.learn(
+                str(tmp_path), [], "f", "m", "i", str(tmp_path), datetime.date.today()
+            )
+
+    def test_a_note_whose_run_is_gone_is_read_from_its_recorded_comparisons(
+        self,
+    ) -> None:
+        text = (
+            "## Results\n\n"
+            "- `a - b = +3.7 pts [+0.9, +6.6]` over 600 shared matches: a better\n"
+            "- `a - c = +0.1 pts [-2.2, +2.5]` over 680 shared matches:"
+            " no significant difference\n"
+            "- not a comparison\n"
+        )
+        assert workflows.recorded(text) == [
+            ("`a - b = +3.7 pts [+0.9, +6.6]` over 600 shared matches: a better", True),
+            (
+                (
+                    "`a - c = +0.1 pts [-2.2, +2.5]` over 680 shared matches:"
+                    " no significant difference"
+                ),
+                False,
+            ),
+        ]
+
+
+class TestListedPools:
+    """pool.lists: pools drawn from the specs of list files, not the bots dir."""
+
+    def write_list(self, tmp_path: pathlib.Path, lines: list[str]) -> str:
+        path = tmp_path / "hard.txt"
+        path.write_text("# a hard list\n" + "\n".join(lines) + "\n", encoding="utf-8")
+        return str(path)
+
+    def test_the_pools_come_from_the_list_its_overrides_included(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        listed = [
+            data.bot("rock_v1"),
+            data.bot("cycler_v1"),
+            data.bot("frequency_v1") + ":DECAY=0.7",
+        ]
+        rrs = build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            3,
+            2,
+            seed=3,
+            pool_list=(self.write_list(tmp_path, listed),),
+        )
+        for rr in rrs:
+            assert sorted(format_spec(p) for p in rr["pool"]) == sorted(
+                format_spec(parse_spec(t)) for t in listed
+            )
+
+    def test_a_candidate_never_meets_itself_from_the_list(
+        self, tmp_path: pathlib.Path
+    ) -> None:
+        listed = [data.bot("rock_v1"), data.bot("wsls_v1"), data.bot("cycler_v1")]
+        (rr,) = build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            2,
+            1,
+            seed=3,
+            pool_list=(self.write_list(tmp_path, listed),),
+        )
+        assert "wsls_v1" not in [p.stem for p in rr["pool"]]
+
+    def test_a_short_list_needs_allow_small(self, tmp_path: pathlib.Path) -> None:
+        listed = [data.bot("rock_v1")]
+        with pytest.raises(SystemExit, match="only 1 eligible"):
+            build_schedule(
+                [make_spec(data.bot("wsls_v1"))],
+                data.BOTS_DIR,
+                3,
+                1,
+                seed=3,
+                pool_list=(self.write_list(tmp_path, listed),),
+            )

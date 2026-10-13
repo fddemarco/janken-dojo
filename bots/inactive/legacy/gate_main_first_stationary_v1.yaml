@@ -1,0 +1,25 @@
+description: |
+  gate_main_first plus a stationary expert: a third gated arm for fixed-distribution bots (idea #36).
+
+  smartbot_sims's arms (main expert), then a long-memory frequency count of the
+  opponent's moves played BEAT (the stationary expert), then anti_smartbot_sims'
+  Replay of smartbot_sims (the anti expert). Gatekeeper rule LEADER_PRIORITY over
+  the two gated experts: the main expert first; the best-scored expert takes over
+  once it leads the current one by EDGE, but from the stationary expert only the
+  main or the anti expert can take over. Screened with an Oracle arm (32 paired
+  seeds): it wins biased 97% (vs 86%) but costs about 4 pts vs L2.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v1}
+      experts:
+        - {bot: frequency_v1}
+        - {bot: smartbot_sims_v1, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: LEADER_PRIORITY
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

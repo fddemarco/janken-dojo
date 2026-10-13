@@ -15,7 +15,7 @@ the defaults. Run every command as `uv run janken ...`.
 uv run janken bot show <bot>     # its defaults and spaces/<bot>.yaml
 ```
 
-`janken tune` scaffolds a missing space file (each default ÷2 … ×2). Before a real
+`janken tune` scaffolds a missing space file (each default /2 ... x2). Before a real
 study, edit the space into sensible bounds:
 
 - `log: true` for rates;
@@ -27,9 +27,9 @@ The bot's file is never edited.
 ## 2. Run it
 
 ```bash
-uv run janken tune bots/<bot>.yaml --hypothesis "..." --idea <N> --effort standard
-uv run janken tune bots/fleets/iliad_v3/agamemnon_v3.yaml --support bots/fleets/iliad_v3/achilles_v3.yaml \
-  --support bots/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
+uv run janken tune bots/<level>/<bot>.yaml --hypothesis "..." --idea <N> --effort standard
+uv run janken tune bots/l4/champion.yaml --support bots/l2/helper_a.yaml \
+  --support bots/l2/helper_b.yaml --hypothesis "..."          # a fleet: supports at weight 0
 ```
 
 - **Budget:**
@@ -61,5 +61,5 @@ the tuned bot's defaults:
 uv run janken bot new <bot>_tuned --from <bot> --description "..."
 ```
 
-Then set the new bot's defaults, and `/evaluate` it against the original. A validated
-difference whose CI excludes 0 goes to `/learn`.
+Then set the new bot's defaults, and `/evaluate` it against the original. A kept result
+goes to `/learn` (its insight is tentative when no validated CI excludes 0).

@@ -4,11 +4,12 @@
     Greedy       the best-scored arm (ties: first, or random); deterministic play
                  is readable by opponents that replay us (experiment 0006)
     Thompson     Thompson sampling of each arm's Dirichlet (the Kaggle winner's
-                 bandit; rps_kaggle §4.5)
+                 bandit; rps_kaggle section 4.5)
     SampledVote  a move sampled from the arms' softmax vote: exploits like the
                  best arms while staying hard to predict (idea #10; a sampled arm
                  inside an argmax bandit is inert, experiment 0001)
-    Gatekeeper   two experts: the last arm (a replay) and Thompson over the rest,
+    Gatekeeper   a Gate, compiled (janken/kit/blueprint/lowering.py): two
+                 experts, the last arm (a replay) and Thompson over the rest,
                  picked by the last arm's own record (EDGE), the main expert's
                  lead over it (ANTI_FIRST) or a bandit over both (BANDIT); idea
                  #30: the replay of smartbot_sims wins the metabot family, its
@@ -244,6 +245,39 @@ def _leader(
     i[at + 2] = current
     move = i[at + 3 + current]
     return move if move >= 0 else main
+
+
+@kernel
+def gated_arms(spec: np.ndarray, sel: int) -> int:
+    """How many gated arms Gatekeeper record `sel` keeps (the bandit's last ones)."""
+    if spec[sel + c.R_A] == c.LEADER or spec[sel + c.R_A] == c.LEADER_PRIORITY:
+        return spec[sel + c.R_B]
+    return 1
+
+
+@kernel
+def played_gated(
+    spec: np.ndarray, sel: int, f: np.ndarray, i: np.ndarray, kn: np.ndarray, rn: int
+) -> bool:
+    """Whether Gatekeeper record `sel`, having just picked raw round rn's move,
+    played a gated expert's move rather than the main bandit's (a replayed Gate
+    names the main bandit's likely move instead of one Thompson sample of it)."""
+    rule = spec[sel + c.R_A]
+    at = spec[sel + c.R_I]
+    if rule == c.LEADER or rule == c.LEADER_PRIORITY:
+        current = i[at + 2]
+        return current != 0 and i[at + 3 + current] >= 0
+    if i[at] < 0:
+        return False
+    if rule == c.EDGE:
+        kk = spec[sel + c.R_K]
+        warm = rn >= kn[kk + 2]
+        return warm and value(c.SC_DIRICHLET, f, spec[sel + c.R_F]) > kn[kk]
+    if rule == c.MAIN_FIRST:
+        return i[at + 4] == 1
+    if rule == c.ANTI_FIRST or rule == c.ANTI_FIRST_HOLD:
+        return i[at + 4] == 0
+    return False  # BANDIT: a draw between the two records, not kept
 
 
 @kernel

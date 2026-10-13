@@ -1,0 +1,45 @@
+description: |
+  The field's L4 gatekeepers replayed as they play, one level up, gated by LEADER.
+
+  smartbot_sims_v2's main bandit; gated experts: replay_hunter_wide_v2's own
+  (smartbot_sims_v2 from both seats, the learners from theirs, rps4_lite from
+  ours), the Thompson councils it split rounds with (geometry_ensemble,
+  multiscale_council) from their seat, and the L4 gatekeepers replay_hunter_wide,
+  replay_hunter_gate, level_k_gate and double_bluff_gate from their seat as
+  their gatekeeper plays (the gated expert's move while their gate plays one,
+  else their main bandit's likeliest). Every replay, inner ones included, computes
+  its likely move (estimate NORMAL) rather than drawing it. Every replay is played
+  all three ways.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: backoff_family_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: mirror_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_matcher_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_wide_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: multiscale_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_wide_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: level_k_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: double_bluff_gate_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

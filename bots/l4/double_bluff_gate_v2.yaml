@@ -1,0 +1,15 @@
+description: |
+  smartbot_sims, with a counter to anti_smartbot_sims as an EDGE-gated expert (NORMAL replays).
+  As double_bluff_gate_v1, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+defaults:
+  EDGE: 0.06
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [BEAT_BEAT]}
+      rule: EDGE
+      edge: $EDGE
+      warmup: $WARMUP

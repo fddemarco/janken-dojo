@@ -1,4 +1,0 @@
-bot: bots/rotation_outcome.yaml
-weight: 1.0
-params:
-  DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.7, 0.8, 0.9, 1.0]}

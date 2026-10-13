@@ -1,0 +1,17 @@
+description: |
+  Research-only pure Oracle of anti_smartbot_sims (L3): its win chance per opponent level, no game logic.
+
+  The referee never runs this bot: each round it draws an outcome vs the opponent's
+  move with anti_smartbot_sims's measured win chance vs the opponent's level (ties and losses
+  split the rest; `janken lab calibrate anti_smartbot_sims`, 16 seeds, 2026-10-11), and draws
+  vs another Oracle. Pools use it in place of anti_smartbot_sims with `pool.mocks`. It cheats:
+  never in a tournament or an export.
+mocks: anti_smartbot_sims_v1
+defaults:
+  WIN_L1: 0.3367
+  WIN_L2: 0.4059
+  WIN_L3: 0.415
+  WIN_L4: 0.3681
+blueprint:
+  core:
+    Heuristic: {signal: {Oracle: {wins: [$WIN_L1, $WIN_L2, $WIN_L3, $WIN_L4]}}, rotation: BEAT}

@@ -1,0 +1,16 @@
+description: |
+  repeat_mirror plus the pre-trained context table as one more arm, every rotation (idea #72, second step).
+  The pre-trained prior (pretrained_context_v1) names the field's habits from the first rounds; repeat_mirror's online arms take over as the match teaches them, all scored by the same decayed record.
+defaults:
+  DECAY: 0.9
+blueprint:
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    Bandit:
+      predictors:
+        - {bot: longest_match, arms: 2, space: {MAX_LEN: 10, CTX: JOINT, OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: second_match, arms: 2, space: {MAX_LEN: 12, CTX: JOINT, OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pretrained_context_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

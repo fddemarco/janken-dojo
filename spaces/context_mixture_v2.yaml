@@ -1,0 +1,4 @@
+bot: bots/l1/context_mixture_v2.yaml
+weight: 1.0
+params:
+  DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.6, 0.7, 0.8, 0.9]}

@@ -11,7 +11,7 @@
 jit = true
 # Commands that keep numba's compiled code on disk (the compute-intensive ones); the
 # rest compile in memory. --cache / --no-cache or $JANKEN_NUMBA_CACHE override.
-cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune"]
+cache_commands = ["evaluate", "tune", "tournament", "bot check", "lab experiment", "lab resume", "lab match", "lab arena", "lab identify", "lab calibrate", "lab study run", "lab dataset add", "lab predict", "lab predict-tune", "species census", "species compare", "species classify"]
 
 [output]
 # Progress bars on long commands: "auto" (only on an interactive terminal), "on" or
@@ -32,6 +32,9 @@ spaces_dir = "spaces"
 [execution]
 # Threads playing matches; 0 uses every core.
 workers = 0
+# While a batch plays, the matches finished so far are logged and stored every flush_s
+# seconds: a slow match (an L4 vs an L5) shows up soon after it ends, fast ones together.
+flush_s = 10.0
 
 [match]
 # Rounds per match: 200 is the tournament standard.
@@ -45,6 +48,13 @@ allow_small = false
 # instead of the bots they mock. Set it locally while experimenting:
 # `janken config set --local pool.mocks true`. Oracles never enter a tournament.
 mocks = false
+# The share of each pool's members that play a parameter variant, drawn uniformly
+# from their space file, instead of their defaults: a bot that only beats the
+# field's exact defaults shows it (janken/lab/pool.py).
+variants = 0.0
+# Draw pools from these list files' specs (one per line, gauntlet lists such as
+# research/gauntlet/hard_l4.txt) instead of the bots dir: none uses the bots dir.
+lists = []
 
 [calibration]
 # Matches a bot plays vs each opponent when it is calibrated for its Oracle.
@@ -65,7 +75,7 @@ validate_round_robins = 2
 predict_trials = 10
 
 [effort.standard]
-# 10 round robins give each candidate 200 matches vs the pool: a score CI of ~±6 pts.
+# 10 round robins give each candidate 200 matches vs the pool: a score CI of ~+/-6 pts.
 round_robins = 10
 tune_round_robins = 5
 trials = 100
@@ -74,7 +84,7 @@ validate_round_robins = 10
 predict_trials = 100
 
 [effort.thorough]
-# For small effects: 40 round robins give a score CI of ~±3 pts.
+# For small effects: 40 round robins give a score CI of ~+/-3 pts.
 round_robins = 40
 tune_round_robins = 10
 trials = 300
@@ -88,6 +98,14 @@ predict_trials = 300
 mode = "full"
 # -1 draws a fresh seed (recorded with the run); any other value reproduces a run.
 seed = -1
+# Sequential evaluation: a new note's run plays its round robins in `looks` steps and
+# stops at the first look where the candidate vs baseline comparison is clear of 0 (each
+# look spends part of alpha, O'Brien-Fleming), or where, if the effect seen so far is
+# the true one, the chance of clearing the last look is under `futility`.
+sequential = true
+looks = 5
+alpha = 0.05
+futility = 0.10
 
 [tuning]
 # "tpe", "grid" (each param's grid list) or "random" (a baseline).
@@ -145,6 +163,10 @@ tune_split = "train"
 # A process that finds the file locked retries for lock_timeout_s seconds.
 file = "runs.duckdb"
 lock_timeout_s = 30.0
+# Every match played is kept (table match_cache), keyed by what decides it: the bots'
+# sources and overrides, the seed, the rounds and the kit's code. A match played again
+# (tuning's fixed pools, gauntlet seeds, species runs) is read back, not replayed.
+match_cache = true
 
 [query]
 # `janken lab query`: the database read ("runs" or "dataset"), and the rows printed.
@@ -166,3 +188,186 @@ max_rounds = 1000
 # the builtins it may not name (file access, dynamic code, introspection).
 allowed_modules = ["abc", "array", "bisect", "collections", "copy", "dataclasses", "datetime", "decimal", "enum", "fractions", "functools", "heapq", "itertools", "json", "math", "numbers", "random", "re", "statistics", "string", "time", "typing"]
 banned_names = ["open", "eval", "exec", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars", "getattr", "setattr", "delattr", "exit", "quit", "help"]
+
+[fleet]
+# `janken bot fleet`: a fleet scaffolded on a bot. Its champion file goes to `dir`
+# (under the bots dir, so it can name its base bot);
+# it has `size` bots (the champion and its supports) and a random handshake of
+# `handshake_length` moves; `export` writes its scripts at once.
+dir = "inactive/fleets"
+size = 5
+handshake_length = 8
+vigilant = true
+export = true
+
+[species]
+# How `janken species classify` decides what a kept bot is. Alike: its core agrees with
+# a species' current version on at least `agreement` of the predicted moves (dataset
+# `split`) AND their per-opponent scores in a paired run of `round_robins` correlate at
+# least `profile_correlation`. Better: no matchup's 95% CI below 0, and one above 0 at
+# the Bonferroni level alpha / matchups (matchups with >= min_matchup_matches matches),
+# or as good and speed_factor times faster.
+agreement = 0.8
+profile_correlation = 0.7
+round_robins = 40
+# Sequential: the paired run grows in `looks` steps and stops at the first one where the
+# challenger is alike in profile and worse on some matchup at the alpha that look spends
+# (O'Brien-Fleming over 0.05): a variant then, whatever more round robins would show.
+sequential = true
+looks = 3
+# Classify reads only the two candidates' matches: pool vs pool would cost ~5x more.
+mode = "candidates"
+# A kept bot whose evaluation paired it with its level's species' current version (as
+# the baseline) is decided from that evaluation: the next version when not worse there
+# and better, or more than speed_factor times faster; a variant otherwise. No core
+# agreement bar and no species run: naming the incumbent as the baseline declares it.
+promote_on_evaluation = true
+min_matchup_matches = 10
+alpha = 0.05
+split = "test"
+# Matches of the split the cores replay, evenly spread over it. The bots that replay
+# smartbot_sims (anti_smartbot_sims, the gates) cost ~1s a match each; 30 matches give
+# ~15k predictions per pair, plenty for an agreement rate.
+matches = 30
+# A challenger as good as the incumbent (worse on no matchup, better on none) still
+# replaces it when it plays speed_factor times faster: each bot plays speed_matches
+# self-play matches, timed speed_repeats times (the fastest repeat counts).
+speed_factor = 2.0
+speed_matches = 8
+speed_repeats = 3
+# Retired versions and variants go here, relative to the bots dir (never in a pool).
+legacy_dir = "inactive/legacy"
+# Computed cores are kept here, in the workspace, named after a hash of the bot (and
+# the bots it names), the replay code and the histories: a census, compare or
+# classify replays only the bots that changed (janken/lab/cores.py).
+cores_dir = "cores"
+
+[telemetry]
+# Timing spans: one JSON line per coarse operation (a command, compiling, playing, a
+# round robin, a trial), in the workspace; read with `janken lab profile spans`.
+# $JANKEN_SPANS overrides.
+spans = true
+file = "logs/spans.jsonl"
+max_mb = 20
+# A command whose last run took this many times its median is flagged slow.
+slow_factor = 1.5
+
+[profile]
+# `janken lab profile`: profiles and benchmarks go to this folder of the workspace.
+dir = "profiles"
+interval_s = 0.001
+top = 15
+# Profile compiled code; false runs the command as plain Python, to see inside kernels.
+jit = true
+# Run the command once, unmeasured, before profiling or timing it: numba's on-disk
+# cache is then warm (for engine.cache_commands), as in everyday use.
+warmup = true
+# The optimization budget. A hotspot under min_share of the wall time isn't worth it
+# (removing it all gains < 11%). Otherwise a session is worth it when cutting
+# expected_cut of the hotspot, on every use of the command projected over
+# horizon_days (its rate over the last window_days of spans), saves at least the
+# session's cost, session_minutes.
+min_share = 0.10
+expected_cut = 0.5
+window_days = 30
+horizon_days = 90
+session_minutes = 60
+# A session tries at most max_attempts changes, and keeps one only if it cuts the
+# fastest of `repeats` timed runs by at least min_gain.
+max_attempts = 3
+min_gain = 0.05
+repeats = 3
+# A command is profiled again only after cooldown_days, unless its spans flag it slow.
+cooldown_days = 7
+
+[gauntlet]
+# `janken lab gauntlet`: a candidate vs every opponent of a list, each on its own
+# (variations of the field's bots included). Logs go to this folder of the workspace.
+dir = "gauntlet"
+# Matches per opponent, and the share of rounds won a candidate must reach vs each.
+seeds = 10
+threshold = 0.36
+batch = 256
+# Sequential stopping: after min_seeds matches, a pairing whose share won is already
+# clear of the threshold stops (each further seed a look; stop_alpha spent over them,
+# O'Brien-Fleming: janken/lab/sequential.py). Only the close ones play every seed.
+sequential = true
+min_seeds = 3
+stop_alpha = 0.05
+# `variations`: per_bot variants of each field bot, drawn from its space file (at
+# most `draws` Latin hypercubes), kept only if their moves differ from the
+# default's vs the probes in seeded matches of probe_rounds rounds.
+per_bot = 10
+draws = 4
+seed = 0
+probe_rounds = 100
+variation_probes = ["bots/l2/smartbot_v1.yaml", "bots/l1/frequency_v1.yaml"]
+levels = ["l1", "l2", "l3", "l4"]
+# Field bots that get no variants: Nash-like by `lab gauntlet nash` (vs simple
+# probes; research/gauntlet/nash_check.md) and with no parameters to vary.
+exclude = ["nash_v1"]
+# `nash`: a bot is Nash-like ("Nash with extra steps") when, vs every probe, its
+# rounds won minus lost stay under nash_skew: no simple bot exploits it or is
+# exploited by it. The probes: a fixed move, a cycle, a reaction to our last move,
+# a frequency counter, a pattern matcher.
+nash_probes = ["bots/l1/rock_v1.yaml", "bots/l1/cycler_v1.yaml", "bots/l1/reactionary_v1.yaml", "bots/l1/frequency_v1.yaml", "bots/l1/pattern_memory_v1.yaml"]
+nash_seeds = 3
+nash_skew = 0.10
+# A bot whose first match vs some probe is already this skewed is settled (not
+# Nash-like) without the other seeds: a Nash-like bot's match is about 0.05 off.
+nash_decisive = 0.25
+# `fingerprint`: margins over these scripted probes (research/probes.md), read from
+# tournament exports and compared with the lab's (a gauntlet log with the probes as
+# candidates); the closest fingerprint_nearest lab bots are listed.
+fingerprint_probes = ["bots/inactive/probes/probe_cycle3.yaml", "bots/inactive/probes/probe_debruijn2.yaml", "bots/inactive/probes/probe_debruijn3.yaml", "bots/inactive/probes/probe_debruijn4.yaml", "bots/inactive/probes/probe_blocks50.yaml"]
+# The fantasy names the probes are submitted under (NAME=STEM): a tournament bot whose
+# whole name matches one (ignoring case and punctuation) is that probe.
+fingerprint_aliases = ["Nimbus=probe_cycle3", "Thistle=probe_debruijn2", "Corvina=probe_debruijn3", "Marigold=probe_debruijn4", "Bramble=probe_blocks50"]
+fingerprint_nearest = 3
+
+[arena]
+# `janken lab arena`: an experimental learner (janken/experimental/: third-party
+# libraries allowed, research only, never exported) vs every opponent of a gauntlet
+# list, logged in this folder of the workspace and scored like `lab gauntlet run`.
+dir = "arena"
+seeds = 5
+# The learner: Vowpal Wabbit, cost-sensitive (one cost per move, every round, from
+# what each move would have scored), with a constant learning rate since opponents
+# adapt. Its features: the last `history` rounds, and what the `experts` would play
+# from our seat and from theirs. It plays a random move with chance `explore`.
+vw_args = "--csoaa 3 --power_t 0 --learning_rate 0.1 --quiet"
+history = 3
+explore = 0.05
+experts = ["frequency_v1", "smartbot_fast_v1", "backoff_family_v1", "period_bandit_v1", "iocaine_lite_v1", "geometry_ensemble_v1"]
+
+[identify]
+# `janken lab identify` (research only, janken/experimental/identify.py): can an
+# opponent bandit's parameters be told from its moves in time to exploit them? Each
+# hypothesis bot gets `particles` parameter vectors from its space file (seeded by
+# `seed`), each replayed from the opponent's seat and weighted (1 - eps) per round it
+# names the opponent's move, eps / 2 per miss. Logs go to this workspace folder.
+dir = "identify"
+seeds = 5
+hypotheses = ["smartbot_v1", "sampled_markov_v1", "geometry_ensemble_v1", "iocaine_lite_v1", "rps4_lite_v1", "period_bandit_v1", "outcome_reader_v1", "multiscale_council_v1"]
+particles = 32
+eps = 0.5
+# We play `probe` until commit_round, then the move that beats the posterior's vote.
+# Every checkpoint_every rounds the posterior is scored, and the particles under
+# prune_ratio of the best one's weight dropped; an estimate within `near` of a
+# parameter's range counts as near the truth.
+commit_round = 150
+checkpoint_every = 25
+prune_ratio = 1e-6
+near = 0.1
+probe = "l5_hunter"
+# true: the opponent's own species is never a hypothesis (an unknown architecture).
+leave_one_out = false
+seed = 0
+# The posterior forgets: each round, its log weights are multiplied by `forget`
+# (1: a match-long record). The switch branch plays keep or exploit, whichever has
+# the better record decayed by switch_decay, both scored counterfactually.
+forget = 1.0
+switch_decay = 0.95
+# Blocks read every way (both seats, every rotation) as particles beside the
+# hypotheses: building blocks most bandits share, not a whole architecture.
+components = []

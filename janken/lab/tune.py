@@ -6,7 +6,7 @@ Design (see research/README.md, "Tuning"):
   tuned together in one study (a fleet: a champion and its supports), each trial
   choosing every bot's parameters at once. Optuna names a parameter
   `<stem>.<NAME>`.
-* Objective: each tuned bot's match score, (W + ½D) / N, over its matches against
+* Objective: each tuned bot's match score, (W + D/2) / N, over its matches against
   the pool and against the other tuned bots, combined as a weighted mean with the
   space files' weights. A fleet's supports take weight 0: they are tuned only for
   what they do to the champion.
@@ -45,12 +45,12 @@ import optuna
 import polars as pl
 import tqdm
 
-from .. import botfile, progress, settings
-from ..engine import play_pairs
+from .. import library, progress, settings, telemetry
 from ..match import MatchResult
 from ..spec import BotSpec, format_spec, make_spec
 from . import analyze, store
 from .experiment import build_schedule, run_experiment
+from .match_cache import MatchCache
 from .runs_db import RunStore
 from .space import Number, Param, Space, check_unique_stems
 
@@ -73,6 +73,7 @@ class Setup:
     allow_small: bool = False
     use_mocks: bool = False  # pools draw the mocks (janken/mocks.py)
     root: str = ""  # "": the default experiments directory
+    match_cache: bool = False  # read back matches already played (match_cache.py)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -207,6 +208,18 @@ def _pct(x: float) -> str:
     return "%.1f%%" % (100 * x)
 
 
+def timed_trial(
+    op: str, objective: Callable[[optuna.Trial], float]
+) -> Callable[[optuna.Trial], float]:
+    """`objective`, each trial logged as a timing span `op`."""
+
+    def timed(trial: optuna.Trial) -> float:
+        with telemetry.span(op, trial=trial.number):
+            return objective(trial)
+
+    return timed
+
+
 def objective_value(tallies: Mapping[str, Tally], spaces: Sequence[Space]) -> float:
     """The weighted mean of the tuned bots' scores."""
     total = sum(s.weight for s in spaces)
@@ -264,7 +277,7 @@ def _open_study(
         ),
     )
     config = study_config(spaces, setup)
-    hashes = {s.stem: botfile.source_hash(s.bot) for s in spaces}
+    hashes = {s.stem: library.source_hash(s.bot) for s in spaces}
     stored = study.user_attrs.get("config")
     if stored is None:
         study.set_user_attr("config", config)
@@ -320,6 +333,10 @@ def run_tune(
         file=sys.stderr,
     )
 
+    # Every trial plays the same pools on the same seeds: the matches it doesn't
+    # change (pool vs pool, the supports' with defaults) are read back after the first.
+    matches = MatchCache(RunStore.at(setup.root), setup.match_cache)
+
     def objective(trial: optuna.Trial) -> float:
         params = suggest(trial, spaces)
         tuned = {s.stem: spec for s, spec in zip(spaces, specs_for(spaces, params))}
@@ -328,7 +345,7 @@ def run_tune(
             pairs = [
                 (tuned.get(a.stem, a), tuned.get(b.stem, b)) for a, b in rr["pairs"]
             ]
-            results = play_pairs(
+            results = matches.play(
                 pairs, setup.rounds, rr["seeds"], setup.workers or None
             )
             for (a, b), m in zip(pairs, results):
@@ -360,7 +377,7 @@ def run_tune(
         )
         try:
             study.optimize(
-                objective,
+                timed_trial("tune.trial", objective),
                 n_trials=n_trials,
                 timeout=search.timeout or None,
                 callbacks=[callback],
@@ -377,7 +394,8 @@ def run_tune(
     )
     report(study, spaces, 10)
     if search.validate_top:
-        validate(study, spaces, setup, search, study_name)
+        with telemetry.span("tune.validate", top=search.validate_top):
+            validate(study, spaces, setup, search, study_name)
     return study
 
 
@@ -407,7 +425,7 @@ class TrialProgress:
         self.finished += 1
         done = [t for t in study.trials if t.value is not None]
         best = study.best_trial if done else None
-        best_text = self.show(best.value) if best and best.value is not None else "—"
+        best_text = self.show(best.value) if best and best.value is not None else "-"
         if trial.state == optuna.trial.TrialState.PRUNED:
             self.pruned += 1
             state = "pruned"
@@ -561,6 +579,7 @@ def validate(
             use_mocks=setup.use_mocks,
             root=setup.root or None,
             extra={"tuning": {"study": study_name, "trials": trials}},
+            cache=setup.match_cache,
         )
         print(analyze.render(analyze.analyze_run(run_id, setup.root or None)))
         played.update({c.key: run_id for c in group})
@@ -590,7 +609,7 @@ def validate(
                 [
                     r.champion,
                     r.trial,
-                    "—" if math.isnan(r.train_value) else _pct(r.train_value),
+                    "-" if math.isnan(r.train_value) else _pct(r.train_value),
                     f"{_pct(r.score)} [{_pct(r.ci_lo)}, {_pct(r.ci_hi)}]",
                     f"{100 * r.vs_defaults:+.1f} pts [{100 * r.vs_defaults_lo:+.1f}, {100 * r.vs_defaults_hi:+.1f}]",
                 ]

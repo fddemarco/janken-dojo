@@ -1,0 +1,5 @@
+bot: bots/l1/anti_frequency_v1.yaml
+weight: 1.0
+params:
+  DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.8, 0.9, 1.0]}
+  NOISE: {type: float, low: 0.0, high: 0.5, grid: [0.0, 0.1]}

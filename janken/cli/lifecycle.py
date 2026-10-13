@@ -34,13 +34,22 @@ TITLE_HELP = "the note's title (default: built from the bots)"
 NAME_HELP = "the note's file name, NNNN-<name>.md (default: from the title)"
 IDEA_HELP = "the ideas.md number it tests (it goes in progress); 0: none"
 NOTE_HELP = (
-    "an existing note (number or NNNN-name) to run or resume, instead of a new one"
+    "an existing note (number or NNNN-name) to run or resume, instead of a new one;"
+    " with --round-robins, its run grows to that many"
 )
 
 
-def _plan(lab: Lab, mode: str):
-    from ..lab.workflows import Plan
+def plan_for(lab: Lab, mode: str, sequential: bool = False):
+    """How the lab's flags play an experiment; `sequential`: a new evaluation
+    stops early (evaluation.looks, .alpha, .futility)."""
+    from ..lab.workflows import Plan, Stopping
 
+    stopping = Stopping(
+        sequential=sequential,
+        looks=CFG.evaluation.looks,
+        alpha=CFG.evaluation.alpha,
+        futility=CFG.evaluation.futility,
+    )
     return Plan(
         workspace=lab.workspace,
         bots_dir=lab.bots_dir,
@@ -50,8 +59,14 @@ def _plan(lab: Lab, mode: str):
         seed=lab.seed,
         allow_small=lab.allow_small,
         use_mocks=lab.use_mocks,
+        variants=lab.variants,
+        spaces_dir=lab.spaces_dir,
+        pool_list=lab.pool_list,
         workers=lab.workers,
         mode=mode,
+        flush_s=CFG.execution.flush_s,
+        cache=CFG.runs.match_cache,
+        stopping=stopping,
     )
 
 
@@ -93,8 +108,10 @@ def _draft(
 @lab_command("status")
 def status(lab: Lab) -> None:
     """The research state and the next step: notes, runs, ideas, leaderboard."""
+    from ..engine.registry import discover
     from ..lab import analyze
     from ..lab.runs_db import RunStore
+    from ..match import bot_name
     from ..notebook import ideas, insights, notes, state
 
     all_notes = notes.all_notes(lab.notebook)
@@ -106,7 +123,8 @@ def status(lab: Lab) -> None:
     )
     with open(insights.path(lab.notebook), encoding="utf-8") as f:
         insight_text = f.read()
-    step = state.next_step(all_notes, backlog, run_status, insight_text)
+    field = {bot_name(p) for p in discover(lab.bots_dir)}
+    step = state.next_step(all_notes, backlog, run_status, insight_text, field)
     open_notes = [n for n in all_notes if n.status != notes.ANALYZED]
     top = ideas.ranked(backlog)[: CFG.status.ideas]
     board = (
@@ -161,7 +179,7 @@ def evaluate(
     candidates: Annotated[
         list[str],
         typer.Argument(
-            help="the bot(s) under test: bots/x.yaml[:NAME=value,...]",
+            help="the bot(s) under test: bots/l1/x.yaml[:NAME=value,...]",
             default_factory=list,
             show_default=False,
         ),
@@ -180,11 +198,21 @@ def evaluate(
     idea: Annotated[int, typer.Option(help=IDEA_HELP)] = 0,
     note: Annotated[str, typer.Option(help=NOTE_HELP)] = "",
     mode: Annotated[Mode, typer.Option(help=about("evaluation.mode"))] = MODE,
+    sequential: Annotated[
+        bool, typer.Option(help=about("evaluation.sequential"))
+    ] = CFG.evaluation.sequential,
 ) -> None:
-    """Test candidates against random pools, with a note: hypothesis → results.
+    """Test candidates against random pools, with a note: hypothesis --> results.
 
     Writes research/experiments/NNNN-<name>.md (planned), plays the experiment, analyzes
     it, and writes its results in (status run). Close it with `janken verdict`.
+
+    With --sequential (and a baseline), a new note's run grows by itself: it
+    plays its round robins in evaluation.looks steps and stops at the first one
+    where the comparison with the first baseline is clear, or futile (each look
+    spends part of evaluation.alpha). Or grow it by hand: `--round-robins 1`,
+    then `--note NNNN --round-robins 3` (5, 7, 10). A grown run equals one planned
+    at its new size, so the steps cost nothing extra.
     """
     from ..lab import workflows
 
@@ -195,7 +223,10 @@ def evaluate(
         created = workflows.plan(lab.notebook, draft, [], datetime.date.today())
         note = f"{created.number:04d}"
         lab.say(f"note {shown(created.path)} (planned)")
-    done, summary = workflows.evaluate(lab.notebook, note, _plan(lab, str(mode)))
+    grow_to = lab.given("round_robins", 0)  # an existing note's run grows to it
+    done, summary = workflows.evaluate(
+        lab.notebook, note, plan_for(lab, str(mode), sequential), grow_to
+    )
     lab.emit(
         {
             "note": shown(done.path),
@@ -288,7 +319,7 @@ def tune(
     done = workflows.tune(
         lab.notebook,
         note,
-        _plan(lab, CFG.evaluation.mode),
+        plan_for(lab, CFG.evaluation.mode),
         budget,
         lab.spaces_dir,
         CFG.space,

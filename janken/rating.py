@@ -3,7 +3,7 @@
 There is one pool, everybody plays everybody, and a result is worth what the
 opponent is worth: beating a strong bot moves you a lot, beating a bot you were
 expected to beat moves you barely at all. Titles are labels read off a bot's
-peak rating — the "leagues" a bot is placed in.
+peak rating - the "leagues" a bot is placed in.
 
 Nothing persists between runs: every bot enters a run at the starting rating and
 the whole run is a single Glicko-2 rating period (see `glicko.py`).
@@ -76,7 +76,7 @@ def ladder() -> str:
     for title in TITLES:
         floor = floor_for(title)
         parts.append(name(title) if not floor else f"{name(title)} {int(floor)}+")
-    return " → ".join(parts)
+    return " --> ".join(parts)
 
 
 @dataclasses.dataclass
@@ -111,7 +111,7 @@ def rate_tournament(
     """Rate one run: `(ratings, titles)`, both keyed by bot name.
 
     The whole run is one rating period: every match is scored against the
-    ratings the bots brought in — all fresh, since nothing persists — so the
+    ratings the bots brought in - all fresh, since nothing persists - so the
     order matches finished in cannot change the answer. A bot in `names` that
     played no match keeps the starting rating.
     """

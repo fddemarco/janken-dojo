@@ -2,7 +2,7 @@
 
     | # | idea | priority | status | motivation |
 
-A status is `open`, `in-progress`, `done (→ link)` or `dropped (→ link)`. Rows are
+A status is `open`, `in-progress`, `done (--> link)` or `dropped (--> link)`. Rows are
 parsed from and rendered back to the table; every other line of the file, and every
 row nobody changed, is kept byte for byte.
 """
@@ -29,7 +29,7 @@ class Idea:
     number: int
     text: str
     priority: str
-    status: str  # the whole cell, e.g. "done (→ [0003](experiments/0003-x.md))"
+    status: str  # the whole cell, e.g. "done (--> [0003](experiments/0003-x.md))"
     motivation: str
 
     @property
@@ -136,10 +136,10 @@ def save(notebook: str, backlog: Backlog) -> None:
 
 
 def linked(state: str, number: int, slug: str) -> str:
-    """A closed status pointing at its note: `done (→ [0007](experiments/0007-x.md))`."""
+    """A closed status pointing at its note: `done (--> [0007](experiments/0007-x.md))`."""
     if state not in (DONE, DROPPED):
         raise IdeaError(f"only done or dropped link a note, not {state!r}")
-    return f"{state} (→ [{number:04d}](experiments/{number:04d}-{slug}.md))"
+    return f"{state} (--> [{number:04d}](experiments/{number:04d}-{slug}.md))"
 
 
 def ranked(backlog: Backlog) -> list[Idea]:

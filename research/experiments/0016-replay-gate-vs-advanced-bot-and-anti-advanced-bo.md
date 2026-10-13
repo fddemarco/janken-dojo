@@ -21,19 +21,19 @@ uv run janken lab experiment bots/replay_gate.yaml bots/advanced_bot.yaml bots/a
 
 ## Results
 
-10 of 10 round robin(s) · pool 20 · 200 rounds/match · seed 3219431378 · mode full
+10 of 10 round robin(s), pool 20, 200 rounds/match, seed 3219431378, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| replay_gate | 200 | 178-2-20 | 89.5% [84.5%, 93.0%] | +65.4 | 0 | 1835 ± 34 |
-| advanced_bot | 200 | 155-3-42 | 78.2% [72.0%, 83.4%] | +68.0 | 0 | 1704 ± 54 |
-| anti_advanced_bots | 200 | 141-1-58 | 70.8% [64.1%, 76.6%] | +11.0 | 0 | 1721 ± 86 |
+| replay_gate | 200 | 178-2-20 | 89.5% [84.5%, 93.0%] | +65.4 | 0 | 1835 +/- 34 |
+| advanced_bot | 200 | 155-3-42 | 78.2% [72.0%, 83.4%] | +68.0 | 0 | 1704 +/- 54 |
+| anti_advanced_bots | 200 | 141-1-58 | 70.8% [64.1%, 76.6%] | +11.0 | 0 | 1721 +/- 86 |
 
 Paired comparisons:
 
-- `replay_gate − advanced_bot = +11.2 pts [+5.2, +17.5]` over 200 shared matches: replay_gate better
-- `replay_gate − anti_advanced_bots = +18.8 pts [+11.2, +26.2]` over 200 shared matches: replay_gate better
-- `advanced_bot − anti_advanced_bots = +7.5 pts [-2.2, +17.0]` over 200 shared matches: no significant difference
+- `replay_gate - advanced_bot = +11.2 pts [+5.2, +17.5]` over 200 shared matches: replay_gate better
+- `replay_gate - anti_advanced_bots = +18.8 pts [+11.2, +26.2]` over 200 shared matches: replay_gate better
+- `advanced_bot - anti_advanced_bots = +7.5 pts [-2.2, +17.0]` over 200 shared matches: no significant difference
 
 Weakest matchups of replay_gate: meta_smartbot 33.3%, transition_matrix 50.0%, smartbot 71.4%, sinon 71.4%, geometry 75.0%, nash 75.0%.
 

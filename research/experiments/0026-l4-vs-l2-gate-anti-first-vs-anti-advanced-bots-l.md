@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** evaluation
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/gate_anti_first.yaml`
 - **Baselines:** `bots/anti_advanced_bots.yaml`
 - **Run:** `20261010-214527_0026-l4-vs-l2-gate-anti-first-vs-anti-advanced-bots-l`
@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_anti_first.yaml bots/anti_advanced_bots.y
 
 ## Results
 
-100 of 100 round robin(s) · pool 6 · 200 rounds/match · seed 2605825007 · mode candidates
+100 of 100 round robin(s), pool 6, 200 rounds/match, seed 2605825007, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_anti_first | 600 | 566-5-29 | 94.8% [92.7%, 96.3%] | +58.6 | 0 | 1806 ± 80 |
-| anti_advanced_bots | 600 | 542-9-49 | 91.1% [88.5%, 93.1%] | +20.8 | 0 | 1775 ± 89 |
+| gate_anti_first | 600 | 566-5-29 | 94.8% [92.7%, 96.3%] | +58.6 | 0 | 1806 +/- 80 |
+| anti_advanced_bots | 600 | 542-9-49 | 91.1% [88.5%, 93.1%] | +20.8 | 0 | 1775 +/- 89 |
 
 Paired comparisons:
 
-- `gate_anti_first − anti_advanced_bots = +3.7 pts [+0.9, +6.6]` over 600 shared matches: gate_anti_first better
+- `gate_anti_first - anti_advanced_bots = +3.7 pts [+0.9, +6.6]` over 600 shared matches: gate_anti_first better
 
 Weakest matchups of gate_anti_first: smart_staller 86.5%, meta_smartbot 87.0%, smartbot 97.5%, rps4_lite 97.5%, staller 100.0%, iocaine_lite 100.0%.
 

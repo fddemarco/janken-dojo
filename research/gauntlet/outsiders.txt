@@ -1,0 +1,5 @@
+# Opponents outside the field, built from components no field L4 replays (bots/inactive/outsiders):
+# stand-ins for unknown L3-L4s, the honest test of a hunter whose experts replay the field.
+bots/inactive/outsiders/outsider_council.yaml
+bots/inactive/outsiders/outsider_gate.yaml
+bots/inactive/outsiders/outsider_greedy.yaml

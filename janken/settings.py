@@ -15,6 +15,7 @@ them when a function is decorated (janken/kit/jit.py), before any command runs:
     $JANKEN_JIT = on | off            overrides engine.jit
     $JANKEN_NUMBA_CACHE = 1 | 0       set by `apply` for the running command
     $JANKEN_PROGRESS = auto | on | off   overrides output.progress
+    $JANKEN_SPANS = on | off          overrides telemetry.spans
 """
 
 import dataclasses
@@ -27,11 +28,16 @@ import typing
 from collections.abc import Iterator, Mapping, MutableMapping
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_FILE = os.path.join(ROOT, "janken.toml")
-LOCAL_FILE = os.path.join(ROOT, "janken.local.toml")
+# $JANKEN_CONFIG / $JANKEN_LOCAL_CONFIG choose other files (the test suite's own,
+# with no local overrides; subprocesses inherit them). An empty path means none.
+CONFIG_ENV = "JANKEN_CONFIG"
+LOCAL_CONFIG_ENV = "JANKEN_LOCAL_CONFIG"
+CONFIG_FILE = os.environ.get(CONFIG_ENV, os.path.join(ROOT, "janken.toml"))
+LOCAL_FILE = os.environ.get(LOCAL_CONFIG_ENV, os.path.join(ROOT, "janken.local.toml"))
 JIT_ENV = "JANKEN_JIT"
 CACHE_ENV = "JANKEN_NUMBA_CACHE"
 PROGRESS_ENV = "JANKEN_PROGRESS"
+SPANS_ENV = "JANKEN_SPANS"
 PROGRESS_MODES = ("auto", "on", "off")
 FORMATS = ("text", "json")
 EFFORTS = ("quick", "standard", "thorough")
@@ -98,6 +104,11 @@ class ExecutionConfig:
     """How matches are played."""
 
     workers: int = setting("threads playing matches (0: every core)", minimum=0)
+    flush_s: float = setting(
+        "seconds between flushes of the matches finished while a batch plays"
+        " (logged and stored as they end; 0: once, at the batch's end)",
+        minimum=0,
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -117,6 +128,15 @@ class PoolConfig:
     )
     mocks: bool = setting(
         "draw the mocks (research-only stand-ins) instead of the bots they mock"
+    )
+    variants: float = setting(
+        "the share of pool members that play a parameter variant drawn from their"
+        " space file (0: every member at its defaults)",
+        minimum=0,
+    )
+    lists: tuple[str, ...] = setting(
+        "list files of specs (one per line, gauntlet lists) to draw pools from"
+        " instead of the bots dir (none: the bots dir)"
     )
 
 
@@ -163,6 +183,20 @@ class EvaluationConfig:
         "full: every pair plays; candidates: only matches with a candidate", MODES
     )
     seed: int = setting("pools and match seeds (-1: a fresh, recorded seed)")
+    sequential: bool = setting(
+        "evaluate plays its round robins in looks, stopping once the paired"
+        " comparison is clear (or futile): janken/lab/sequential.py"
+    )
+    looks: int = setting("looks spread over the planned round robins", minimum=1)
+    alpha: float = setting(
+        "the paired comparison's error rate, spent over the looks (O'Brien-Fleming)",
+        minimum=0,
+    )
+    futility: float = setting(
+        "stop when the chance of clearing the last look, if the effect seen so far"
+        " is the true one, falls under this (0: never)",
+        minimum=0,
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -246,6 +280,10 @@ class RunsConfig:
     lock_timeout_s: float = setting(
         "seconds to wait for a runs database another process holds", minimum=0
     )
+    match_cache: bool = setting(
+        "read back a match already played (same bots, overrides, seed, rounds and"
+        " code) instead of replaying it (janken/lab/match_cache.py)"
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -284,6 +322,296 @@ class ExportConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class FleetConfig:
+    """`bot fleet`: a fleet scaffolded on a bot (a champion and its supports).
+
+    Its handshake is `handshake_length` moves drawn at random.
+    """
+
+    dir: str = setting("where a new fleet's champion file goes, under the bots dir")
+    size: int = setting("bots in a new fleet, the champion included", minimum=2)
+    handshake_length: int = setting(
+        "moves in a new fleet's random handshake", minimum=1
+    )
+    vigilant: bool = setting(
+        "a new fleet's bots stop throwing at a teammate's first non-throw"
+    )
+    export: bool = setting("export a new fleet's scripts as soon as it is made")
+
+
+@dataclasses.dataclass(frozen=True)
+class SpeciesConfig:
+    """Species and versions: how a kept bot is classified (`janken species`).
+
+    Two bots behave alike when their cores agree on at least `agreement` of the moves
+    they predict on the dataset's `split`, and their per-opponent scores in a paired
+    run correlate at least `profile_correlation`. A challenger replaces its species'
+    current version when no matchup's 95% CI is below 0 and at least one is above 0 at
+    the Bonferroni level `alpha` / matchups. Matchups with fewer than
+    `min_matchup_matches` paired matches are left out. A challenger worse on no
+    matchup and better on none still replaces the incumbent when it plays at least
+    `speed_factor` times faster (self-play, timed `speed_repeats` times).
+    """
+
+    agreement: float = setting(
+        "the share of predicted moves two bots' cores must agree on to be alike",
+        minimum=0,
+    )
+    profile_correlation: float = setting(
+        "the correlation two bots' per-opponent scores must reach to be alike",
+        minimum=-1,
+    )
+    round_robins: int = setting(
+        "round robins of the paired run against the species' current version",
+        minimum=1,
+    )
+    sequential: bool = setting(
+        "the paired run grows in looks and stops once the challenger is a variant"
+        " (worse on a matchup at the alpha a look spends)"
+    )
+    looks: int = setting("looks spread over the paired run's round robins", minimum=1)
+    mode: str = setting(
+        "the paired run's mode: candidates (classify reads only the two candidates'"
+        " matches) or full (pool vs pool too)",
+        MODES,
+    )
+    promote_on_evaluation: bool = setting(
+        "a kept bot whose evaluation's baseline was its level's species' current"
+        " version is decided from that evaluation: the next version when not worse"
+        " there and better or speed_factor times faster (no agreement bar, no run)"
+    )
+    min_matchup_matches: int = setting(
+        "paired matches a matchup needs to count in the dominance test", minimum=2
+    )
+    alpha: float = setting(
+        "the family-wise error of 'better on at least one matchup' (Bonferroni)",
+        minimum=0,
+    )
+    split: str = setting("the dataset split the cores are compared on", SPLITS)
+    matches: int = setting(
+        "dataset matches the cores are compared on, evenly spread over the split",
+        minimum=1,
+    )
+    speed_factor: float = setting(
+        "a challenger as good as the incumbent replaces it when more than this many"
+        " times faster",
+        minimum=1,
+    )
+    speed_matches: int = setting(
+        "self-play matches each bot plays when the two are timed", minimum=1
+    )
+    speed_repeats: int = setting(
+        "times the timing is repeated (the fastest repeat counts)", minimum=1
+    )
+    legacy_dir: str = setting(
+        "where retired versions and variants go, relative to the bots dir"
+    )
+    cores_dir: str = setting(
+        "where computed cores are kept (one file per bot, code and histories),"
+        " in the workspace"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class TelemetryConfig:
+    """Timing spans: one JSON line per coarse operation, in the workspace.
+
+    Every lab command logs a `command` span, and the costly steps inside it (compiling,
+    playing, a round robin, a trial) log their own, so where the time goes can be read
+    over weeks (`janken lab profile spans`). A command whose last run took
+    `slow_factor` times its median is flagged slow.
+    """
+
+    spans: bool = setting("log timing spans ($JANKEN_SPANS overrides)")
+    file: str = setting("the spans' JSON-lines file, in the workspace")
+    max_mb: int = setting("size at which the spans file is rotated, in MB", minimum=1)
+    slow_factor: float = setting(
+        "a command's last run this many times its median is flagged slow", minimum=1
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class ProfileConfig:
+    """`lab profile`: hotspots, benchmarks and the optimization budget.
+
+    A hotspot is worth an optimization session only when it holds at least
+    `min_share` of the wall time, and removing `expected_cut` of it, on every use of
+    the command projected over `horizon_days` (its rate from the last `window_days`
+    of spans), saves at least the session's own `session_minutes`. A session tries
+    at most `max_attempts` changes, and keeps one only if it cuts the fastest of
+    `repeats` timed runs by at least `min_gain`.
+    """
+
+    dir: str = setting("where profiles and benchmarks go, in the workspace")
+    interval_s: float = setting("the profiler's sampling interval, in seconds")
+    top: int = setting("hotspots listed", minimum=1)
+    jit: bool = setting("profile compiled code (off: plain Python, inside kernels)")
+    warmup: bool = setting(
+        "run the command once first, unmeasured (fills numba's on-disk cache)"
+    )
+    min_share: float = setting("the smallest share of wall time worth optimizing")
+    expected_cut: float = setting("the share of a hotspot an optimization removes")
+    window_days: int = setting("days of spans that estimate a command's use", minimum=1)
+    horizon_days: int = setting("days of use a saving is projected over", minimum=1)
+    session_minutes: int = setting(
+        "an optimization session's cost cap, and the saving it must pay back",
+        minimum=1,
+    )
+    max_attempts: int = setting("changes one session tries at most", minimum=1)
+    min_gain: float = setting("the wall-time cut a change must show to be kept")
+    repeats: int = setting("timed runs per benchmark (the fastest counts)", minimum=1)
+    cooldown_days: int = setting(
+        "days before a command is profiled again (unless its spans flag it slow)",
+        minimum=0,
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class GauntletConfig:
+    """`lab gauntlet`: candidates vs every opponent of a list, variations included.
+
+    `variations` draws `per_bot` variants of each field bot from its space file
+    (`draws` Latin hypercubes at most), keeping those whose moves differ from the
+    default's vs `variation_probes`; `exclude` names the bots it skips. `nash`
+    calls a bot Nash-like when vs every one of `nash_probes` its rounds won minus
+    lost stay under `nash_skew`. `run` plays `seeds` matches per opponent and
+    reports those under `threshold`; with `sequential`, a pairing stops once its
+    share is clear of the threshold (after `min_seeds`, at `stop_alpha` spent
+    over the seeds: janken/lab/sequential.py). `nash` settles a bot after one
+    match when a probe already skews it by `nash_decisive`. `fingerprint` reads
+    tournament exports for each bot's margins over `fingerprint_probes` (scripted
+    probes, research/probes.md, also read under their `fingerprint_aliases`) and
+    names the `fingerprint_nearest` lab bots with
+    the closest margins.
+    """
+
+    dir: str = setting("where gauntlet logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    threshold: float = setting("the share of rounds won a candidate must reach")
+    sequential: bool = setting(
+        "stop a pairing once its share won is clear of the threshold"
+    )
+    min_seeds: int = setting(
+        "matches a pairing plays before it may stop (a spread needs two)", minimum=2
+    )
+    stop_alpha: float = setting(
+        "the chance of stopping a pairing on the wrong side of the threshold, spent"
+        " over its seeds (O'Brien-Fleming)",
+        minimum=0,
+    )
+    batch: int = setting("matches per batch (one log write)", minimum=1)
+    per_bot: int = setting("variants drawn per field bot", minimum=1)
+    draws: int = setting("Latin hypercubes drawn per bot at most", minimum=1)
+    seed: int = setting("the variants' sampler seed")
+    probe_rounds: int = setting("rounds of a match that checks a variant", minimum=1)
+    variation_probes: tuple[str, ...] = setting(
+        "bots a variant is checked against: its moves must differ from the default's"
+    )
+    levels: tuple[str, ...] = setting("the level folders whose bots get variants")
+    exclude: tuple[str, ...] = setting("field bots that get no variants (Nash-like)")
+    nash_probes: tuple[str, ...] = setting("the simple bots a Nash check plays")
+    nash_seeds: int = setting("matches per probe in a Nash check", minimum=1)
+    nash_skew: float = setting(
+        "rounds won minus lost a probe must reach for a bot not to be Nash-like"
+    )
+    nash_decisive: float = setting(
+        "rounds won minus lost in one match vs a probe that settles a bot as not"
+        " Nash-like at once (a Nash-like bot's match is about 0.05 off, one sd)"
+    )
+    fingerprint_probes: tuple[str, ...] = setting(
+        "the scripted probes a fingerprint reads (lab paths; a tournament bot is a"
+        " probe when its name contains a probe's stem)"
+    )
+    fingerprint_aliases: tuple[str, ...] = setting(
+        "the names the probes are submitted under, NAME=STEM, so other players can't"
+        " tell them from their names (a name matches whole, ignoring case and"
+        " punctuation)"
+    )
+    fingerprint_nearest: int = setting(
+        "lab bots listed per fingerprinted bot, closest first", minimum=1
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class ArenaConfig:
+    """`lab arena`: an experimental learner (janken/experimental/, research only)
+    vs every opponent of a gauntlet list, logged and scored like a gauntlet.
+
+    The learner is Vowpal Wabbit run with `vw_args`, learning online each round
+    which move pays, from the last `history` rounds and from the moves the
+    `experts` (kit bots, by stem) would play from either seat. It plays a random
+    move with chance `explore`.
+    """
+
+    dir: str = setting("where arena logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    vw_args: str = setting("the learner's Vowpal Wabbit arguments (cost-sensitive)")
+    history: int = setting("rounds of history the learner's features read", minimum=1)
+    explore: float = setting("the chance the learner plays a random move", minimum=0)
+    experts: tuple[str, ...] = setting(
+        "kit bots (stems) whose moves, from either seat, are the learner's features"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class IdentifyConfig:
+    """`lab identify`: can an opponent bandit's parameters be told from its moves?
+    (janken/experimental/identify.py, research only).
+
+    Each of the `hypotheses` (bots, by stem) gets `particles` parameter vectors
+    drawn from its space file (seeded by `seed`), each replayed from the
+    opponent's seat; a particle's weight is (1 - eps) for every round it names the
+    opponent's move, eps / 2 for every round it misses. Every `checkpoint_every`
+    rounds the posterior is scored and the particles under `prune_ratio` of the
+    best one's weight are dropped. We play `probe` until `commit_round`, then the
+    move that beats the posterior's vote; a parameter is "near" the truth within
+    `near` of its space range. With `leave_one_out`, the opponent's own species
+    is never a hypothesis (its architecture is unknown).
+    """
+
+    dir: str = setting("where identification logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    hypotheses: tuple[str, ...] = setting(
+        "the bots (stems) whose parameter vectors are the particles"
+    )
+    particles: int = setting("parameter vectors drawn per hypothesis", minimum=1)
+    eps: float = setting(
+        "a particle's chance of missing the opponent's move (sets the posterior's"
+        " sharpness)",
+        minimum=0,
+    )
+    commit_round: int = setting(
+        "the round from which we exploit the posterior", minimum=1
+    )
+    checkpoint_every: int = setting(
+        "rounds between scorings of the posterior (and prunings)", minimum=1
+    )
+    prune_ratio: float = setting(
+        "a particle under this share of the best one's weight is dropped", minimum=0
+    )
+    near: float = setting(
+        "the share of a parameter's range within which an estimate counts as near",
+        minimum=0,
+    )
+    probe: str = setting("the bot (stem) we play until the commit round")
+    leave_one_out: bool = setting(
+        "never count the opponent's own species among the hypotheses"
+    )
+    seed: int = setting("the particles' sampler seed")
+    forget: float = setting(
+        "each round, the posterior's weight on the evidence so far (1: none forgotten)",
+        minimum=0,
+    )
+    switch_decay: float = setting(
+        "the decay of the switch branch's records of keep and exploit", minimum=0
+    )
+    components: tuple[str, ...] = setting(
+        "blocks (stems) whose moves from either seat, at every rotation, are"
+        " particles too (no whole architecture assumed)"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -304,6 +632,13 @@ class Config:
     query: QueryConfig = setting("ad hoc queries")
     status: StatusConfig = setting("the status report")
     export: ExportConfig = setting("submission scripts")
+    fleet: FleetConfig = setting("fleets")
+    species: SpeciesConfig = setting("species and versions")
+    telemetry: TelemetryConfig = setting("timing spans")
+    profile: ProfileConfig = setting("profiling and the optimization budget")
+    gauntlet: GauntletConfig = setting("gauntlets: every opponent on its own")
+    arena: ArenaConfig = setting("experimental learners vs a gauntlet's opponents")
+    identify: IdentifyConfig = setting("identifying opponents' parameters")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""
@@ -547,6 +882,13 @@ def progress_enabled(environ: Mapping[str, str], interactive: bool) -> bool:
             f"{PROGRESS_ENV} must be one of {PROGRESS_MODES}, got {mode!r}"
         )
     return interactive if mode == "auto" else mode == "on"
+
+
+def spans_enabled(environ: Mapping[str, str]) -> bool:
+    """Whether timing spans are logged: $JANKEN_SPANS, else the config."""
+    if SPANS_ENV in environ:
+        return parse_switch(environ[SPANS_ENV], SPANS_ENV)
+    return config().telemetry.spans
 
 
 def wants_cache(command: str, flag: CacheFlag, environ: Mapping[str, str]) -> bool:

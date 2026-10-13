@@ -1,0 +1,9 @@
+description: |
+  A specialist against iocaine_lite: replay it exactly, beat its move.
+
+  iocaine_lite plays its best-scored arm greedily, so the Replay of its core (fed
+  the swapped history) names its move up to its tie-breaks; we play the beat.
+blueprint:
+  core:
+    Heuristic:
+      signal: {bot: iocaine_lite_v1, side: OPP}

@@ -26,7 +26,7 @@ from typing import Annotated, Any, TypeVar
 
 import typer
 
-from .. import progress, settings
+from .. import progress, settings, telemetry
 
 CFG = settings.config()
 F = TypeVar("F", bound=Callable[..., Any])
@@ -245,6 +245,26 @@ COMMON: tuple[tuple[str, Any, Any], ...] = (
         CFG.pool.mocks,
     ),
     (
+        "variants",
+        Annotated[
+            float,
+            typer.Option(help=about("pool.variants"), rich_help_panel=EVIDENCE),
+        ],
+        CFG.pool.variants,
+    ),
+    (
+        "pool_list",
+        Annotated[
+            list[str],
+            typer.Option(
+                help=about("pool.lists") + " (repeatable)",
+                rich_help_panel=EVIDENCE,
+                default_factory=lambda: list(CFG.pool.lists),
+            ),
+        ],
+        inspect.Parameter.empty,  # a list: its default comes from the factory
+    ),
+    (
         "workers",
         Annotated[
             int,
@@ -305,6 +325,8 @@ class Lab:
     pool_size: int
     allow_small: bool
     use_mocks: bool
+    variants: float
+    pool_list: tuple[str, ...]
     workers: int
     format: str
     quiet: bool
@@ -330,7 +352,7 @@ class Lab:
     def say(self, text: str) -> None:
         """Print a human-readable line (not with --quiet or --format json)."""
         if not self.quiet and self.format != "json":
-            print(text)
+            print(text, flush=True)  # progress shows when piped to a file
 
     def emit(self, data: object, text: str) -> None:
         """Print a result: `data` as JSON with --format json, else `text`."""
@@ -351,9 +373,11 @@ def make_lab(command: str, raw: Mapping[str, Any], passed: frozenset[str]) -> La
     settings.apply(command, settings.CacheFlag(str(raw["cache"])), os.environ)
     os.environ[settings.PROGRESS_ENV] = str(raw["progress"])
     effort = str(raw["effort"])
+    workspace = CFG.path(raw["workspace"])
+    telemetry.configure(workspace, command)
     return Lab(
         command=command,
-        workspace=CFG.path(raw["workspace"]),
+        workspace=workspace,
         notebook=CFG.path(raw["notebook"]),
         bots_dir=os.path.relpath(CFG.path(raw["bots_dir"])),
         spaces_dir=CFG.path(raw["spaces_dir"]),
@@ -363,6 +387,8 @@ def make_lab(command: str, raw: Mapping[str, Any], passed: frozenset[str]) -> La
         pool_size=int(raw["pool_size"]),
         allow_small=bool(raw["allow_small_pool"]),
         use_mocks=bool(raw["mocks"]),
+        variants=float(raw["variants"]),
+        pool_list=tuple(raw["pool_list"]),
         workers=int(raw["workers"]),
         format=str(raw["format"]),
         quiet=bool(raw["quiet"]),
@@ -391,6 +417,27 @@ def _domain_errors() -> tuple[type[Exception], ...]:
     )
 
 
+def bot_path(lab: Lab, name: str) -> str:
+    """A bot by path, or by stem (found in the bots dir's level folders, else
+    anywhere in its library: blocks/, inactive/).
+
+    Raises:
+        typer.Exit: no bot, or more than one, has that stem.
+    """
+    if name.endswith(".yaml") or os.sep in name:
+        return name
+    from .. import library
+    from ..engine import registry
+
+    try:
+        return registry.find(lab.bots_dir, name)
+    except FileNotFoundError as error:
+        found = library.Library(lab.bots_dir).paths(name)
+        if len(found) == 1:
+            return found[0]
+        raise fail(str(error)) from error
+
+
 def fail(message: str) -> typer.Exit:
     """Print `message` as an error; raise what this returns to stop with status 2."""
     print(f"error: {message}", file=sys.stderr)
@@ -401,7 +448,7 @@ def lab_command(command: str) -> Callable[[F], F]:
     """Declare a lab command: add the common flags to `fn`'s own, and call it with a
     `Lab` (its first parameter, `lab`) built from them.
 
-    `command` names it for `engine.cache_commands` ("evaluate", "lab experiment", …).
+    `command` names it for `engine.cache_commands` ("evaluate", "lab experiment", ...).
     """
 
     def wrap(fn: F) -> F:
@@ -429,7 +476,8 @@ def lab_command(command: str) -> Callable[[F], F]:
             )
             lab = make_lab(command, raw, passed)
             try:
-                return fn(lab, **kwargs)
+                with telemetry.span("command", effort=lab.effort):
+                    return fn(lab, **kwargs)
             except _domain_errors() as exc:
                 raise fail(str(exc)) from None
             except (KeyboardInterrupt, SystemError) as exc:

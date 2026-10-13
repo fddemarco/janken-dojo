@@ -1,0 +1,11 @@
+description: |
+  A counter to anti_smartbot_sims: predict its move, beat it.
+
+  anti_smartbot_sims plays the beat of the move smartbot_sims would play in our
+  seat. One signal: a replay of smartbot_sims_v2 from our side (256 Thompson
+  draws, its likeliest move X); anti plays beat(X), so we play beat(beat(X)).
+blueprint:
+  core:
+    Heuristic:
+      signal: {bot: smartbot_sims_v2, side: MY, draws: 256}
+      rotation: BEAT_BEAT

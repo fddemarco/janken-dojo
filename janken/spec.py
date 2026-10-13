@@ -1,7 +1,7 @@
 """BotSpec: a bot file plus parameter overrides, under one result label.
 
-    bots/geometry.yaml                        -> label "geometry" (its defaults)
-    bots/geometry.yaml:ALPHA=0.1,MAX_LEN=12   -> label "geometry@1f3a9c"
+    bots/l1/geometry_v1.yaml                        -> label "geometry_v1" (its defaults)
+    bots/l1/geometry_v1.yaml:ALPHA=0.1,MAX_LEN=12   -> label "geometry_v1@1f3a9c"
 
 The label is the name the bot carries in match results. A variant's label is
 the stem plus a short hash of its overrides, so variants of one file can share
@@ -15,7 +15,7 @@ import json
 import os
 from collections.abc import Mapping
 
-from . import botfile
+from . import botfile, library
 from .match import bot_name
 
 
@@ -87,5 +87,5 @@ def to_dict(spec: BotSpec) -> dict:
         "stem": spec.stem,
         "path": spec.path,
         "params": spec.params,
-        "sha256": botfile.source_hash(spec.path),
+        "sha256": library.source_hash(spec.path),
     }

@@ -21,28 +21,28 @@ uv run janken lab experiment bots/smartbot_sims.yaml bots/smartbot_sims2.yaml bo
 
 ## Results
 
-200 of 200 round robin(s) · pool 20 · 200 rounds/match · seed 1346550024 · mode full
+200 of 200 round robin(s), pool 20, 200 rounds/match, seed 1346550024, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| smartbot_sims3 | 4000 | 3200-64-736 | 80.8% [79.6%, 82.0%] | +77.1 | 0 | 1757 ± 69 |
-| smartbot_bandit | 4000 | 3200-64-736 | 80.8% [79.6%, 82.0%] | +77.1 | 0 | 1752 ± 76 |
-| smartbot_sims2 | 4000 | 3152-57-791 | 79.5% [78.2%, 80.7%] | +76.4 | 0 | 1732 ± 70 |
-| smartbot_sims | 4000 | 3008-51-941 | 75.8% [74.5%, 77.1%] | +70.2 | 0 | 1702 ± 68 |
-| smartbot | 4000 | 2713-90-1197 | 69.0% [67.5%, 70.4%] | +52.3 | 0 | 1634 ± 80 |
+| smartbot_sims3 | 4000 | 3200-64-736 | 80.8% [79.6%, 82.0%] | +77.1 | 0 | 1757 +/- 69 |
+| smartbot_bandit | 4000 | 3200-64-736 | 80.8% [79.6%, 82.0%] | +77.1 | 0 | 1752 +/- 76 |
+| smartbot_sims2 | 4000 | 3152-57-791 | 79.5% [78.2%, 80.7%] | +76.4 | 0 | 1732 +/- 70 |
+| smartbot_sims | 4000 | 3008-51-941 | 75.8% [74.5%, 77.1%] | +70.2 | 0 | 1702 +/- 68 |
+| smartbot | 4000 | 2713-90-1197 | 69.0% [67.5%, 70.4%] | +52.3 | 0 | 1634 +/- 80 |
 
 Paired comparisons:
 
-- `smartbot_sims − smartbot_sims2 = -3.7 pts [-5.2, -2.3]` over 4000 shared matches: smartbot_sims2 better
-- `smartbot_sims − smartbot_sims3 = -5.0 pts [-6.4, -3.5]` over 4000 shared matches: smartbot_sims3 better
-- `smartbot_sims − smartbot_bandit = -5.0 pts [-6.4, -3.5]` over 4000 shared matches: smartbot_bandit better
-- `smartbot_sims − smartbot = +6.9 pts [+5.2, +8.5]` over 4000 shared matches: smartbot_sims better
-- `smartbot_sims2 − smartbot_sims3 = -1.3 pts [-2.7, +0.2]` over 4000 shared matches: no significant difference
-- `smartbot_sims2 − smartbot_bandit = -1.3 pts [-2.7, +0.2]` over 4000 shared matches: no significant difference
-- `smartbot_sims2 − smartbot = +10.6 pts [+9.0, +12.2]` over 4000 shared matches: smartbot_sims2 better
-- `smartbot_sims3 − smartbot_bandit = +0.0 pts [+0.0, +0.0]` over 4000 shared matches: no significant difference
-- `smartbot_sims3 − smartbot = +11.8 pts [+10.3, +13.4]` over 4000 shared matches: smartbot_sims3 better
-- `smartbot_bandit − smartbot = +11.8 pts [+10.3, +13.4]` over 4000 shared matches: smartbot_bandit better
+- `smartbot_sims - smartbot_sims2 = -3.7 pts [-5.2, -2.3]` over 4000 shared matches: smartbot_sims2 better
+- `smartbot_sims - smartbot_sims3 = -5.0 pts [-6.4, -3.5]` over 4000 shared matches: smartbot_sims3 better
+- `smartbot_sims - smartbot_bandit = -5.0 pts [-6.4, -3.5]` over 4000 shared matches: smartbot_bandit better
+- `smartbot_sims - smartbot = +6.9 pts [+5.2, +8.5]` over 4000 shared matches: smartbot_sims better
+- `smartbot_sims2 - smartbot_sims3 = -1.3 pts [-2.7, +0.2]` over 4000 shared matches: no significant difference
+- `smartbot_sims2 - smartbot_bandit = -1.3 pts [-2.7, +0.2]` over 4000 shared matches: no significant difference
+- `smartbot_sims2 - smartbot = +10.6 pts [+9.0, +12.2]` over 4000 shared matches: smartbot_sims2 better
+- `smartbot_sims3 - smartbot_bandit = +0.0 pts [+0.0, +0.0]` over 4000 shared matches: no significant difference
+- `smartbot_sims3 - smartbot = +11.8 pts [+10.3, +13.4]` over 4000 shared matches: smartbot_sims3 better
+- `smartbot_bandit - smartbot = +11.8 pts [+10.3, +13.4]` over 4000 shared matches: smartbot_bandit better
 
 Weakest matchups of smartbot_sims: achilles 35.6%, odysseus 36.4%, tpi_lite 38.0%, smartbot_geo 39.0%, ajax 41.3%, hector 42.7%.
 

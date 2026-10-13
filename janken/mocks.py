@@ -1,6 +1,6 @@
 """Oracles: research-only stand-ins for bots of any level, and the rules around them.
 
-An Oracle (janken/kit/blueprint.py) wins with a set chance vs each opponent level
+An Oracle (janken/kit/blueprint/) wins with a set chance vs each opponent level
 (janken/kit/levels.py); the referee reveals the opponent's move and level to it.
 A bot holding one is level ORACLE, and is of one of two kinds:
 
@@ -19,10 +19,10 @@ play PAPER). They never enter a tournament or an export.
 
 from collections.abc import Sequence
 
-from . import botfile
+from . import botfile, library
 from .kit import blueprint as bp
 from .kit import codes as c
-from .kit import declare, levels
+from .kit import levels
 from .match import bot_name
 
 
@@ -30,8 +30,12 @@ def kind(blueprint: bp.Blueprint) -> int:
     """ORACLE_NONE, ORACLE_PURE (only an Oracle) or ORACLE_ARM."""
     if not levels.has_oracle(blueprint):
         return c.ORACLE_NONE
+    core = blueprint.core
     alone = (
-        len(blueprint.signals) == 1 and not blueprint.guards and not blueprint.overlays
+        isinstance(core, bp.Heuristic)
+        and isinstance(core.signal, bp.Oracle)
+        and not blueprint.guards
+        and not blueprint.overlays
     )
     return c.ORACLE_PURE if alone else c.ORACLE_ARM
 
@@ -50,7 +54,7 @@ def oracle_cell(compiled: bp.Compiled) -> int:
 
 def read_blueprint(path: str) -> bp.Blueprint:
     """A bot file's blueprint (a kernel module has an empty one)."""
-    return declare.blueprint_from_data(botfile.read(path).blueprint)
+    return library.read_blueprint(path)
 
 
 def path_level(path: str) -> int:

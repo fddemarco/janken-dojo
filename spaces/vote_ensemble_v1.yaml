@@ -1,0 +1,5 @@
+bot: bots/l2/vote_ensemble_v1.yaml
+weight: 1.0
+params:
+  DECAY: {type: float, low: 0.3, high: 1.0, grid: [0.5, 0.7, 0.85, 0.95]}
+  TEMPERATURE: {type: float, low: 0.05, high: 1.0, log: true, grid: [0.1, 0.2, 0.3, 0.5]}

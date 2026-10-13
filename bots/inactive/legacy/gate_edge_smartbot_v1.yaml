@@ -1,0 +1,19 @@
+description: |
+  smartbot, with its own replay as an EDGE-gated expert.
+
+  The main bandit is smartbot_v1's. The gated expert is anti_smartbot's idea: a
+  replay of smartbot from the opponent's side (256 Thompson draws), beaten. It
+  plays while its posterior mean P(win) - P(loss) is above EDGE (from round
+  WARMUP on), so against smartbot-like opponents it switches to the counter.
+defaults:
+  EDGE: 0.06
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_v1}
+      experts:
+        - {bot: smartbot_v1, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: EDGE
+      edge: $EDGE
+      warmup: $WARMUP

@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "dotenv>=0.9.9",
     "duckdb>=1.5.6",
+    "loguru>=0.7.3",
     "mdformat>=1.0.0",
     # Bots and the match engine are compiled with numba (janken/engine/, janken/kit/).
     "numba>=0.68.0",
@@ -16,15 +17,32 @@ dependencies = [
     "pre-commit>=4.6.2",
     "pyarrow>=26.0.0",
     "pydantic>=2.14.0",
+    "pyinstrument>=5.1.3",
     "pyrefly>=1.3.2",
     "pytest>=9.1.1",
-    # Bot files (bots/*.yaml) and space files (spaces/*.yaml).
+    # Bot files (bots/<level>/*.yaml) and space files (spaces/*.yaml).
     "pyyaml>=6.0",
     "ruff>=0.17.0",
+    "scikit-learn>=1.9.1",
+    "skore>=0.27.0",
     "tqdm>=4.70.1",
     "ty>=0.0.86",
     "typer>=0.27.3",
 ]
+
+[dependency-groups]
+# Research only: the learners of janken/experimental/ (janken lab arena). No bot,
+# and nothing outside janken/experimental/ and its CLI command, may import these;
+# an idea that works there is rebuilt from scratch as a kit stage.
+experimental = [
+    "torch>=2.14.1",
+    "vowpalwabbit>=9.11.9",
+]
+
+[tool.uv]
+# `uv sync` / `uv run` install the experimental group too (`--no-group
+# experimental` leaves it out).
+default-groups = ["experimental"]
 
 [project.scripts]
 # `uv sync` installs the project (editable) with this console script: `janken ...` in
@@ -42,6 +60,33 @@ build-backend = "uv_build"
 module-name = "janken"
 module-root = ""
 
+[tool.ruff.lint.per-file-ignores]
+# play_pairs plays a batch in a worker thread (so it can log matches as they end) and
+# hands whatever stopped it back to the caller's thread, which raises it.
+"janken/engine/__init__.py" = ["BLE001"]
+
 [tool.ruff.lint.flake8-bugbear]
 # janken/settings.py declares each setting with `setting(...)`, a dataclasses.field.
-extend-immutable-calls = ["janken.settings.setting"]
+# The blueprint's stages are frozen dataclasses, so their defaults can be instances.
+extend-immutable-calls = [
+    "janken.settings.setting",
+    "janken.kit.blueprint.scorers.NoScore",
+    "janken.kit.blueprint.selectors.First",
+    "janken.kit.blueprint.composites.Bandit",
+    "janken.kit.blueprint.heuristic.Heuristic",
+    "janken.kit.blueprint.heuristic.Silent",
+]
+
+[tool.pytest.ini_options]
+# `uv run pytest`: tests/conftest.py switches the JIT off before any test module loads.
+# Heavy tests (end-to-end loops, studies, replays of L3+ bots) are off by default: run
+# them only to validate a change they cover, with `uv run pytest -m heavy`.
+testpaths = ["tests"]
+addopts = ["-m", "not heavy"]
+markers = [
+    "heavy: compute-heavy (over ~1 s, or plays L3+ bots); deselected by default, run with -m heavy",
+]
+filterwarnings = [
+    # TPESampler(group=True) (janken/lab/tune.py) is optuna-experimental, used knowingly.
+    "ignore::optuna.exceptions.ExperimentalWarning",
+]

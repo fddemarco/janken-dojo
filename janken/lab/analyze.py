@@ -1,12 +1,12 @@
 """Analysis of stored experiments: per run, across runs, and between candidates.
 
-The headline number is a bot's **match score**, (wins + ½ draws) / matches,
+The headline number is a bot's **match score**, (wins + draws/2) / matches,
 since ratings come only from who won each match. A score is given with a
 95% Wilson interval (draws count as half a success, a slight
 approximation). The candidates' score is reported against the *pool* only,
 so candidates playing each other don't blur it. Glicko-2 ratings are
 computed per round robin, the way `run` rates a tournament, then averaged
-(± SD across round robins).
+(+/- SD across round robins).
 
 Candidate vs candidate is a **paired** comparison: in one run both played the
 same pool bots on the same round robins, so we bootstrap the mean per-match
@@ -114,9 +114,8 @@ def ratings_per_rr(df: pl.DataFrame) -> dict[str, list[float]]:
     return out
 
 
-def paired_diff(lf: pl.DataFrame, a: str, b: str, reps: int = 4000, seed: int = 0):
-    """Mean of score(a) - score(b) over shared (rr, pool opponent) units, with a
-    bootstrap 95% CI; None if they share no opponents."""
+def paired_units(lf: pl.DataFrame, a: str, b: str) -> np.ndarray:
+    """score(a) - score(b) on every (rr, pool opponent) unit both played."""
     pool = lf.filter(~pl.col("opp_cand"))
     sa = pool.filter(pl.col("bot") == a).select(
         "rr", "opp", pl.col("result").alias("ra")
@@ -125,12 +124,26 @@ def paired_diff(lf: pl.DataFrame, a: str, b: str, reps: int = 4000, seed: int = 
         "rr", "opp", pl.col("result").alias("rb")
     )
     joined = sa.join(sb, on=["rr", "opp"])
-    if joined.height == 0:
+    return (joined["ra"] - joined["rb"]).to_numpy()
+
+
+def paired_diff(
+    lf: pl.DataFrame,
+    a: str,
+    b: str,
+    reps: int = 4000,
+    seed: int = 0,
+    level: float = 0.95,
+):
+    """Mean of score(a) - score(b) over shared (rr, pool opponent) units, with a
+    bootstrap CI at `level` (95% by default); None if they share no opponents."""
+    d = paired_units(lf, a, b)
+    if d.size == 0:
         return None
-    d = (joined["ra"] - joined["rb"]).to_numpy()
     rng = np.random.default_rng(seed)
     boots = d[rng.integers(0, d.size, (reps, d.size))].mean(axis=1)
-    lo, hi = np.quantile(boots, [0.025, 0.975])
+    tail = (1 - level) / 2
+    lo, hi = np.quantile(boots, [tail, 1 - tail])
     return {
         "a": a,
         "b": b,
@@ -193,14 +206,14 @@ def summarize(manifest: dict, df: pl.DataFrame) -> dict:
 
 def _pct(x):
     return (
-        "—"
+        "-"
         if x is None or (isinstance(x, float) and math.isnan(x))
         else "%.1f%%" % (100 * x)
     )
 
 
 def _num(x, fmt="%.0f"):
-    return "—" if x is None else fmt % x
+    return "-" if x is None else fmt % x
 
 
 def _md_table(headers, rows):
@@ -228,7 +241,7 @@ def render(summary: dict, worst: int = 6) -> str:
     out = [
         "# Experiment {}".format(summary["run_id"]),
         "",
-        "{} round robin(s) · pool {} · {} rounds/match · seed {} · mode {}".format(
+        "{} round robin(s), pool {}, {} rounds/match, seed {}, mode {}".format(
             cfg["round_robins"],
             cfg["pool_size"],
             cfg["rounds"],
@@ -255,11 +268,11 @@ def render(summary: dict, worst: int = 6) -> str:
                 "score [95% CI]",
                 "rounds +/- per match",
                 "forfeits",
-                "rating ± sd",
+                "rating +/- sd",
             ],
             [
                 _record_row(r)
-                + ["{} ± {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
+                + ["{} +/- {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
                 for r in summary["candidates_vs_pool"]
             ],
         )
@@ -268,7 +281,7 @@ def render(summary: dict, worst: int = 6) -> str:
         out += ["", "## Paired comparisons (same pool matches)", ""]
         out.append(
             _md_table(
-                ["a", "b", "shared", "score(a) − score(b) [95% CI]", "verdict"],
+                ["a", "b", "shared", "score(a) - score(b) [95% CI]", "verdict"],
                 [
                     [
                         c["a"],
@@ -338,11 +351,11 @@ def render(summary: dict, worst: int = 6) -> str:
                 "score [95% CI]",
                 "rounds +/- per match",
                 "forfeits",
-                "rating ± sd",
+                "rating +/- sd",
             ],
             [
                 _record_row(r)
-                + ["{} ± {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
+                + ["{} +/- {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
                 for r in summary["field"]
             ],
         )
@@ -576,7 +589,7 @@ def render_validations(study: str, root: str | None = None) -> str:
                         r["validated_at"],
                         r["config"],
                         r["trial"],
-                        "—"
+                        "-"
                         if math.isnan(r["train_value"])
                         else f"{r['train_value']:.4f}",
                         r["split"],
@@ -599,7 +612,7 @@ def render_validations(study: str, root: str | None = None) -> str:
 
 
 def comparison_text(c: dict) -> str:
-    """`a − b = +x.x pts [lo, hi]` and its verdict."""
+    """`a - b = +x.x pts [lo, hi]` and its verdict."""
     verdict = (
         "a better"
         if c["ci_lo"] > 0
@@ -608,7 +621,7 @@ def comparison_text(c: dict) -> str:
         else "no significant difference"
     )
     return (
-        "`{} − {} = {:+.1f} pts [{:+.1f}, {:+.1f}]` over {} shared matches: {}".format(
+        "`{} - {} = {:+.1f} pts [{:+.1f}, {:+.1f}]` over {} shared matches: {}".format(
             c["a"],
             c["b"],
             100 * c["mean"],
@@ -627,7 +640,7 @@ def render_brief(summary: dict, worst: int = 6) -> str:
     each candidate's weakest matchups."""
     cfg = summary["config"]
     out = [
-        "{} of {} round robin(s) · pool {} · {} rounds/match · seed {} · mode {}".format(
+        "{} of {} round robin(s), pool {}, {} rounds/match, seed {}, mode {}".format(
             summary.get("round_robins_played", cfg["round_robins"]),
             cfg["round_robins"],
             cfg["pool_size"],
@@ -644,11 +657,11 @@ def render_brief(summary: dict, worst: int = 6) -> str:
                 "score vs pool [95% CI]",
                 "rounds +/-",
                 "forfeits",
-                "rating ± sd",
+                "rating +/- sd",
             ],
             [
                 _record_row(r)
-                + ["{} ± {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
+                + ["{} +/- {}".format(_num(r["rating"]), _num(r["rating_sd"]))]
                 for r in summary["candidates_vs_pool"]
             ],
         ),

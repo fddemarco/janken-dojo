@@ -1,0 +1,14 @@
+# The best L4 (replay_hunter_wide_v2) wins under ~70% of its matches vs these field bots
+# (runs of 2026-10-13, at least 5 matches each): a pool for idea #60, where strong bots differ.
+bots/l5/l5_hunter.yaml
+bots/l5/l5_wide_hunter.yaml
+bots/l1/geometry_v1.yaml
+bots/l4/replay_hunter_gate_v2.yaml
+bots/l1/nash_v1.yaml
+bots/l2/sampled_markov_v1.yaml
+bots/l4/double_bluff_gate_v2.yaml
+bots/l2/smartbot_fast_v1.yaml
+bots/l1/period_detector_v1.yaml
+bots/l4/level_k_gate_v2.yaml
+bots/l1/transition_matrix_v1.yaml
+bots/l3/gate_main_first_backoff_v1.yaml

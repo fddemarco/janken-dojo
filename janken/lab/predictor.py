@@ -1,7 +1,7 @@
 """A bot as a predictor of the opponent's next move.
 
 A bot's move implies a prediction: the opponent move it beats. Read through its
-core only, the signals, rotations, scorer and selector of its blueprint, that is
+core only, the predictor tree of its blueprint (a Bandit or a Gate), that is
 the bot's best guess at the opponent's next move from the moves so far. Its
 guards and overlays (noise, openings, stalling, team play, invalid moves) are
 about playing the game, not about predicting, so a predictor leaves them out,
@@ -18,10 +18,10 @@ from collections.abc import Mapping
 
 import numpy as np
 
-from .. import botfile
+from .. import botfile, library
 from ..engine.registry import pack_params
-from ..kit import declare
-from ..kit.blueprint import Blueprint, Compiled, Knob
+from ..kit.blueprint import Blueprint, Compiled
+from ..kit.blueprint.binding import knob_names
 from ..spec import BotSpec
 
 
@@ -43,19 +43,6 @@ class Predictor:
     def state(self) -> np.ndarray:
         """(f size, fixed i size, per-round i slots), as the kernel takes them."""
         return np.array(self.compiled.state, np.int64)
-
-
-def knob_names(node: object) -> set[str]:
-    """The parameter names read by every Knob in a blueprint (or any part of it)."""
-    if isinstance(node, Knob):
-        return {node.name}
-    if isinstance(node, tuple):
-        return set().union(*(knob_names(x) for x in node))
-    if dataclasses.is_dataclass(node) and not isinstance(node, type):
-        return set().union(
-            *(knob_names(getattr(node, f.name)) for f in dataclasses.fields(node))
-        )
-    return set()
 
 
 def core_of(blueprint: Blueprint) -> Blueprint:
@@ -106,6 +93,6 @@ def _blueprint(path: str) -> Blueprint:
     if botfile.is_kernel_module(path):
         raise PredictorError(f"{path} is a kernel module; a predictor is a YAML bot")
     try:
-        return declare.blueprint_from_data(botfile.read(path).blueprint)
+        return library.read_blueprint(path)
     except ValueError as exc:
         raise PredictorError(f"{path}: {exc}") from exc

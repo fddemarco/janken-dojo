@@ -1,0 +1,26 @@
+description: |
+  Markov models that sample their predictions, under exploratory Thompson sampling.
+
+  Order-1 and order-2 n-grams over the opponent's, the joint and our history,
+  each drawing its prediction from its count row (like transition_matrix) rather
+  than taking the mode; three rotations each. Dirichlet scores and Thompson
+  sampling with flattened posteriors (SHARP 0.5): hard to read, slow to commit.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  SHARP: 0.5
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: ngram
+          arms: 6
+          space:
+            ORDER: [1, 2, 1, 2, 1, 2]
+            CTX: [OPP, OPP, JOINT, JOINT, MY, MY]
+            DECAY: $TABLE_DECAY
+            SAMPLE: 1
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

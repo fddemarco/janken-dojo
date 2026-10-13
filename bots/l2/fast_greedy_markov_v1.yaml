@@ -1,0 +1,23 @@
+description: |
+  Short memories everywhere: quick to adapt, quick to forget.
+
+  Low-order n-grams with fast-decaying tables and a back-off model, three
+  rotations each, scored by a net score decayed at DECAY (0.5: about the last two
+  rounds count) and played greedily; a NOISE floor of random moves on top.
+defaults:
+  DECAY: 0.5
+  TABLE_DECAY: 0.7
+  NOISE: 0.1
+blueprint:
+  guards: [{Noise: {p: $NOISE}}]
+  core:
+    Bandit:
+      predictors:
+        - bot: ngram
+          arms: 3
+          space: {ORDER: [1, 2, 1], CTX: [OPP, OPP, JOINT], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: backoff, space: {MAX_ORDER: 2, CTX: JOINT}, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

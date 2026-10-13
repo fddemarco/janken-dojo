@@ -22,7 +22,7 @@ It also looks for opponents playing well-known irrational constants.
   almost certainly chance. With a huge candidate set, some short sequence always matches,
   and what follows it is uniform. The author never saw a large score against an unseeded
   agent, and the notebook itself says "TODO: verify the statistics".
-- The leaderboard gain (~915 vs ~685 for the π bot) most plausibly came from beating seeded
+- The leaderboard gain (~915 vs ~685 for the pi bot) most plausibly came from beating seeded
   and fixed-sequence bots, not from true random ones.
 
 ## Relevance to janken
@@ -53,7 +53,7 @@ fixed at the engine level: idea #17.
 - Fixed or publicly known sequences lose to anyone who knows them. Our bots should only get
   randomness from the engine's stream, as the rules already require.
 - Small per-round edges matter more here than on Kaggle, because any margin wins
-  (`rps_kaggle.md` §5). Even so, an edge has to be measured with paired runs before we
+  (`rps_kaggle.md` section 5). Even so, an edge has to be measured with paired runs before we
   believe it. This notebook is a cautionary example of an unverified edge.
 
 ## Ideas spawned

@@ -1,0 +1,17 @@
+description: |
+  Research opponent (not in the field): outsider_council as a gate's main, with replays of itself and of repeat_mirror from both seats as experts: an unknown L4 in the field's style, built from components the field's L4s don't replay.
+defaults:
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: outsider_council}
+      experts:
+        - {bot: outsider_council, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: outsider_council, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: repeat_mirror_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: outsider_greedy, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+      rule: LEADER
+      edge: 0.0
+      decay: 1.0
+      warmup: $WARMUP

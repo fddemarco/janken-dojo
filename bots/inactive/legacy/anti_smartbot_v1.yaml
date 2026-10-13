@@ -1,0 +1,11 @@
+description: |
+  A specialist against smartbot: replay it exactly, beat its likeliest move.
+
+  One signal, a Replay of smartbot_v1's whole core at its defaults, fed the
+  swapped history; 256 Thompson draws over its replayed arm records name the
+  move it picks most often, and we play its beat. Strong against smartbot, only as
+  good as a replay of smartbot against anything else.
+blueprint:
+  core:
+    Heuristic:
+      signal: {bot: smartbot_v1, side: OPP, draws: 256}

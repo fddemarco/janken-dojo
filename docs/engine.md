@@ -12,8 +12,10 @@
   history stream (`janken/kit/matching.py`), which every history matcher of the bot
   shares, so no round is rescanned and matching costs O(1) per query.
 - `kernel.py` plays whole matches, both bots and the referee, and `prange` spreads a
-  schedule across cores. Each match seeds numba's generator from its own seed, so results
-  don't depend on thread count.
+  schedule across cores. Each side of a match draws from its own random stream: before a
+  bot moves, the kernel reseeds numba's generator from (match seed, side, round). Results
+  don't depend on thread count, and neither bot's draws depend on the other's (a shared
+  stream would let a bot replay its opponent's randomness).
 - `result.py` turns raw moves into `MatchResult`s; `registry.py` finds bot files and
   builds each bot's `prm` vector.
 

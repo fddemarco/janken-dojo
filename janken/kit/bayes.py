@@ -1,6 +1,6 @@
 """NaiveBayes, compiled: TPI-lite, one signal that combines its ensemble's others.
 
-Testing Please Ignore (rps_kaggle §6) multiplies the evidence of every predictor
+Testing Please Ignore (rps_kaggle section 6) multiplies the evidence of every predictor
 into one distribution over the opponent's next move and plays the move with the
 best expected score. Here each input is one of the ensemble's signals, read as a
 symbol (0..2, or NO_MOVE as a fourth value), so the combiner learns what any

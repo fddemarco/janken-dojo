@@ -1,0 +1,17 @@
+description: |
+  Research opponent (not in the field), second outsider family (idea #88): outsider2_council as a gate's main, with replays of itself from both seats and of iocaine_lite and geometry_ensemble from ours as experts.
+defaults:
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: outsider2_council}
+      experts:
+        - {bot: outsider2_council, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: outsider2_council, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: iocaine_lite_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: geometry_ensemble_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+      rule: LEADER
+      edge: 0.0
+      decay: 1.0
+      warmup: $WARMUP

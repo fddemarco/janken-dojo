@@ -1,0 +1,10 @@
+description: |
+  Beats the opponent's move after the second-longest earlier repeat of the recent joint history (idea #63: L1 diversity).
+  Where pattern_memory follows the longest repeat, this one follows the runner-up: it predicts an opponent that has learned to dodge the longest match.
+defaults:
+  MAX_LEN: 12
+  CTX: JOINT
+  OF: OPP
+blueprint:
+  core:
+    Heuristic: {signal: {SecondMatch: {max_len: $MAX_LEN, ctx: $CTX, of: $OF}}, rotation: BEAT}

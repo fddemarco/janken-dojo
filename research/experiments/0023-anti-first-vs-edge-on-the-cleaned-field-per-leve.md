@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** evaluation
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/arm_gate_anti_first.yaml`
 - **Baselines:** `bots/arm_replay_gate.yaml`
 - **Run:** `20261010-204849_0023-anti-first-vs-edge-on-the-cleaned-field-per-leve`
@@ -21,16 +21,16 @@ uv run janken lab experiment bots/arm_gate_anti_first.yaml bots/arm_replay_gate.
 
 ## Results
 
-40 of 40 round robin(s) · pool 20 · 200 rounds/match · seed 1374732409 · mode full
+40 of 40 round robin(s), pool 20, 200 rounds/match, seed 1374732409, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| arm_replay_gate | 800 | 635-117-48 | 86.7% [84.2%, 88.9%] | +61.7 | 0 | 1828 ± 38 |
-| arm_gate_anti_first | 800 | 627-119-54 | 85.8% [83.2%, 88.1%] | +83.1 | 0 | 1821 ± 45 |
+| arm_replay_gate | 800 | 635-117-48 | 86.7% [84.2%, 88.9%] | +61.7 | 0 | 1828 +/- 38 |
+| arm_gate_anti_first | 800 | 627-119-54 | 85.8% [83.2%, 88.1%] | +83.1 | 0 | 1821 +/- 45 |
 
 Paired comparisons:
 
-- `arm_gate_anti_first − arm_replay_gate = -0.9 pts [-2.9, +1.1]` over 800 shared matches: no significant difference
+- `arm_gate_anti_first - arm_replay_gate = -0.9 pts [-2.9, +1.1]` over 800 shared matches: no significant difference
 
 Weakest matchups of arm_gate_anti_first: transition_matrix 41.1%, oracle_advanced_bot 50.0%, oracle_anti_advanced 50.0%, oracle_replay_gate 50.0%, oracle_gate_anti_first 50.0%, geometry 58.9%.
 

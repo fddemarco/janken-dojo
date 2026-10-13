@@ -1,0 +1,26 @@
+description: |
+  smartbot_sims plus stalling, i.e. pure random play on two triggers (idea #22).
+
+  Against near-copies (the smartbot family, smartbot_fast) matches are coin flips
+  won by a few rounds, and any margin wins. Lead lock: once the lead is safe by
+  LOCK_Z standard deviations of a random walk over the rounds left, play at random
+  so the lead can't be read back. Drawdown: when the last DD_WINDOW rounds net
+  -DD_TRIGGER or worse, stall STALL_ROUNDS rounds. smartbot_staller's Stall settings.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+  DD_WINDOW: 20
+  DD_TRIGGER: 5
+  STALL_ROUNDS: 15
+  LOCK_Z: 4.0
+blueprint:
+  core:
+    bot: smartbot_sims_v1
+    space: {ARM_DECAY: $ARM_DECAY, TABLE_DECAY: $TABLE_DECAY, MAX_MATCH: $MAX_MATCH}
+  overlays:
+    - Stall:
+        dd_window: $DD_WINDOW
+        dd_trigger: $DD_TRIGGER
+        stall_rounds: $STALL_ROUNDS
+        lock_z: $LOCK_Z

@@ -1,0 +1,14 @@
+description: |
+  Probe (research only, never in the field): A De Bruijn sequence of order 2 (9 moves, every pair of moves once), repeated: a bot that looks only one move back can't predict it; one that looks 2+ back learns it after one period.
+  It ignores the opponent; its final scores vs each bot are a fingerprint of that bot (research/probes.md).
+defaults: {}
+blueprint:
+  core:
+    Heuristic:
+      # moves: 0 rock, 1 paper, 2 scissors
+      signal:
+        Script:
+          moves: [
+          0, 0, 1, 0, 2, 1, 1, 2, 2
+          ]
+      rotation: COPY

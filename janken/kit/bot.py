@@ -1,20 +1,22 @@
 """The whole bot vocabulary in Python, in one module: `from janken.kit import bot`.
 
-Bots themselves are YAML (bots/<name>.yaml, read by declare.py); this module is for
+Bots themselves are YAML (bots/<level>/<name>.yaml, read by declare.py); this module is for
 code that builds blueprints directly, such as the tests:
 
     blueprint = bot.Blueprint(guards=(bot.Noise(bot.Knob("NOISE")),), ...)
     STATE, SPEC, KNOBS = blueprint.compile({"NOISE": 0.05})
 
-See blueprint.py for the stages and presets.py for the shared bot cores.
+See janken/kit/blueprint/ for the stages. A bot file names the bots an aggregator
+combines (blueprint/refs.py); here, a core is built from its predictors directly.
 """
 
 import numpy as np
 
-from . import presets
 from .blueprint import (
     ALL_ROTATIONS,
+    CTW,
     Backoff,
+    Bandit,
     Biased,
     Blueprint,
     ChooseSelector,
@@ -24,12 +26,12 @@ from .blueprint import (
     Dirichlet,
     DropSwitch,
     EmitInvalid,
-    Ensemble,
     First,
     Frequency,
-    Gatekeeper,
+    Gate,
     Geometry,
     Greedy,
+    Heuristic,
     Knob,
     LastMove,
     LongestMatch,
@@ -40,15 +42,22 @@ from .blueprint import (
     OnInvalid,
     Opening,
     Oracle,
+    Period,
+    Predictor,
+    PriorTable,
+    Rarest,
     React,
     Relative,
     Replay,
     Rotated,
     SampledVote,
     Scorer,
+    ScoreState,
+    Script,
     SecondMatch,
     Selector,
     SignalLike,
+    Silent,
     Sim,
     Stall,
     Team,
@@ -67,9 +76,8 @@ from .codes import (
     COPY,
     CRASH_ACTION,
     EDGE,
-    ILIAD,
-    ILIAD_V2,
-    ILIAD_V3,
+    EST_DRAWS,
+    EST_NORMAL,
     IMPOSTOR,
     JOINT,
     LAST,
@@ -105,10 +113,10 @@ __all__ = [
     "CHAMPION",
     "COPY",
     "CRASH_ACTION",
+    "CTW",
     "EDGE",
-    "ILIAD",
-    "ILIAD_V2",
-    "ILIAD_V3",
+    "EST_DRAWS",
+    "EST_NORMAL",
     "IMPOSTOR",
     "JOINT",
     "LAST",
@@ -130,6 +138,7 @@ __all__ = [
     "TIES_RANDOM",
     "Array",
     "Backoff",
+    "Bandit",
     "Biased",
     "Blueprint",
     "ChooseSelector",
@@ -139,12 +148,12 @@ __all__ = [
     "Dirichlet",
     "DropSwitch",
     "EmitInvalid",
-    "Ensemble",
     "First",
     "Frequency",
-    "Gatekeeper",
+    "Gate",
     "Geometry",
     "Greedy",
+    "Heuristic",
     "Knob",
     "LastMove",
     "LongestMatch",
@@ -155,15 +164,22 @@ __all__ = [
     "OnInvalid",
     "Opening",
     "Oracle",
+    "Period",
+    "Predictor",
+    "PriorTable",
+    "Rarest",
     "React",
     "Relative",
     "Replay",
     "Rotated",
     "SampledVote",
+    "ScoreState",
     "Scorer",
+    "Script",
     "SecondMatch",
     "Selector",
     "SignalLike",
+    "Silent",
     "Sim",
     "Stall",
     "Team",
@@ -171,5 +187,4 @@ __all__ = [
     "WinStay",
     "kernel",
     "play",
-    "presets",
 ]

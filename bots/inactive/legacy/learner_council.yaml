@@ -1,0 +1,15 @@
+description: |
+  A council of L2's strong learners: geometry_ensemble, period_bandit and repeat_mirror, every rotation (idea #67).
+  As l2_council_v1, with L2's learners (no counters) as arms: a strong set of counters didn't transfer (note 0065), L1's strong learners did (note 0064).
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: geometry_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: period_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: repeat_mirror_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

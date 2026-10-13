@@ -1,0 +1,20 @@
+description: |
+  A sharp Thompson council of the memory-shaped metabots.
+
+  fast_greedy_markov (short memory), multiscale (four memories), backoff_family
+  and geometry_ensemble, replayed from our side, three rotations each. Dirichlet
+  scores and Thompson sampling sharpened by SHARP (3): commits fast to a leader.
+defaults:
+  ARM_DECAY: 0.95
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: fast_greedy_markov_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: multiscale_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: backoff_family_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

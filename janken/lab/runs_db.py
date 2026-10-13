@@ -4,12 +4,13 @@ One DuckDB file, `[tool.janken.runs] file` in the experiments directory:
 
     runs               one row per run: its status, setup and manifest (JSON)
     matches            one row per match (MATCH_SCHEMA), tagged with its run_id
+    match_cache        every match played, by what decides it (match_cache.py)
     reports            the latest analysis of a run: summary (JSON) and report
     tune_validations   one row per configuration a `tune --validate-top` replayed
     predict_validations  one row per configuration `predict-tune --validate-top` scored
 
-A run is created `running` with its whole manifest, and every round robin is
-committed in its own transaction as soon as it's played, so a run is analyzable
+A run is created `running` with its whole manifest, and its matches are
+committed as they end (every `execution.flush_s` seconds), so a run is analyzable
 while it plays and keeps what it played when it's interrupted (status
 `interrupted`; `janken lab resume` plays the rest).
 
@@ -54,6 +55,16 @@ MATCH_SCHEMA = {
     "moves": pl.Utf8,
 }
 
+CACHE_SCHEMA = {
+    "key": pl.Utf8,
+    "wins_a": pl.Int64,
+    "wins_b": pl.Int64,
+    "draws": pl.Int64,
+    "forfeit_a": pl.Utf8,
+    "forfeit_b": pl.Utf8,
+    "moves": pl.Utf8,
+}
+
 UNKNOWN_LIBRARY = "pre-blueprint"  # runs from before the library hash was recorded
 
 SCHEMA = """
@@ -84,6 +95,15 @@ CREATE TABLE IF NOT EXISTS matches (
     cand_a BOOLEAN NOT NULL,
     cand_b BOOLEAN NOT NULL,
     seed BIGINT NOT NULL,
+    wins_a INTEGER NOT NULL,
+    wins_b INTEGER NOT NULL,
+    draws INTEGER NOT NULL,
+    forfeit_a VARCHAR,
+    forfeit_b VARCHAR,
+    moves VARCHAR NOT NULL
+);
+CREATE TABLE IF NOT EXISTS match_cache (
+    key VARCHAR PRIMARY KEY,
     wins_a INTEGER NOT NULL,
     wins_b INTEGER NOT NULL,
     draws INTEGER NOT NULL,
@@ -256,6 +276,23 @@ class RunStore:
             ],
         )
 
+    def retarget(self, run_id: str, manifest: Mapping[str, object]) -> None:
+        """Replace a run's manifest (a grown schedule) and its target size."""
+        config = manifest["config"]
+        if not isinstance(config, dict):
+            raise TypeError("a manifest's config must be a mapping")
+        with self._transaction() as con:
+            con.execute(
+                "UPDATE runs SET round_robins = ?, n_matches = ?, manifest = ?"
+                " WHERE run_id = ?",
+                [
+                    config["round_robins"],
+                    manifest["n_matches"],
+                    json.dumps(manifest, default=str),
+                    run_id,
+                ],
+            )
+
     def append_matches(self, rows: Sequence[Mapping[str, object]]) -> None:
         """Commit a batch of match rows (MATCH_SCHEMA), in one transaction."""
         if not rows:
@@ -367,6 +404,31 @@ class RunStore:
         """(run id, manifest, matches) of the run `ref` resolves to."""
         run_id = self.resolve(ref)
         return run_id, self.manifest(run_id), self.matches(run_id)
+
+    # --- the match cache (match_cache.py) -----------------------------------------
+
+    def cached(self, keys: Sequence[str]) -> dict[str, dict[str, object]]:
+        """{key: its stored match (CACHE_SCHEMA)} for every key that has one."""
+        if not keys or not self.exists():
+            return {}
+        frame = self.query(
+            "SELECT * FROM match_cache WHERE key IN (SELECT unnest(?::VARCHAR[]))",
+            [list(keys)],
+        )
+        return {str(row["key"]): row for row in frame.to_dicts()}
+
+    def cache(self, rows: Sequence[Mapping[str, object]]) -> None:
+        """Keep played matches (CACHE_SCHEMA rows); a key already kept stays."""
+        if not rows:
+            return
+        frame = pl.DataFrame(rows, schema=CACHE_SCHEMA)
+        with self._transaction() as con:
+            duck.insert_frame(con, "match_cache", frame, on_conflict_ignore=True)
+
+    def played_matches(self, run_id: str) -> set[tuple[int, int]]:
+        """The (rr, k) of every match the run has stored."""
+        frame = self.query("SELECT rr, k FROM matches WHERE run_id = ?", [run_id])
+        return {(int(r), int(k)) for r, k in zip(frame["rr"], frame["k"])}
 
     def played_round_robins(self, run_id: str) -> set[int]:
         frame = self.query("SELECT DISTINCT rr FROM matches WHERE run_id = ?", [run_id])

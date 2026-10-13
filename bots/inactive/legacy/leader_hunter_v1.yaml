@@ -1,0 +1,21 @@
+description: |
+  smartbot, with replays of three other metabots as gated experts (LEADER).
+
+  The main bandit is smartbot_v1's. The gated experts replay iocaine_lite,
+  rps4_lite and smartbot_fast from the opponent's side (their likely move; 256
+  Thompson draws for smartbot_fast) and beat it. Whichever leads the current
+  player by more than EDGE (from round WARMUP on) takes over.
+defaults:
+  EDGE: 0.05
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_v1}
+      experts:
+        - {bot: iocaine_lite_v1, side: OPP, rotations: [BEAT]}
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT]}
+        - {bot: smartbot_fast_v1, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: LEADER
+      edge: $EDGE
+      warmup: $WARMUP

@@ -1,0 +1,27 @@
+description: |
+  An ensemble that votes instead of picking one arm.
+
+  Frequency, n-gram, back-off and rotation models, three rotations each. Every
+  arm votes for its move with weight exp(score / TEMPERATURE) (decayed net
+  scores), and the move is sampled from the vote: a soft mixture, hard to
+  predict, that leans on whatever has been working.
+defaults:
+  DECAY: 0.9
+  TEMPERATURE: 0.3
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.8]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 4
+          space: {ORDER: [1, 2, 1, 2], CTX: [OPP, OPP, JOINT, JOINT], DECAY: 0.9}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: backoff, space: {MAX_ORDER: 3, CTX: JOINT}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: relative
+          arms: 2
+          space: {REF: [OPP, MY], BY_OUTCOME: 1, DECAY: 0.9}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_SCORED
+      selector: {SampledVote: {temperature: $TEMPERATURE}}

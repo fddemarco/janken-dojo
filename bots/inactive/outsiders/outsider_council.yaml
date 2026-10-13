@@ -1,0 +1,17 @@
+description: |
+  Research opponent (not in the field): a sharp Thompson council built only from this session's learners, none of which the field's L4s replay: repeat_mirror played from our seat, context_mixture from both seats, pretrained_context, three rotations each.
+  It stands in for an unknown L3 built from public components (rfind-style repeats, CTW, a trained table).
+defaults:
+  ARM_DECAY: 0.95
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: repeat_mirror_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: context_mixture_v2, arms: 2, space: {OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pretrained_context_v3, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pattern_memory_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

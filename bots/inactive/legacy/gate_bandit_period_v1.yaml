@@ -1,0 +1,16 @@
+description: |
+  period_bandit and an anti-smartbot replay, chosen by a two-armed bandit.
+
+  The main bandit is period_bandit_v1's (periods, rarest moves, score states).
+  The gated expert replays smartbot from the opponent's side (256 Thompson draws)
+  and beats it. The BANDIT rule Thompson-samples between the two records.
+defaults:
+  DECAY: 1.0
+blueprint:
+  core:
+    Gate:
+      main: {bot: period_bandit_v1}
+      experts:
+        - {bot: smartbot_v1, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: BANDIT
+      decay: $DECAY

@@ -1,0 +1,8 @@
+description: |
+  Beats pattern_memory's reply: predicts our own next move by the longest earlier repeat (as pattern_memory does from its seat) and plays what beats its beat (idea #65).
+  A counter of the L1 strong set computed at L1: one signal (LongestMatch of our moves) turned BEAT_BEAT, no replay.
+defaults:
+  MAX_LEN: 10
+blueprint:
+  core:
+    Heuristic: {signal: {LongestMatch: {max_len: $MAX_LEN, ctx: JOINT, of: MY}}, rotation: BEAT_BEAT}

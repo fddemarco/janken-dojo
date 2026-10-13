@@ -1,0 +1,25 @@
+description: |
+  Models of reactive opponents: what they do given how the last round went.
+
+  Rotation models relative to either player's last move (with and without the
+  last outcome), score-conditioned frequencies of both players, and win-stay /
+  lose-shift and counter-reactionary rules played from the opponent's side;
+  three rotations each. DropSwitch scores (zeroed on a loss with chance P_RESET),
+  greedy.
+defaults:
+  TABLE_DECAY: 0.9
+  P_RESET: 0.5
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: relative
+          arms: 4
+          space: {REF: [OPP, OPP, MY, MY], BY_OUTCOME: [0, 1, 0, 1], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: score_state, arms: 2, space: {OF: [OPP, MY], DECAY: $TABLE_DECAY}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: wsls_v1, arms: 2, space: {SHIFT: [1, 2]}, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_reactionary_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {DropSwitch: {p_reset: $P_RESET}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

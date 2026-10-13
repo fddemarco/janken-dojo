@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** evaluation
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/arm_gate_anti_first.yaml`
 - **Baselines:** `bots/gate_anti_first.yaml`
 - **Run:** `20261010-204355_0022-arm-gate-anti-first-vs-gate-anti-first-per-level`
@@ -21,16 +21,16 @@ uv run janken lab experiment bots/arm_gate_anti_first.yaml bots/gate_anti_first.
 
 ## Results
 
-10 of 10 round robin(s) · pool 20 · 200 rounds/match · seed 1534642689 · mode full
+10 of 10 round robin(s), pool 20, 200 rounds/match, seed 1534642689, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| arm_gate_anti_first | 200 | 189-0-11 | 94.5% [90.4%, 96.9%] | +89.4 | 0 | 1912 ± 42 |
-| gate_anti_first | 200 | 181-1-18 | 90.8% [85.9%, 94.0%] | +88.1 | 0 | 1851 ± 78 |
+| arm_gate_anti_first | 200 | 189-0-11 | 94.5% [90.4%, 96.9%] | +89.4 | 0 | 1912 +/- 42 |
+| gate_anti_first | 200 | 181-1-18 | 90.8% [85.9%, 94.0%] | +88.1 | 0 | 1851 +/- 78 |
 
 Paired comparisons:
 
-- `arm_gate_anti_first − gate_anti_first = +3.8 pts [-0.8, +8.5]` over 200 shared matches: no significant difference
+- `arm_gate_anti_first - gate_anti_first = +3.8 pts [-0.8, +8.5]` over 200 shared matches: no significant difference
 
 Weakest matchups of arm_gate_anti_first: transition_matrix 62.5%, geometry 66.7%, replay_gate 71.4%, advanced_bot 85.7%, biased 87.5%, smartbot 88.9%.
 

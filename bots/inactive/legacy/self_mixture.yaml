@@ -1,0 +1,11 @@
+description: |
+  Beats the opponent's next move as context-tree weighting over the opponent's OWN move sequence predicts it, up to 5 moves back (idea #63: L1 diversity).
+  Where context_mixture mixes joint contexts (both sides, up to 3), this one reads only their sequence, deeper: a self-pattern model, insensitive to what we play.
+defaults:
+  DEPTH: 5
+  CTX: OPP
+  OF: OPP
+  DECAY: 1.0
+blueprint:
+  core:
+    Heuristic: {signal: {CTW: {depth: $DEPTH, ctx: $CTX, of: $OF, decay: $DECAY}}, rotation: BEAT}

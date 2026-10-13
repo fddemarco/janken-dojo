@@ -1,0 +1,15 @@
+description: |
+  A bandit over L1's strong set, each at every rotation (theory: L1 strong set; control for mirror_l1_bandit).
+  longest_match, second_match (the repeat followers, opponent's moves) and geometry, played COPY, BEAT and BEAT_BEAT, scored by a decayed net record, greedy.
+defaults:
+  DECAY: 0.9
+blueprint:
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    Bandit:
+      predictors:
+        - {bot: longest_match, space: {MAX_LEN: 10, CTX: JOINT, OF: OPP}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: second_match, space: {MAX_LEN: 12, CTX: JOINT, OF: OPP}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

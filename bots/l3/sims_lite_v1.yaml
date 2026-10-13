@@ -1,0 +1,24 @@
+description: |
+  iocaine_lite's predictors plus two cheap metabots modelling us.
+
+  Frequency and longest-match on the joint history (for the opponent and for us),
+  and iocaine_lite and rps4_lite replayed from the
+  opponent's side; three rotations each. Decayed net scores, greedy, a pinned
+  random arm: smartbot_sims' idea at a fraction of its cost.
+defaults:
+  DECAY: 0.9
+  MAX_LEN: 12
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: longest_match
+          arms: 2
+          space: {MAX_LEN: $MAX_LEN, CTX: JOINT, OF: [OPP, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {bot: iocaine_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

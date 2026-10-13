@@ -1,9 +1,0 @@
-description: |
-  A weighted coin: rock P_ROCK, paper P_PAPER, scissors the rest.
-defaults:
-  P_ROCK: 0.5
-  P_PAPER: 0.3
-blueprint:
-  signals:
-    - Biased: {p_rock: $P_ROCK, p_paper: $P_PAPER}
-  rotations: [COPY]

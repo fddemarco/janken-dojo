@@ -1,0 +1,18 @@
+description: |
+  smartbot_fast, gated against rps4_lite with hysteresis (ANTI_FIRST_HOLD).
+
+  The gated expert replays rps4_lite from the opponent's side and beats it; it
+  plays first, until smartbot_fast's main bandit beats it by more than EDGE, and
+  play returns to it only once it leads again by EDGE.
+defaults:
+  EDGE: 0.05
+  WARMUP: 20
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_fast_v1}
+      experts:
+        - {bot: rps4_lite_v1, side: OPP, rotations: [BEAT]}
+      rule: ANTI_FIRST_HOLD
+      edge: $EDGE
+      warmup: $WARMUP

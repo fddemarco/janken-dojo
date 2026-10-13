@@ -1,7 +1,7 @@
 """Overlays, compiled: transform the chosen move, after the core has run.
 
     Stall        random play while being read (drawdown) or while the lead is safe
-                 (lead lock): any margin wins a match here (rps_kaggle §5)
+                 (lead lock): any margin wins a match here (rps_kaggle section 5)
     Team         an Iliad fleet's handshake; supports throw matches to the champion,
                  and an impostor fakes a support's to beat the champion's throw move;
                  a vigilant teammate stops throwing once the other one doesn't
@@ -21,17 +21,6 @@ from . import codes as c
 from .jit import kernel
 from .moves import INVALID, PAPER, ROCK, SCISSORS
 
-HANDSHAKES = (
-    np.array(  # by fleet: ILIAD, ILIAD_V2, ILIAD_V3 (each differs from round 0)
-        [
-            [SCISSORS, SCISSORS, ROCK, ROCK, PAPER, SCISSORS, SCISSORS, PAPER],
-            [PAPER, ROCK, ROCK, SCISSORS, PAPER, PAPER, ROCK, SCISSORS],
-            [ROCK, SCISSORS, PAPER, PAPER, ROCK, SCISSORS, ROCK, PAPER],
-        ],
-        np.int64,
-    )
-)
-HANDSHAKE = HANDSHAKES[c.ILIAD]
 ROLE_MOVE = np.array([ROCK, PAPER], np.int64)  # by role: CHAMPION, SUPPORT
 INVALID_BUDGET = INVALID_MOVE_LIMIT - 1  # invalid moves a bot may spend and not forfeit
 
@@ -88,15 +77,22 @@ def _kept_faith(opp: np.ndarray, start: int, n: int, expected: int) -> bool:
 
 
 @kernel
-def team_move(role: int, fleet: int, vigilant: int, opp: np.ndarray, n: int) -> int:
-    """The handshake / throw move for round n, or NO_MOVE to play on."""
-    hand = HANDSHAKES[fleet]
-    k = hand.size
+def team_move(
+    role: int,
+    vigilant: int,
+    kn: np.ndarray,
+    kk: int,
+    k: int,
+    opp: np.ndarray,
+    n: int,
+) -> int:
+    """The handshake / throw move for round n, or NO_MOVE to play on. The
+    handshake is the k knobs from slot kk."""
     for t in range(min(n, k)):
-        if opp[t] != hand[t]:
+        if opp[t] != int(kn[kk + t]):
             return c.NO_MOVE
     if n < k:
-        return hand[n]
+        return int(kn[kk + n])
     if n == k:
         return ROLE_MOVE[c.SUPPORT] if role == c.IMPOSTOR else ROLE_MOVE[role]
     if role == c.IMPOSTOR and opp[k] == ROLE_MOVE[c.CHAMPION]:
@@ -142,6 +138,14 @@ def apply(
     if kind == c.O_STALL:
         return _stall(spec, o, i, kn, move, my, opp, n)
     if kind == c.O_TEAM:
-        team = team_move(spec[o + c.R_A], spec[o + c.R_B], spec[o + c.R_C], opp, n)
+        team = team_move(
+            spec[o + c.R_A],
+            spec[o + c.R_C],
+            kn,
+            spec[o + c.R_K],
+            spec[o + c.R_B],
+            opp,
+            n,
+        )
         return move if team < 0 else team
     return _emit_invalid(spec, o, kn, move, my, n)

@@ -1,4 +1,4 @@
-"""Integer codes shared by janken/kit/blueprint.py (Python) and the compiled stages.
+"""Integer codes shared by janken/kit/blueprint/ (Python) and the compiled stages.
 
 A blueprint compiles into one int64 `spec` array: a header, the knob bindings,
 then fixed-width records (one per guard, signal, selector and overlay) and
@@ -41,7 +41,15 @@ CRASH_ACTION, RANDOM_ACTION = 0, 1  # OnInvalid action
     S_BAYES,
     S_MATCH2,
     S_ORACLE,
-) = range(16)
+    S_RAREST,
+    S_PERIOD,
+    S_SCORE_STATE,
+    S_CTW,
+    S_PRIOR,
+    S_SCRIPT,
+) = range(22)
+CTW_NODE = 4  # a CTW context's floats: three KT counts, then its log mixing ratio
+CTW_RATIO_CAP = 50.0  # the log mixing ratio is kept within +-CTW_RATIO_CAP
 
 # Oracles (research only, janken/mocks.py): none, a pure Oracle bot, an Oracle arm;
 # the level the referee reveals for an Oracle opponent (janken/kit/levels.py).
@@ -66,10 +74,13 @@ EDGE, ANTI_FIRST, BANDIT, ANTI_FIRST_HOLD, MAIN_FIRST, LEADER, LEADER_PRIORITY =
     7
 )
 
+# How a replay names a Thompson bandit's likely move: by Monte Carlo draws, or
+# computed from a normal approximation of each arm's draw (janken/kit/replay.py).
+EST_DRAWS, EST_NORMAL = 0, 1
+
 # Overlays.
 O_STALL, O_TEAM, O_EMIT_INVALID = 0, 1, 2
 CHAMPION, SUPPORT, IMPOSTOR = 0, 1, 2  # Team roles
-ILIAD, ILIAD_V2, ILIAD_V3 = 0, 1, 2  # Team fleets: each has its own handshake
 
 # Record fields (every record is REC wide).
 REC = 16

@@ -12,8 +12,11 @@ only the standard library (janken/sandbox.py screens it). A script here holds:
 * the bot's compiled blueprint, as literals (`SPEC`, `KNOBS`, `PRM`), and a `play`
   that keeps the match's state in a module-level dict, never rebound (no `global`).
 
-A fleet's champion brings its supports: every bot in the bots dir with a Team
-overlay of the champion's fleet and role SUPPORT. A support's script is the
+Research-only bots are never exported: mocks (janken/mocks.py) and experimental
+bots, along with every bot that names one (janken/botfile.py).
+
+A fleet's champion brings its supports: the size - 1 bots its file's `fleet`
+section names (janken/botfile.py), one script each. A support's script is the
 champion's, plus a comment naming the support and its role line (`TEAM_ROLE`).
 """
 
@@ -24,11 +27,10 @@ import importlib
 import os
 from collections.abc import Iterator, Mapping, Sequence
 
-from . import botfile, match, mocks
+from . import botfile, library, match, mocks
 from .engine import registry
 from .kit import blueprint as bp
 from .kit import codes as c
-from .kit import declare
 
 # The kit's runtime modules, in the order their module-level statements need.
 RUNTIME = (
@@ -335,37 +337,26 @@ class Fleet:
 
 
 def _blueprint(path: str) -> bp.Blueprint:
-    return declare.blueprint_from_data(botfile.read(path).blueprint)
+    return library.read_blueprint(path)
 
 
-def _teams(blueprint: bp.Blueprint) -> list[bp.Team]:
-    return [o for o in blueprint.overlays if isinstance(o, bp.Team)]
-
-
-def fleet_of(path: str, bots_dir: str) -> Fleet:
-    """The bot at `path` and, when it is a fleet's champion, the bots in `bots_dir`
-    that support it (a Team of its fleet with role SUPPORT), by name.
+def fleet_of(path: str) -> Fleet:
+    """The bot at `path` and, when it leads a fleet (its file's `fleet` section),
+    the supports that section names, in order.
 
     Raises:
-        ExportError: the bot is a support or an impostor (export its champion).
+        ExportError: the bot plays a Team overlay outside a fleet section (an
+            impostor, or a bot posing as a fleet's member): research only.
     """
     name = match.bot_name(path)
-    teams = _teams(_blueprint(path))
-    if not teams:
-        return Fleet(name)
-    if any(team.role != c.CHAMPION for team in teams):
-        raise ExportError(f"{name} isn't a fleet's champion: export the champion")
-    fleets = {team.fleet for team in teams}
-    supports = []
-    for other in registry.discover(bots_dir):
-        if botfile.is_kernel_module(other) or match.bot_name(other) == name:
-            continue
-        if any(
-            team.role == c.SUPPORT and team.fleet in fleets
-            for team in _teams(_blueprint(other))
-        ):
-            supports.append(match.bot_name(other))
-    return Fleet(name, tuple(sorted(supports)))
+    fleet = botfile.read(path).fleet
+    if fleet.declared:
+        return Fleet(name, fleet.supports)
+    if any(isinstance(o, bp.Team) for o in _blueprint(path).overlays):
+        raise ExportError(
+            f"{name} plays a Team outside a fleet section: export a fleet's champion"
+        )
+    return Fleet(name)
 
 
 # --- the scripts -----------------------------------------------------------------
@@ -401,7 +392,7 @@ def _bot_lines(
     f_size, i_size, per_round = compiled.state
     spec = [int(v) for v in compiled.spec]
     return [
-        "# --- the bot: its compiled blueprint (janken/kit/blueprint.py) ---",
+        "# --- the bot: its compiled blueprint (janken/kit/blueprint/) ---",
         *_literal_lines("SPEC", spec),
         *_literal_lines("KNOBS", [float(v) for v in compiled.knobs]),
         *_literal_lines("PRM", [float(v) for v in prm]),
@@ -505,18 +496,24 @@ def _header(path: str, description: str) -> list[str]:
     ]
 
 
-def scripts(path: str, bots_dir: str, max_rounds: int) -> dict[str, str]:
+def scripts(path: str, max_rounds: int) -> dict[str, str]:
     """The submission scripts of the bot at `path` and of its fleet's supports, by
-    bot name. A support's script is the champion's, plus a comment naming the
-    support and its role line.
+    bot name: a fleet of N bots makes N scripts. A support's script is the
+    champion's, plus a comment naming the support and its role line.
 
     Raises:
         ExportError: the bot can't be exported (see fleet_of, rewrite_module), or
-            it is a mock: it cheats, so it is research only (janken/mocks.py).
+            it is research only: a mock (an Oracle cheats, janken/mocks.py), or
+            experimental, or built on an experimental bot (janken/botfile.py).
     """
     if mocks.is_mock(path):
         raise ExportError(f"{path} is a mock (an Oracle cheats): research only")
-    fleet = fleet_of(path, bots_dir)
+    flagged = library.experimental(path)
+    if flagged:
+        raise ExportError(
+            f"{path} is research only: experimental bot(s) {', '.join(flagged)}"
+        )
+    fleet = fleet_of(path)
     found = botfile.read(path)
     compiled = _blueprint(path).compile(found.defaults)
     prm = [float(v) for v in registry.param_vector(path)]

@@ -1,25 +1,26 @@
 """The engine and the tournament: refereeing, schedules, standings, ratings, CLI."""
 
 import os
+import pathlib
 import random
 import shutil
-import sys
-import tempfile
 import textwrap
-import unittest
 from collections import Counter
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
+import pytest
 from typer.testing import CliRunner
 
 from janken import rating
 from janken.cli import app
-from janken.engine import play_pairs
-from janken.engine.build import BotContractError, load_bot
+from janken.engine import dealt, play_pairs, registry
+from janken.engine.build import BotContractError, load_bot, with_neighbours
+from janken.kit import levels
 from janken.match import INVALID_MOVE_LIMIT, MatchResult
 from janken.spec import make_spec
 from janken.tournament import Standing, balanced_schedule, discover_bots, run_tournament
+from tests import data
+
+BOTS_DIR = data.BOTS_DIR
 
 # Fixture bots: name -> body of `step(f, i, prm, my, opp, n)`.
 FIXTURES = {
@@ -39,21 +40,44 @@ FIXTURES = {
 # YAML fixture bots: name -> bot file. They share the directory, so the engine
 # dispatches both kinds of bot.
 YAML_FIXTURES = {
-    "stone": "blueprint:\n  signals: [{Constant: {move: ROCK}}]\n  rotations: [COPY]\n",
+    "stone": (
+        "blueprint:\n"
+        "  core:\n"
+        "    Heuristic: {signal: {Constant: {move: ROCK}}, rotation: COPY}\n"
+    ),
     # History matchers: their per-match workspace is sized by the match's rounds.
     "matcher": (
         "blueprint:\n"
-        "  signals:\n"
-        "    - LongestMatch: {max_len: 6, ctx: JOINT}\n"
-        "    - Sim: {signal: {LongestMatch: {max_len: 3, ctx: OPP}}}\n"
-        "    - Geometry: {alpha: 0.1, max_len: 6}\n"
-        "  scorer: {DecayedNet: {decay: 0.9}}\n"
-        "  selector: Greedy\n"
+        "  core:\n"
+        "    Bandit:\n"
+        "      predictors:\n"
+        "        - {bot: longest}\n"
+        "        - {bot: longest, side: OPP, space: {MAX_LEN: 3, CTX: OPP}}\n"
+        "        - {bot: geometric}\n"
+        "      scorer: {DecayedNet: {decay: 0.9}}\n"
+        "      selector: Greedy\n"
+    ),
+}
+
+# The L1 blocks the YAML fixtures name as arms (blocks/: never in a pool).
+YAML_BLOCKS = {
+    "longest": (
+        "defaults: {MAX_LEN: 6, CTX: JOINT}\n"
+        "blueprint:\n"
+        "  core:\n"
+        "    Heuristic:\n"
+        "      signal: {LongestMatch: {max_len: $MAX_LEN, ctx: $CTX}}\n"
+        "      rotation: BEAT\n"
+    ),
+    "geometric": (
+        "blueprint:\n"
+        "  core:\n"
+        "    Heuristic: {signal: {Geometry: {alpha: 0.1, max_len: 6}}, rotation: BEAT}\n"
     ),
 }
 
 
-def bot_source(body, state="(0, 1)"):
+def bot_source(body: str, state: str = "(0, 1)") -> str:
     return textwrap.dedent("""\
         import random
 
@@ -69,185 +93,202 @@ def bot_source(body, state="(0, 1)"):
         """) % (state, body)
 
 
-class FixtureBots(unittest.TestCase):
+@pytest.fixture(scope="class")
+def fixture_bots_dir(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    cls = request.cls
+    cls.dir = str(tmp_path_factory.mktemp("fixture_bots"))
+    for name, body in FIXTURES.items():
+        with open(cls.bot(name), "w") as f:
+            f.write(bot_source(body))
+    for name, text in YAML_FIXTURES.items():
+        with open(os.path.join(cls.dir, name + ".yaml"), "w") as f:
+            f.write(text)
+    os.makedirs(os.path.join(cls.dir, "blocks"))
+    for name, text in YAML_BLOCKS.items():
+        with open(os.path.join(cls.dir, "blocks", name + ".yaml"), "w") as f:
+            f.write(text)
+
+
+@pytest.mark.usefixtures("fixture_bots_dir")
+class FixtureBots:
     """Writes every fixture bot into one directory, so the suite compiles once."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.dir = tempfile.mkdtemp()
-        for name, body in FIXTURES.items():
-            with open(cls.bot(name), "w") as f:
-                f.write(bot_source(body))
-        for name, text in YAML_FIXTURES.items():
-            with open(os.path.join(cls.dir, name + ".yaml"), "w") as f:
-                f.write(text)
+    dir: str
 
     @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.dir)
-
-    @classmethod
-    def bot(cls, name):
+    def bot(cls, name: str) -> str:
         suffix = ".yaml" if name in YAML_FIXTURES else ".py"
         return os.path.join(cls.dir, name + suffix)
 
-    def play(self, a, b, rounds=10, seed=1):
+    def play(self, a: str, b: str, rounds: int = 10, seed: int = 1) -> MatchResult:
         (m,) = play_pairs(
             [(make_spec(self.bot(a)), make_spec(self.bot(b)))], rounds, [seed]
         )
         return m
 
 
-class RefereeTest(FixtureBots):
-    def test_transcript_records_every_round(self):
+class TestReferee(FixtureBots):
+    def test_transcript_records_every_round(self) -> None:
         m = self.play("paper", "rock")
-        self.assertEqual(m.moves, "pr" * 10)
-        self.assertEqual((m.wins_a, m.wins_b, m.draws), (10, 0, 0))
-        self.assertEqual(m.winner, "paper")
+        assert m.moves == "pr" * 10
+        assert (m.wins_a, m.wins_b, m.draws) == (10, 0, 0)
+        assert m.winner == "paper"
 
-    def test_a_few_invalid_moves_cost_only_their_rounds(self):
+    def test_a_few_invalid_moves_cost_only_their_rounds(self) -> None:
         m = self.play("slips", "rock")
         slips = INVALID_MOVE_LIMIT - 1
-        self.assertIsNone(m.forfeit_a)
-        self.assertEqual((m.wins_a, m.wins_b), (10 - slips, slips))
-        self.assertTrue(m.moves.startswith("xr" * slips))
+        assert m.forfeit_a is None
+        assert (m.wins_a, m.wins_b) == (10 - slips, slips)
+        assert m.moves.startswith("xr" * slips)
 
-    def test_invalid_moves_forfeit_the_match_at_the_limit(self):
-        m = self.play("junk", "rock", rounds=50)
-        self.assertEqual(m.forfeit_a, f"returned {INVALID_MOVE_LIMIT} invalid moves")
-        self.assertEqual(m.winner, "rock")
+    def test_invalid_moves_forfeit_the_match_at_the_limit(self) -> None:
+        m = self.play("junk", "rock", rounds=9)
+        assert m.forfeit_a == f"returned {INVALID_MOVE_LIMIT} invalid moves"
+        assert m.winner == "rock"
         # It stops at the limit, and the round that tipped it over still counts.
-        self.assertEqual(len(m.moves) // 2, INVALID_MOVE_LIMIT)
-        self.assertEqual(m.wins_b, INVALID_MOVE_LIMIT)
+        assert len(m.moves) // 2 == INVALID_MOVE_LIMIT
+        assert m.wins_b == INVALID_MOVE_LIMIT
 
-    def test_the_limit_is_cumulative_not_consecutive(self):
-        m = self.play("alternator", "rock", rounds=100)
-        self.assertEqual(m.forfeit_a, f"returned {INVALID_MOVE_LIMIT} invalid moves")
-        self.assertEqual(len(m.moves) // 2, 2 * INVALID_MOVE_LIMIT - 1)
+    def test_the_limit_is_cumulative_not_consecutive(self) -> None:
+        m = self.play("alternator", "rock", rounds=9)
+        assert m.forfeit_a == f"returned {INVALID_MOVE_LIMIT} invalid moves"
+        assert len(m.moves) // 2 == 2 * INVALID_MOVE_LIMIT - 1
 
-    def test_both_invalid_is_a_draw_and_both_forfeit(self):
+    def test_both_invalid_is_a_draw_and_both_forfeit(self) -> None:
         m = self.play("junk", "junk")
-        self.assertEqual(m.draws, INVALID_MOVE_LIMIT)
-        self.assertTrue(m.forfeit_a and m.forfeit_b)
-        self.assertIsNone(m.winner)
+        assert m.draws == INVALID_MOVE_LIMIT
+        assert m.forfeit_a and m.forfeit_b
+        assert m.winner is None
 
-    def test_a_crash_forfeits_and_stops_the_transcript(self):
+    def test_a_crash_forfeits_and_stops_the_transcript(self) -> None:
         m = self.play("crashy", "rock")
-        self.assertEqual(m.forfeit_a, "crashed")
-        self.assertEqual(m.winner, "rock")
-        self.assertEqual(m.moves, "pr" * 2)  # the crashed round is not recorded
+        assert m.forfeit_a == "crashed"
+        assert m.winner == "rock"
+        assert m.moves == "pr" * 2  # the crashed round is not recorded
 
-    def test_state_starts_fresh_every_match(self):
+    def test_state_starts_fresh_every_match(self) -> None:
         pair = (make_spec(self.bot("counter")), make_spec(self.bot("rock")))
         for m in play_pairs([pair, pair], 5, [1, 2]):
-            self.assertEqual(m.wins_a, 5)
+            assert m.wins_a == 5
 
-    def test_a_seed_makes_a_match_reproducible(self):
-        one = self.play("randy", "randy", rounds=50, seed=7)
-        two = self.play("randy", "randy", rounds=50, seed=7)
-        other = self.play("randy", "randy", rounds=50, seed=8)
-        self.assertEqual(one.moves, two.moves)
-        self.assertNotEqual(one.moves, other.moves)
+    def test_a_seed_makes_a_match_reproducible(self) -> None:
+        one = self.play("randy", "randy", rounds=9, seed=7)
+        two = self.play("randy", "randy", rounds=9, seed=7)
+        other = self.play("randy", "randy", rounds=9, seed=8)
+        assert one.moves == two.moves
+        assert one.moves != other.moves
 
-    def test_a_yaml_bot_plays_kernel_modules(self):
+    def test_a_bots_draws_dont_depend_on_its_opponents(self) -> None:
+        # rock draws nothing and randy draws every round: randy's moves are the same.
+        vs_rock = self.play("randy", "rock", rounds=40, seed=5)
+        vs_randy = self.play("randy", "randy", rounds=40, seed=5)
+        assert vs_rock.moves[0::2] == vs_randy.moves[0::2]
+
+    def test_the_two_sides_draw_from_different_streams(self) -> None:
+        m = self.play("randy", "randy", rounds=40, seed=5)
+        assert m.moves[0::2] != m.moves[1::2]
+
+    def test_a_yaml_bot_plays_kernel_modules(self) -> None:
         m = self.play("stone", "paper", rounds=5)
-        self.assertEqual(m.moves, "rp" * 5)
-        self.assertEqual((m.wins_a, m.wins_b), (0, 5))
+        assert m.moves == "rp" * 5
+        assert (m.wins_a, m.wins_b) == (0, 5)
 
-    def test_the_workspace_follows_the_match_length_and_starts_fresh(self):
-        short = self.play("matcher", "randy", rounds=20, seed=4)
-        long = self.play("matcher", "randy", rounds=60, seed=4)
-        self.assertEqual(long.moves[: len(short.moves)], short.moves)
+    def test_the_workspace_follows_the_match_length_and_starts_fresh(self) -> None:
+        short = self.play("matcher", "randy", rounds=4, seed=4)
+        long = self.play("matcher", "randy", rounds=9, seed=4)
+        assert long.moves[: len(short.moves)] == short.moves
         pair = (make_spec(self.bot("matcher")), make_spec(self.bot("randy")))
-        again = play_pairs([pair, pair], 60, [4, 4])
-        self.assertEqual([m.moves for m in again], [long.moves, long.moves])
+        again = play_pairs([pair, pair], 9, [4, 4])
+        assert [m.moves for m in again] == [long.moves, long.moves]
 
-    def test_a_bad_blueprint_is_refused(self):
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "bad.yaml")
-            with open(path, "w") as f:
-                f.write("defaults: {UNUSED: 1}\nblueprint: {}\n")
-            with self.assertRaises(BotContractError):
-                load_bot(path)
+    def test_a_bad_blueprint_is_refused(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        path = os.path.join(d, "bad.yaml")
+        with open(path, "w") as f:
+            f.write("defaults: {UNUSED: 1}\nblueprint: {}\n")
+        with pytest.raises(BotContractError):
+            load_bot(path)
 
-    def test_a_file_without_step_is_refused(self):
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "lazy.py")
-            with open(path, "w") as f:
-                f.write("DEFAULTS = {}\n")
-            with self.assertRaises(ValueError):
-                load_bot(path)
+    def test_a_file_without_step_is_refused(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        path = os.path.join(d, "lazy.py")
+        with open(path, "w") as f:
+            f.write("DEFAULTS = {}\n")
+        with pytest.raises(ValueError):
+            load_bot(path)
 
 
-class TournamentTest(FixtureBots):
-    def test_round_robin_standings(self):
+class TestTournament(FixtureBots):
+    def test_round_robin_standings(self) -> None:
         paths = [self.bot(n) for n in ("rock", "paper", "scissors")]
         result = run_tournament(paths, rounds=10)
         # A perfect rock-paper-scissors cycle: everyone 1 win, 1 loss.
-        self.assertEqual(len(result.matches), 3)
+        assert len(result.matches) == 3
         for s in result.standings:
-            self.assertEqual((s.points, s.wins, s.losses), (3, 1, 1))
+            assert (s.points, s.wins, s.losses) == (3, 1, 1)
 
-    def test_balanced_schedule(self):
+    def test_balanced_schedule(self) -> None:
         bots = [f"/b/{i}.py" for i in range(12)]
         sched = balanced_schedule(bots, 6, random.Random(1234))
         games = Counter()
         for a, b in sched:
-            self.assertNotEqual(a, b)  # never a self-match
+            assert a != b  # never a self-match
             games[a] += 1
             games[b] += 1
-        self.assertEqual(len(sched), 36)  # 12 bots * 6 games / 2
-        self.assertTrue(all(g == 6 for g in games.values()))
+        assert len(sched) == 36  # 12 bots * 6 games / 2
+        assert all(g == 6 for g in games.values())
 
-    def test_balanced_schedule_tournament_runs(self):
+    def test_balanced_schedule_tournament_runs(self) -> None:
         paths = [self.bot(n) for n in ("rock", "paper", "scissors", "randy")]
         result = run_tournament(paths, rounds=5, games_per_bot=2, seed=1)
-        self.assertEqual(len(result.matches), 4)  # 4 bots * 2 / 2
-        self.assertEqual(len(result.standings), 4)
+        assert len(result.matches) == 4  # 4 bots * 2 / 2
+        assert len(result.standings) == 4
 
-    def test_underscore_files_skipped(self):
-        with tempfile.TemporaryDirectory() as d:
-            for name in ("a.yaml", "b.py", "_helper.yaml", "notes.txt"):
-                open(os.path.join(d, name), "w").close()
-            names = [os.path.basename(p) for p in discover_bots(d)]
-            self.assertEqual(names, ["a.yaml", "b.py"])
+    def test_underscore_files_skipped(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        for name in ("a.yaml", "b.py", "_helper.yaml", "notes.txt"):
+            open(os.path.join(d, name), "w").close()
+        names = [os.path.basename(p) for p in discover_bots(d)]
+        assert names == ["a.yaml", "b.py"]
 
-    def test_sort_key_tiebreakers(self):
+    def test_sort_key_tiebreakers(self) -> None:
         strong = Standing("strong", points=6, round_wins=50, round_losses=10)
         weak = Standing("weak", points=6, round_wins=30, round_losses=20)
-        self.assertLess(strong.sort_key(), weak.sort_key())
+        assert strong.sort_key() < weak.sort_key()
 
-    def test_results_do_not_depend_on_thread_count(self):
+    def test_results_do_not_depend_on_thread_count(self) -> None:
         paths = discover_bots(self.dir)
         one = run_tournament(paths, rounds=10, seed=3, workers=1)
         two = run_tournament(paths, rounds=10, seed=3, workers=4)
-        self.assertEqual([m.moves for m in one.matches], [m.moves for m in two.matches])
+        assert [m.moves for m in one.matches] == [m.moves for m in two.matches]
 
-    def test_cli_tournament(self):
+    def test_cli_tournament(self) -> None:
         args = ["tournament", "--bots-dir", self.dir, "--rounds", "5", "--seed", "1"]
         result = CliRunner().invoke(app, [*args, "--cache", "off"])
-        self.assertEqual(result.exit_code, 0, result.output)
-        self.assertIn("rating", result.output)
-        self.assertIn("matches in", result.output)
+        assert result.exit_code == 0, result.output
+        assert "rating" in result.output
+        assert "matches in" in result.output
 
 
-class RateTournamentTest(unittest.TestCase):
-    def test_winners_rise_losers_fall_and_titles_follow(self):
+class TestRateTournament:
+    def test_winners_rise_losers_fall_and_titles_follow(self) -> None:
         matches = [
             MatchResult("a", "b", wins_a=10),
             MatchResult("a", "c", wins_a=10),
             MatchResult("b", "c", wins_a=6, wins_b=4),
         ]
         ratings, titles = rating.rate_tournament(matches, ["a", "b", "c", "idle"])
-        self.assertGreater(ratings["a"].after, ratings["b"].after)
-        self.assertGreater(ratings["b"].after, ratings["c"].after)
-        self.assertEqual(ratings["a"].games, 2)
-        self.assertEqual(ratings["idle"].after, rating.START_RATING)
-        self.assertEqual(ratings["idle"].games, 0)
-        self.assertEqual(titles["a"], rating.title_for_rating(ratings["a"].after))
-        self.assertEqual(titles["c"], "novice")
+        assert ratings["a"].after > ratings["b"].after
+        assert ratings["b"].after > ratings["c"].after
+        assert ratings["a"].games == 2
+        assert ratings["idle"].after == rating.START_RATING
+        assert ratings["idle"].games == 0
+        assert titles["a"] == rating.title_for_rating(ratings["a"].after)
+        assert titles["c"] == "novice"
 
-    def test_match_order_does_not_matter(self):
+    def test_match_order_does_not_matter(self) -> None:
         matches = [
             MatchResult("a", "b", wins_a=3),
             MatchResult("b", "c", wins_b=2),
@@ -256,14 +297,109 @@ class RateTournamentTest(unittest.TestCase):
         forward, _ = rating.rate_tournament(matches)
         backward, _ = rating.rate_tournament(list(reversed(matches)))
         for bot in forward:
-            self.assertAlmostEqual(forward[bot].after, backward[bot].after)
+            assert forward[bot].after == pytest.approx(
+                backward[bot].after, rel=0, abs=0.5e-7
+            )
 
-    def test_a_forfeit_is_a_loss(self):
+    def test_a_forfeit_is_a_loss(self) -> None:
         ratings, _ = rating.rate_tournament(
             [MatchResult("a", "b", wins_a=5, forfeit_a="crashed")]
         )
-        self.assertLess(ratings["a"].after, ratings["b"].after)
+        assert ratings["a"].after < ratings["b"].after
 
 
-if __name__ == "__main__":
-    unittest.main()
+def touch(*parts: str) -> str:
+    """An empty file at the joined path, its folders made; returns the path."""
+    path = os.path.join(*parts)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w").close()
+    return os.path.normpath(path)
+
+
+class TestLevelFolders:
+    @pytest.mark.parametrize(
+        ("level", "folder"), [(1, "l1"), (4, "l4"), (levels.ORACLE, "oracle")]
+    )
+    def test_folder(self, level: int, folder: str) -> None:
+        assert levels.folder(level) == folder
+
+    @pytest.mark.parametrize(
+        ("name", "is_level"),
+        [("l1", True), ("l12", True), ("oracle", True), ("l", False)]
+        + [("lx", False), ("inactive", False), ("fleets", False)],
+    )
+    def test_is_level_folder(self, name: str, is_level: bool) -> None:
+        assert levels.is_level_folder(name) is is_level
+
+    def test_discover_reads_level_folders_only(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        found = [
+            touch(d, "flat.yaml"),
+            touch(d, "l1", "a.yaml"),
+            touch(d, "l3", "b.yaml"),
+            touch(d, "oracle", "c.yaml"),
+        ]
+        touch(d, "inactive", "legacy", "old.yaml")
+        touch(d, "inactive", "d.yaml")
+        touch(d, "notes", "e.yaml")
+        assert registry.discover(d) == sorted(found)
+
+    def test_field_root(self) -> None:
+        assert registry.field_root(os.path.join("bots", "l2", "x.yaml")) == "bots"
+        assert registry.field_root(os.path.join("bots", "x.yaml")) == "bots"
+        fleet = os.path.join("bots", "inactive", "fleets", "f")
+        assert registry.field_root(os.path.join(fleet, "x.yaml")) == fleet
+
+    def test_find(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        a = touch(d, "l1", "a.yaml")
+        touch(d, "l1", "twice.yaml")
+        touch(d, "l2", "twice.yaml")
+        assert registry.find(d, "a") == a
+        with pytest.raises(FileNotFoundError, match="no bot"):
+            registry.find(d, "missing")
+        with pytest.raises(FileNotFoundError, match="2 bots named"):
+            registry.find(d, "twice")
+
+    def test_neighbours_span_the_field(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        field = [touch(d, "l1", "a.yaml"), touch(d, "l2", "b.yaml")]
+        touch(d, "inactive", "c.yaml")
+        assert with_neighbours([field[1]]) == sorted(field)
+
+    def test_bot_check_refuses_a_misplaced_bot(self, tmp_path: pathlib.Path) -> None:
+        d = str(tmp_path)
+        rock = os.path.join(d, "l2", "rock.yaml")
+        os.makedirs(os.path.dirname(rock))
+        shutil.copy(registry.find(BOTS_DIR, "rock_v1"), rock)
+        result = CliRunner().invoke(app, ["bot", "check", "--bots-dir", d, "rock"])
+        assert result.exit_code == 2
+        assert f"{os.sep}l1: move it there" in result.output
+
+
+class TestStreaming(FixtureBots):
+    def pairs(self, n: int) -> list:
+        return [(make_spec(self.bot("randy")), make_spec(self.bot("counter")))] * n
+
+    def test_every_match_is_reported_once_in_order_of_its_index(self) -> None:
+        reported: list[tuple[int, MatchResult]] = []
+        got = play_pairs(self.pairs(5), 8, [1, 2, 3, 4, 5], None, reported.extend)
+        assert sorted(k for k, _ in reported) == [0, 1, 2, 3, 4]
+        assert [m for _, m in sorted(reported, key=lambda km: km[0])] == got
+
+    def test_reporting_as_they_end_changes_no_result(self) -> None:
+        seeds = [7, 8, 9, 10]
+        quiet = play_pairs(self.pairs(4), 8, seeds)
+        streamed = play_pairs(self.pairs(4), 8, seeds, 2, lambda done: None, 0.01)
+        assert streamed == quiet
+
+
+class TestDealt:
+    def test_the_heavy_matches_land_in_different_chunks(self) -> None:
+        order = dealt([1, 9, 1, 1, 9, 1], threads=2)
+        assert sorted(order) == list(range(6))
+        first, second = order[:3], order[3:]
+        assert {1, 4} & set(first) and {1, 4} & set(second)
+
+    def test_one_thread_plays_the_heaviest_first(self) -> None:
+        assert dealt([1.0, 3.0, 2.0], threads=1) == [1, 2, 0]

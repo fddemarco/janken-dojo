@@ -51,27 +51,27 @@ The dataset is **append-only**: nothing updates or deletes a row.
 
 ## Commands
 
-All of them are low level (`janken lab …`) and take the [common flags](cli.md#the-common-flags).
+All of them are low level (`janken lab ...`) and take the [common flags](cli.md#the-common-flags).
 `--workspace` picks the dataset.
 
 ```bash
 # Grow it: every bot vs every bot, 5 matches per pair (dataset.matches by default).
 uv run janken lab dataset add bots/ --matches 5
-uv run janken lab dataset add bots/smartbot.yaml bots/smartbot_sims.yaml:ARM_DECAY=0.8 \
+uv run janken lab dataset add bots/l2/smartbot_v1.yaml bots/l3/smartbot_sims_v1.yaml:ARM_DECAY=0.8 \
   --matches 10 --rounds 1000
 
 # What's in it: matches, rounds, batches, the test split; --players lists every player.
 uv run janken lab dataset info --players
 
 # Score predictors (on dataset.split, test by default), per predicted player too.
-uv run janken lab predict bots/smartbot.yaml bots/iocaine_lite.yaml --players
+uv run janken lab predict bots/l2/smartbot_v1.yaml bots/l2/iocaine_lite_v1.yaml --players
 
 # Tune one predictor for edge (on dataset.tune_split), validating on the test split.
-uv run janken lab predict-tune spaces/iocaine_lite.yaml --study ioc-pred-v1 --metric edge
+uv run janken lab predict-tune spaces/iocaine_lite_v1.yaml --study ioc-pred-v1 --metric edge
 
 # AutoML: pick the best predictor, and its params, among three.
-uv run janken lab predict-tune spaces/smartbot.yaml spaces/iocaine_lite.yaml \
-  spaces/markov2_joint.yaml --study automl-v1 --effort thorough
+uv run janken lab predict-tune spaces/smartbot_v1.yaml spaces/iocaine_lite_v1.yaml \
+  spaces/markov2_joint_v1.yaml --study automl-v1 --effort thorough
 ```
 
 ### `lab predict-tune`
@@ -93,5 +93,5 @@ How a study runs:
 - **Storage.** Studies live in `experiments/tuning/predict/`.
 - **Recorded validation.** The scores on the test split of the best trials and of every
   predictor's defaults go to the `predict_validations` table of `experiments/runs.duckdb`:
-  study, predictor, trial (−1: defaults), training value, split and the four metrics.
+  study, predictor, trial (-1: defaults), training value, split and the four metrics.
   `janken lab study show NAME` lists them.

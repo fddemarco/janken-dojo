@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** evaluation
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/gate_anti_first.yaml`
 - **Baselines:** `bots/iocaine_lite.yaml`
 - **Run:** `20261010-213919_0025-l4-vs-l1-gate-anti-first-vs-iocaine-lite-l1-only`
@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_anti_first.yaml bots/iocaine_lite.yaml --
 
 ## Results
 
-40 of 40 round robin(s) · pool 17 · 200 rounds/match · seed 2457783218 · mode candidates
+40 of 40 round robin(s), pool 17, 200 rounds/match, seed 2457783218, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| iocaine_lite | 680 | 623-2-55 | 91.8% [89.5%, 93.6%] | +103.2 | 0 | 1839 ± 39 |
-| gate_anti_first | 680 | 610-7-63 | 90.2% [87.8%, 92.2%] | +108.7 | 0 | 1877 ± 55 |
+| iocaine_lite | 680 | 623-2-55 | 91.8% [89.5%, 93.6%] | +103.2 | 0 | 1839 +/- 39 |
+| gate_anti_first | 680 | 610-7-63 | 90.2% [87.8%, 92.2%] | +108.7 | 0 | 1877 +/- 55 |
 
 Paired comparisons:
 
-- `gate_anti_first − iocaine_lite = -1.5 pts [-3.8, +0.8]` over 680 shared matches: no significant difference
+- `gate_anti_first - iocaine_lite = -1.5 pts [-3.8, +0.8]` over 680 shared matches: no significant difference
 
 Weakest matchups of gate_anti_first: nash 33.8%, geometry 61.3%, transition_matrix 62.5%, biased 78.8%, rotation_outcome 97.5%, markov2_joint 100.0%.
 

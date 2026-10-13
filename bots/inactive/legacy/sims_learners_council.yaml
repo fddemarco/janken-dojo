@@ -1,0 +1,17 @@
+description: |
+  A sharp Thompson council of smartbot_sims_v2 (the best main vs unknown opponents, note 0092) and the strong public learners (context_mixture from both seats, pretrained_context, pattern_memory), three rotations each: the learners inside a randomised council, never played alone.
+  Hypothesis (insights of notes 0091, 0092): vs unknown opponents the main does the work; the learners add reads, and Thompson sampling keeps them from being replayed exactly.
+defaults:
+  ARM_DECAY: 0.95
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_sims_v2, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: context_mixture_v2, arms: 2, space: {OF: [OPP, MY]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pretrained_context_v3, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: pattern_memory_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

@@ -1,0 +1,16 @@
+description: |
+  A council of L2's strong set: geometry_ensemble, period_bandit, anti_smartbot and anti_rps4, every rotation (idea #66; theory: build each level from the strong set below).
+  As l2_council_v1 (a Thompson bandit over L2 replays), with the L2 atlas's strong set as its arms instead of the smartbot, iocaine and rps4 learners that the strong set counters.
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: geometry_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: period_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: anti_smartbot_v2, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: anti_rps4_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

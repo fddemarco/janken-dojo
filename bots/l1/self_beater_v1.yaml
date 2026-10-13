@@ -1,0 +1,8 @@
+description: |
+  Plays what beats its own last move (beats copycats).
+defaults:
+  NOISE: 0.05
+blueprint:
+  guards: [{Noise: {p: $NOISE}}, {Opening: {rounds: 1, move: PAPER}}]
+  core:
+    Heuristic: {signal: {LastMove: {of: MY}}, rotation: BEAT}

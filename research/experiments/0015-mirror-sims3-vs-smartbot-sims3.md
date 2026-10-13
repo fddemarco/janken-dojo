@@ -21,16 +21,16 @@ uv run janken lab experiment bots/mirror_sims3.yaml bots/smartbot_sims3.yaml --r
 
 ## Results
 
-10 of 10 round robin(s) · pool 20 · 200 rounds/match · seed 877486091 · mode full
+10 of 10 round robin(s), pool 20, 200 rounds/match, seed 877486091, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| mirror_sims3 | 200 | 156-5-39 | 79.2% [73.1%, 84.3%] | +13.1 | 0 | 1784 ± 104 |
-| smartbot_sims3 | 200 | 156-5-39 | 79.2% [73.1%, 84.3%] | +60.0 | 0 | 1739 ± 41 |
+| mirror_sims3 | 200 | 156-5-39 | 79.2% [73.1%, 84.3%] | +13.1 | 0 | 1784 +/- 104 |
+| smartbot_sims3 | 200 | 156-5-39 | 79.2% [73.1%, 84.3%] | +60.0 | 0 | 1739 +/- 41 |
 
 Paired comparisons:
 
-- `mirror_sims3 − smartbot_sims3 = +0.0 pts [-8.0, +8.3]` over 200 shared matches: no significant difference
+- `mirror_sims3 - smartbot_sims3 = +0.0 pts [-8.0, +8.3]` over 200 shared matches: no significant difference
 
 Weakest matchups of mirror_sims3: copycat 16.7%, nash 25.0%, wsls 25.0%, word2janken 30.0%, counter_reactionary 33.3%, staller 37.5%.
 

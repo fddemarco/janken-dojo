@@ -1,0 +1,15 @@
+description: |
+  Research opponent (not in the field), second outsider family (idea #88): an iocaine-style greedy bandit over L2s no field L4 replays, from both seats (iocaine_lite and fast_greedy_markov played and replayed, zoo_hunter played), decayed net scores.
+defaults:
+  DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: iocaine_lite_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: iocaine_lite_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: fast_greedy_markov_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: fast_greedy_markov_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: zoo_hunter_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {DecayedNet: {decay: $DECAY}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

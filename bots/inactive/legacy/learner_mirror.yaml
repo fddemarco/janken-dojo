@@ -1,0 +1,18 @@
+description: |
+  L2's strong learners read from both seats, every rotation: iocaine's principle one level up (idea #67, after note 0066).
+  geometry_ensemble, period_bandit and repeat_mirror replayed from our seat (their move) and from the opponent's (their likely move if the opponent is that bot), every rotation, in one Thompson council: each learner and its counter, as repeat_mirror holds each L1 rule and its counter.
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: geometry_ensemble_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: period_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: repeat_mirror_v1, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: repeat_mirror_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

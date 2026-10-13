@@ -21,16 +21,16 @@ uv run janken lab experiment bots/sinon.yaml bots/smartbot_sims3.yaml --rounds 2
 
 ## Results
 
-40 of 40 round robin(s) · pool 20 · 200 rounds/match · seed 2582389146 · mode full
+40 of 40 round robin(s), pool 20, 200 rounds/match, seed 2582389146, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| sinon | 800 | 592-12-196 | 74.8% [71.6%, 77.6%] | +68.1 | 0 | 1722 ± 85 |
-| smartbot_sims3 | 800 | 582-20-198 | 74.0% [70.9%, 76.9%] | +62.2 | 0 | 1715 ± 61 |
+| sinon | 800 | 592-12-196 | 74.8% [71.6%, 77.6%] | +68.1 | 0 | 1722 +/- 85 |
+| smartbot_sims3 | 800 | 582-20-198 | 74.0% [70.9%, 76.9%] | +62.2 | 0 | 1715 +/- 61 |
 
 Paired comparisons:
 
-- `sinon − smartbot_sims3 = +0.8 pts [-2.7, +3.9]` over 800 shared matches: no significant difference
+- `sinon - smartbot_sims3 = +0.8 pts [-2.7, +3.9]` over 800 shared matches: no significant difference
 
 Weakest matchups of sinon: achilles 36.0%, odysseus 37.5%, smartbot_sims 40.5%, geometry 47.6%, sims3_second 47.7%, nash 48.1%.
 

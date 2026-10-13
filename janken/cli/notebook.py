@@ -33,7 +33,7 @@ def idea_add(
         str, typer.Argument(help="the idea, one line (markdown allowed, no '|')")
     ],
     priority: Annotated[
-        Priority, typer.Option(help="P1 (likely big win) … P3 (curiosity)")
+        Priority, typer.Option(help="P1 (likely big win) ... P3 (curiosity)")
     ],
     motivation: Annotated[
         str,
@@ -93,6 +93,27 @@ def idea_start(
     lab.emit({"number": number, "status": ideas.IN_PROGRESS}, f"#{number}: in-progress")
 
 
+@idea_app.command("done")
+@lab_command("idea done")
+def idea_done(
+    lab: Lab,
+    number: Annotated[int, typer.Argument(help=NUMBER_HELP)],
+    reason: Annotated[
+        str,
+        typer.Option(
+            help="what realised it, with a link to the note, commit or bot that shows it"
+        ),
+    ],
+) -> None:
+    """Mark an idea done without a note of its own (a keep verdict marks its idea
+    done), e.g. one realised by a later bot or a lab change."""
+    from ..notebook import ideas
+
+    status = f"{ideas.DONE} ({reason})"
+    ideas.save(lab.notebook, ideas.load(lab.notebook).set_status(number, status))
+    lab.emit({"number": number, "status": status}, f"#{number}: {status}")
+
+
 @idea_app.command("drop")
 @lab_command("idea drop")
 def idea_drop(
@@ -115,7 +136,10 @@ def idea_drop(
 def insight_add(
     lab: Lab,
     note: Annotated[
-        str, typer.Option(help="the note whose evidence backs it (number or NNNN-name)")
+        list[str],
+        typer.Option(
+            help="a note whose results back it (number or NNNN-name; repeatable)"
+        ),
     ],
     finding: Annotated[
         str, typer.Option(help="the one-line finding, general enough to steer bots")
@@ -127,11 +151,12 @@ def insight_add(
         str, typer.Option(help="what to build or try next (add it as an idea too)")
     ],
 ) -> None:
-    """Record an insight, if the note's evidence meets the bar.
+    """Record an insight citing one or more notes' stored results.
 
-    The bar: a paired comparison (or a validated difference from a tuned bot's
-    defaults) whose 95% CI excludes 0. The evidence line is written from the note's
-    stored numbers.
+    The evidence line is written from each note's stored numbers: its paired
+    comparisons (or a tuning's validated differences from the defaults) whose 95%
+    CI excludes 0, else all of them, marked tentative. A note with no stored
+    result can't be cited.
     """
     from ..lab import workflows
 

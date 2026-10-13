@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_main_first_stationary.yaml bots/gate_main
 
 ## Results
 
-50 of 50 round robin(s) · pool 6 · 200 rounds/match · seed 2130153524 · mode candidates
+50 of 50 round robin(s), pool 6, 200 rounds/match, seed 2130153524, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_main_first | 300 | 284-1-15 | 94.8% [91.7%, 96.8%] | +60.7 | 0 | 1817 ± 72 |
-| gate_main_first_stationary | 300 | 278-2-20 | 93.0% [89.5%, 95.4%] | +57.9 | 0 | 1778 ± 84 |
+| gate_main_first | 300 | 284-1-15 | 94.8% [91.7%, 96.8%] | +60.7 | 0 | 1817 +/- 72 |
+| gate_main_first_stationary | 300 | 278-2-20 | 93.0% [89.5%, 95.4%] | +57.9 | 0 | 1778 +/- 84 |
 
 Paired comparisons:
 
-- `gate_main_first_stationary − gate_main_first = -1.8 pts [-5.2, +1.7]` over 300 shared matches: no significant difference
+- `gate_main_first_stationary - gate_main_first = -1.8 pts [-5.2, +1.7]` over 300 shared matches: no significant difference
 
 Weakest matchups of gate_main_first_stationary: meta_smartbot 64.0%, smart_staller 96.0%, smartbot 98.0%, rps4_lite 100.0%, staller 100.0%, iocaine_lite 100.0%.
 

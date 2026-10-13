@@ -1,0 +1,15 @@
+description: |
+  Replays of smartbot_sims_v2 from both seats at every rotation, Thompson sampled (idea #40), each replay's move computed (estimate NORMAL).
+  As bots/inactive/legacy/level_k_bandit with NORMAL replays instead of 256 draws (insight of 2026-10-13: as good, 10-15x cheaper): a decayed Dirichlet and sharpened Thompson follow an opponent that switches levels within a few rounds (double_bluff_gate), where a LEADER gate trails it.
+defaults:
+  ARM_DECAY: 0.85
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

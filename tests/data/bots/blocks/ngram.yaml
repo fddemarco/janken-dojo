@@ -1,0 +1,14 @@
+description: |
+  Block: beats OF's next move as an order-ORDER n-gram over the CTX history
+  predicts it (counts decayed by DECAY; SAMPLE 1: drawn from them, not the mode).
+defaults:
+  ORDER: 1
+  CTX: OPP
+  OF: OPP
+  DECAY: 1.0
+  SAMPLE: 0
+blueprint:
+  core:
+    Heuristic:
+      signal: {NGram: {order: $ORDER, ctx: $CTX, of: $OF, decay: $DECAY, sample: $SAMPLE}}
+      rotation: BEAT

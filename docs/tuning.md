@@ -8,9 +8,9 @@ that validation is evidence.
 ## With a note: `janken tune`
 
 ```bash
-uv run janken tune bots/smartbot_sims.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
-uv run janken tune bots/fleets/iliad_v3/agamemnon_v3.yaml --support bots/fleets/iliad_v3/achilles_v3.yaml \
-  --support bots/fleets/iliad_v3/ajax_v3.yaml --hypothesis "..."          # a fleet: supports at weight 0
+uv run janken tune bots/l3/smartbot_sims_v1.yaml --hypothesis "decays tuned at 200 rounds gain >= 1 pt"
+uv run janken tune bots/l4/champion.yaml --support bots/l2/helper_a.yaml \
+  --support bots/l2/helper_b.yaml --hypothesis "..."          # a fleet: supports at weight 0
 uv run janken tune --note 0009              # resume the note's study, revalidate
 uv run janken verdict 0009 drop --summary "best +0.4 pts [-1.2, +2.0] vs defaults"
 ```
@@ -22,10 +22,10 @@ uv run janken verdict 0009 drop --summary "best +0.4 pts [-1.2, +2.0] vs default
 1. runs the study, named after the note (`NNNN-<name>`);
 1. validates the top K, and writes the recorded validations into the note.
 
-## Without a note: `janken lab study …`
+## Without a note: `janken lab study ...`
 
 ```bash
-uv run janken lab space bots/x.yaml                 # scaffold spaces/x.yaml, then edit it
+uv run janken lab space bots/l1/x.yaml                 # scaffold spaces/x.yaml, then edit it
 uv run janken lab study run spaces/x.yaml --study x-v1 --effort thorough
 uv run janken lab study run spaces/a.yaml spaces/b.yaml --study fleet-v1
 uv run janken lab study show x-v1                   # its recorded validations
@@ -40,7 +40,7 @@ uv run janken lab study list
 1. Each trial picks a value for every param in every space file.
 1. The tuned bots play every pool bot and each other for `--rounds` rounds. Pool bots
    don't play each other, since those matches can't move the tuned bots' score.
-1. A bot's score is `(wins + ½ draws) / matches`. The objective is the weighted mean over
+1. A bot's score is `(wins + draws/2) / matches`. The objective is the weighted mean over
    the tuned bots (their space files' `weight`s).
 
 Every trial plays the **same pools with the same seeds** (common random numbers), so
@@ -62,7 +62,7 @@ The first trial of a new study is the bot's defaults (except with the grid sampl
 | `--sampler` | `tuning.sampler`: `tpe` (default), `grid` (each param's grid list; trials default to the whole grid), `random` (a baseline) |
 | `--timeout` | `tuning.timeout_s` (0: none) |
 
-- **Trials:** aim for about 30 × the number of params (summed over the space files).
+- **Trials:** aim for about 30 x the number of params (summed over the space files).
 - **Overfitting:** too few round robins per trial and TPE overfits those pools, which is
   what validation catches.
 - **Fixed setup:** a study keeps its setup (rounds, round robins, pool size, seed, the
@@ -81,7 +81,7 @@ Every validated configuration is **recorded** in the runs database's `tune_valid
 table. Each row holds:
 
 - the study and the run;
-- the trial it came from (−1 for the defaults) and its training score;
+- the trial it came from (-1 for the defaults) and its training score;
 - the champion's score vs the pool, with its 95% CI;
 - its **paired difference from the defaults' champion**, with a bootstrap CI (paired
   across a fleet's runs too, since they share pools and seeds).
@@ -109,7 +109,7 @@ stops cleanly, since every finished trial is already stored. The files:
 A bot's logic never changes under its filename, and its `defaults` are part of that
 logic. So:
 
-- keep a tuned configuration as a **variant** (`bots/x.yaml:NAME=value,...`), which works
+- keep a tuned configuration as a **variant** (`bots/l1/x.yaml:NAME=value,...`), which works
   anywhere a bot spec does; or
-- make it a **new bot**: `janken bot new x_tuned --from x`, then set its defaults, then
+- make it a **new bot**: `janken bot new x_tuned --from x_v1`, then set its defaults, then
   `janken evaluate` it against `x`.

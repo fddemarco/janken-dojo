@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** analyzed
 - **Kind:** evaluation
-- **Idea:** —
+- **Idea:** -
 - **Candidates:** `bots/gate_anti_first.yaml`
 - **Baselines:** `bots/replay_gate.yaml`
 - **Run:** `20261010-194831_0021-gate-anti-first-vs-replay-gate-real-experts`
@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_anti_first.yaml bots/replay_gate.yaml --r
 
 ## Results
 
-10 of 10 round robin(s) · pool 20 · 200 rounds/match · seed 574314134 · mode full
+10 of 10 round robin(s), pool 20, 200 rounds/match, seed 574314134, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_anti_first | 200 | 178-1-21 | 89.2% [84.2%, 92.8%] | +72.2 | 0 | 1863 ± 58 |
-| replay_gate | 200 | 172-2-26 | 86.5% [81.1%, 90.6%] | +62.7 | 0 | 1816 ± 66 |
+| gate_anti_first | 200 | 178-1-21 | 89.2% [84.2%, 92.8%] | +72.2 | 0 | 1863 +/- 58 |
+| replay_gate | 200 | 172-2-26 | 86.5% [81.1%, 90.6%] | +62.7 | 0 | 1816 +/- 66 |
 
 Paired comparisons:
 
-- `gate_anti_first − replay_gate = +2.8 pts [-2.0, +7.8]` over 200 shared matches: no significant difference
+- `gate_anti_first - replay_gate = +2.8 pts [-2.0, +7.8]` over 200 shared matches: no significant difference
 
 Weakest matchups of gate_anti_first: nash 16.7%, anti_advanced_bots 16.7%, biased 33.3%, geometry 62.5%, sims3_staller 71.4%, tpi_lite 80.0%.
 

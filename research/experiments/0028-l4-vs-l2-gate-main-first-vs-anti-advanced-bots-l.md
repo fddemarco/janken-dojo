@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_main_first.yaml bots/anti_advanced_bots.y
 
 ## Results
 
-100 of 100 round robin(s) · pool 6 · 200 rounds/match · seed 627683978 · mode candidates
+100 of 100 round robin(s), pool 6, 200 rounds/match, seed 627683978, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_main_first | 600 | 561-4-35 | 93.8% [91.6%, 95.5%] | +58.5 | 0 | 1778 ± 90 |
-| anti_advanced_bots | 600 | 524-5-71 | 87.8% [84.9%, 90.1%] | +19.6 | 0 | 1775 ± 93 |
+| gate_main_first | 600 | 561-4-35 | 93.8% [91.6%, 95.5%] | +58.5 | 0 | 1778 +/- 90 |
+| anti_advanced_bots | 600 | 524-5-71 | 87.8% [84.9%, 90.1%] | +19.6 | 0 | 1775 +/- 93 |
 
 Paired comparisons:
 
-- `gate_main_first − anti_advanced_bots = +6.1 pts [+3.0, +9.4]` over 600 shared matches: gate_main_first better
+- `gate_main_first - anti_advanced_bots = +6.1 pts [+3.0, +9.4]` over 600 shared matches: gate_main_first better
 
 Weakest matchups of gate_main_first: meta_smartbot 81.0%, smart_staller 89.5%, smartbot 95.0%, rps4_lite 97.5%, staller 100.0%, iocaine_lite 100.0%.
 

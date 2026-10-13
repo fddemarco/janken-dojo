@@ -1,0 +1,9 @@
+description: |
+  Rock -> paper -> scissors (STEP=1) or the reverse (STEP=2).
+defaults:
+  STEP: 1
+  NOISE: 0.05
+blueprint:
+  guards: [{Noise: {p: $NOISE}}]
+  core:
+    Heuristic: {signal: {Cycle: {step: $STEP}}, rotation: COPY}

@@ -1,0 +1,30 @@
+description: |
+  replay_hunter_gate, plus replays of four more learners and of rps4_lite in our seat (NORMAL replays).
+  As replay_hunter_wide_v1, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: backoff_family_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: mirror_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_matcher_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_wide_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

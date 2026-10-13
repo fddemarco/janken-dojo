@@ -1,0 +1,14 @@
+description: |
+  Probe (research only, never in the field): Rock, paper, scissors, repeated (period 3): how fast a bot locks onto the simplest pattern; a fixed or reactive bot (copycat, win-stay) gets nothing or loses.
+  It ignores the opponent; its final scores vs each bot are a fingerprint of that bot (research/probes.md).
+defaults: {}
+blueprint:
+  core:
+    Heuristic:
+      # moves: 0 rock, 1 paper, 2 scissors
+      signal:
+        Script:
+          moves: [
+          0, 1, 2
+          ]
+      rotation: COPY

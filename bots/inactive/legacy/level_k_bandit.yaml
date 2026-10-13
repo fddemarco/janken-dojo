@@ -1,0 +1,22 @@
+description: |
+  Replays of smartbot_sims from both seats at every rotation, Thompson sampled.
+
+  Two predictions: smartbot_sims_v2's likeliest move in the opponent's seat (Y)
+  and in ours (X), 256 Thompson draws each, each played all three ways (6 arms).
+  COPY X is smartbot_sims's own move; BEAT Y beats smartbot_sims; BEAT_BEAT X
+  beats anti_smartbot_sims; COPY Y beats double_bluff_gate's counter; the rest
+  cover the levels above. A decayed Dirichlet score and Thompson sampling follow
+  an opponent that switches levels mid-match within a few rounds; SHARP
+  multiplies the counts Thompson samples from (higher: commits harder).
+defaults:
+  ARM_DECAY: 0.85
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_sims_v2, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, draws: 256, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

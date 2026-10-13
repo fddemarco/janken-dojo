@@ -11,24 +11,36 @@ Run every command as `uv run janken ...`.
 
 ## 1. Read the state
 
+Read `research/theory/` first: the phase each paradigm is in (diversify or
+specialise), its open questions and its conjectures waiting for a test. Specialise
+only when the level's strong strategies are few and stay strong across their
+parameter variants (`theory/README.md`); otherwise diversify. Work bottom up by level
+(`research/README.md`, Research direction).
+
 ```bash
 uv run janken status                       # next step, open ideas, leaderboard
 uv run janken insight list                 # what is known
 uv run janken idea list --all              # what was tried (done / dropped)
 uv run janken lab leaderboard --rounds 200 # the current best candidates
 uv run janken lab report <best bot's latest run>   # its weakest matchups
+uv run janken species census               # species per level, and alike pairs
+uv run janken species list                 # every species and its lineage
 ```
 
-Then the background: `research/rps_kaggle.md` (techniques, §4–7) and `research/sources/`
+Then the background: `research/rps_kaggle.md` (techniques, section 4-7) and `research/sources/`
 (one card per external resource: claims vs evidence, ideas spawned).
 
 ## 2. Look for leverage
 
 - **Weakest matchups** of the best bot, against the strong opponents (metabots, the
-  staller family, geometry, iocaine, rps4). Headline scores saturate near 85–95%, so the
+  staller family, geometry, iocaine, rps4). Headline scores saturate near 85-95%, so the
   decisive information is there. Dig in:
   `janken lab query "SELECT ... FROM matches WHERE ..."` and `janken lab match A B` for
   transcripts.
+- **Diversity.** A level with few species (L1, L2, L3 alike), or alike pairs in the
+  `census`: ideas for a mechanism no species has yet are worth more than another
+  variant of a crowded family. Variants recorded in `research/species.md` show which
+  directions were already tried.
 - **Insight implications** not yet in the backlog.
 - **Dropped ideas** whose verdict suggested a variant.
 - **Techniques** from `rps_kaggle.md` / `sources/` the kit can express (or that need one

@@ -1,0 +1,13 @@
+description: |
+  Detects the opponent's period (1 to 12 rounds) and beats the move one period back.
+  Catches cycles of any length, which order-1 models and Cycle miss.
+defaults:
+  DECAY: 0.95
+  NOISE: 0.0
+blueprint:
+  guards:
+    - {Noise: {p: $NOISE}}
+    - {Opening: {rounds: 1, move: RANDOM_MOVE}}
+    - {OnInvalid: {action: CRASH_ACTION, scope: ANY, side: OPP}}
+  core:
+    Heuristic: {signal: {Period: {of: OPP, max_period: 12, decay: $DECAY}}, rotation: BEAT}

@@ -21,16 +21,16 @@ uv run janken lab experiment bots/sims3_staller.yaml bots/smartbot_sims3.yaml --
 
 ## Results
 
-200 of 200 round robin(s) · pool 20 · 200 rounds/match · seed 2523968947 · mode full
+200 of 200 round robin(s), pool 20, 200 rounds/match, seed 2523968947, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| smartbot_sims3 | 4000 | 3071-59-870 | 77.5% [76.2%, 78.8%] | +68.1 | 0 | 1746 ± 75 |
-| sims3_staller | 4000 | 3036-69-895 | 76.8% [75.4%, 78.0%] | +19.5 | 0 | 1740 ± 84 |
+| smartbot_sims3 | 4000 | 3071-59-870 | 77.5% [76.2%, 78.8%] | +68.1 | 0 | 1746 +/- 75 |
+| sims3_staller | 4000 | 3036-69-895 | 76.8% [75.4%, 78.0%] | +19.5 | 0 | 1740 +/- 84 |
 
 Paired comparisons:
 
-- `sims3_staller − smartbot_sims3 = -0.8 pts [-2.1, +0.6]` over 4000 shared matches: no significant difference
+- `sims3_staller - smartbot_sims3 = -0.8 pts [-2.1, +0.6]` over 4000 shared matches: no significant difference
 
 Weakest matchups of sims3_staller: ajax 47.6%, achilles 47.9%, nash 48.5%, tpi_lite 50.0%, smartbot_sims 51.3%, odysseus 51.3%.
 

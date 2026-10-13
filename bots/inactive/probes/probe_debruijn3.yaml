@@ -1,0 +1,14 @@
+description: |
+  Probe (research only, never in the field): A De Bruijn sequence of order 3 (27 moves, every 3 moves in a row once), repeated: bots that look 1-2 moves back score about 0; bots that look 3+ back, or find long repeats, learn it after one period.
+  It ignores the opponent; its final scores vs each bot are a fingerprint of that bot (research/probes.md).
+defaults: {}
+blueprint:
+  core:
+    Heuristic:
+      # moves: 0 rock, 1 paper, 2 scissors
+      signal:
+        Script:
+          moves: [
+          0, 0, 0, 1, 0, 0, 2, 0, 1, 1, 0, 1, 2, 0, 2, 1, 0, 2, 2, 1, 1, 1, 2, 1, 2, 2, 2
+          ]
+      rotation: COPY

@@ -1,0 +1,17 @@
+description: |
+  The MAIN_FIRST gatekeeper: smartbot_sims's arms first, the anti expert once it leads (NORMAL replays).
+  As gate_main_first_v2, its replays naming their move by estimate NORMAL instead of 256 Thompson draws: the same likely move, computed, about 10x cheaper (idea #50).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

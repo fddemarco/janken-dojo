@@ -13,6 +13,7 @@ from typing import Annotated
 import typer
 
 from .. import settings
+from . import arena, gauntlet, identify, profile
 from .options import (
     CFG,
     METRIC,
@@ -27,6 +28,7 @@ from .options import (
     Sampler,
     Split,
     about,
+    bot_path,
     budget_help,
     fail,
     lab_command,
@@ -45,9 +47,13 @@ dataset_app = typer.Typer(
 )
 app.add_typer(study_app, name="study")
 app.add_typer(dataset_app, name="dataset")
+app.add_typer(profile.app, name="profile")
+app.add_typer(gauntlet.app, name="gauntlet")
+app.command("arena")(arena.arena)
+app.command("identify")(identify.identify)
 
 QUERY_DB = Db(CFG.query.db)
-SPEC_HELP = "bot files, optionally with overrides: bots/x.yaml:NAME=value,NAME=value"
+SPEC_HELP = "bot files, optionally with overrides: bots/l1/x.yaml:NAME=value,NAME=value"
 
 
 def _seed(seed: int) -> int:
@@ -96,7 +102,12 @@ def experiment(
         workers=lab.workers or None,
         allow_small=lab.allow_small,
         use_mocks=lab.use_mocks,
+        variants=lab.variants,
+        spaces_dir=lab.spaces_dir,
+        pool_list=lab.pool_list,
         root=lab.workspace,
+        flush_s=CFG.execution.flush_s,
+        cache=CFG.runs.match_cache,
     )
     summary = analyze.analyze_run(run_id, lab.workspace)
     lab.emit(summary, analyze.render(summary))
@@ -116,7 +127,13 @@ def resume(
     from ..lab.experiment import resume_experiment
 
     try:
-        run_id = resume_experiment(run, lab.workspace, lab.workers or None)
+        run_id = resume_experiment(
+            run,
+            lab.workspace,
+            lab.workers or None,
+            flush_s=CFG.execution.flush_s,
+            cache=CFG.runs.match_cache,
+        )
     except ValueError as exc:  # a candidate's bot file is gone
         raise fail(str(exc)) from None
     summary = analyze.analyze_run(run_id, lab.workspace)
@@ -208,7 +225,7 @@ def calibrate(
     from ..lab.calibrate import calibrate as measure
     from ..lab.calibrate import level_wins
 
-    path = bot if bot.endswith(".yaml") else os.path.join(lab.bots_dir, bot + ".yaml")
+    path = bot_path(lab, bot)
     if not os.path.isfile(path):
         raise fail(f"no bot file {path}")
     rows = measure(path, lab.bots_dir, lab.rounds, seeds, _seed(lab.seed), lab.workers)
@@ -267,7 +284,9 @@ def query(
 @lab_command("lab space")
 def space(
     lab: Lab,
-    bots: Annotated[list[str], typer.Argument(help="bot files (bots/x.yaml) to tune")],
+    bots: Annotated[
+        list[str], typer.Argument(help="bot files (bots/l1/x.yaml) to tune")
+    ],
     weight: Annotated[float, typer.Option(help=about("space.weight"))] = (
         CFG.space.weight
     ),
@@ -357,6 +376,7 @@ def study_run(
             allow_small=lab.allow_small,
             use_mocks=lab.use_mocks,
             root=lab.workspace,
+            match_cache=CFG.runs.match_cache,
         ),
         Search(
             sampler=str(sampler),

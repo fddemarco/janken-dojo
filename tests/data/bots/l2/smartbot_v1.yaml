@@ -1,0 +1,37 @@
+description: |
+  Predictors x 3 arms, chosen by Thompson sampling (the Kaggle RPS 1st-place recipe).
+
+  18 cheap opponent-move predictors (frequency, n-grams on three histories,
+  longest match, relative-move models) each become three arms: beat the
+  prediction, beat the move that beats it, or play it (so we also beat opponents
+  who model us, and those who model our model). A bandit Thompson-samples a
+  decayed win/tie/loss Dirichlet per arm, and a random arm is the safety net.
+  The arms are blocks (bots/blocks/): frequency, ngram, longest_match, relative.
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        # smartbot's 18 opponent models, each played 3 ways
+        - {bot: frequency, arms: 2, space: {DECAY: [1.0, 0.9]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 10
+          space:
+            ORDER: [1, 2, 3, 4, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: longest_match
+          arms: 3
+          space: {MAX_LEN: $MAX_MATCH, CTX: [OPP, JOINT, MY]}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - bot: relative
+          arms: 3
+          space: {REF: [OPP, OPP, MY], BY_OUTCOME: [0, 1, 0], DECAY: $TABLE_DECAY}
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

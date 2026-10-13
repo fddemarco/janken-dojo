@@ -1,0 +1,30 @@
+description: |
+  A naive-Bayes posterior over the zoo's models of us.
+
+  frequency, markov2_joint, pattern_memory, period_detector,
+  rotation_outcome, score_reader and transition_matrix's most likely move, each
+  played from the opponent's side
+  (what it would play against us), three rotations each, and a NaiveBayes arm
+  combining them. Decayed net scores, greedy.
+defaults:
+  DECAY: 0.9
+  BAYES_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: markov2_joint_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: pattern_memory_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_detector_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rotation_outcome_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: score_reader_v1, side: OPP, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - bot: ngram  # transition_matrix, its most likely move
+          side: OPP
+          space: {ORDER: 1, CTX: OPP, DECAY: 0.95}
+          rotations: [BEAT, BEAT_BEAT, COPY]
+        - {NaiveBayes: {decay: $BAYES_DECAY}}
+      rotations: ALL_ROTATIONS
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

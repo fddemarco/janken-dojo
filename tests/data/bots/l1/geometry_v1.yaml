@@ -1,0 +1,17 @@
+description: |
+  Superant's "RPS Geometry", reduced to real arithmetic.
+
+  Moves are the cube roots of unity B_k = (cos 2*pi*k/3, sin 2*pi*k/3). The feature x
+  is the opponent move that followed the longest earlier repeat of the joint
+  history. A learned complex offset `a <- (1-ALPHA)*a + ALPHA*y*conj(x)`, where y
+  is the move that would have beaten the opponent, rotates x into our move:
+  z = x*a. z becomes probabilities p_k = (2*Re(z*conj(B_k)) + 1) / 3, clipped
+  at 0, and we SAMPLE from them: confident (|a| near 1) means nearly
+  deterministic, no pattern (|a| near 0) means nearly uniform.
+defaults:
+  ALPHA: 0.05
+  MAX_LEN: 20
+blueprint:
+  guards: [{OnInvalid: {action: RANDOM_ACTION, scope: ANY, side: BOTH}}]
+  core:
+    Heuristic: {signal: {Geometry: {alpha: $ALPHA, max_len: $MAX_LEN}}, rotation: BEAT}

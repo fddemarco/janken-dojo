@@ -1,0 +1,23 @@
+description: |
+  The same predictors at four memories, to track opponents that drift.
+
+  Frequency and order-1 and order-2 n-grams of the opponent's moves, each with
+  tables decayed at 1.0, 0.9, 0.7 and 0.5; three rotations each. Decayed net
+  scores, greedy: the time scale that currently fits the opponent wins.
+defaults:
+  DECAY: 0.9
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: frequency, arms: 4, space: {DECAY: [1.0, 0.9, 0.7, 0.5]}, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - bot: ngram
+          arms: 8
+          space:
+            ORDER: [1, 1, 1, 1, 2, 2, 2, 2]
+            CTX: OPP
+            DECAY: [1.0, 0.9, 0.7, 0.5, 1.0, 0.9, 0.7, 0.5]
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

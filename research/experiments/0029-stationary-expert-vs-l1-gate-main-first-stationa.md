@@ -21,16 +21,16 @@ uv run janken lab experiment bots/gate_main_first_stationary.yaml bots/gate_main
 
 ## Results
 
-20 of 20 round robin(s) · pool 17 · 200 rounds/match · seed 498489768 · mode candidates
+20 of 20 round robin(s), pool 17, 200 rounds/match, seed 498489768, mode candidates
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| gate_main_first | 340 | 307-2-31 | 90.6% [87.0%, 93.3%] | +109.7 | 0 | 1851 ± 52 |
-| gate_main_first_stationary | 340 | 307-1-32 | 90.4% [86.8%, 93.1%] | +111.2 | 0 | 1857 ± 38 |
+| gate_main_first | 340 | 307-2-31 | 90.6% [87.0%, 93.3%] | +109.7 | 0 | 1851 +/- 52 |
+| gate_main_first_stationary | 340 | 307-1-32 | 90.4% [86.8%, 93.1%] | +111.2 | 0 | 1857 +/- 38 |
 
 Paired comparisons:
 
-- `gate_main_first_stationary − gate_main_first = -0.1 pts [-3.7, +3.4]` over 340 shared matches: no significant difference
+- `gate_main_first_stationary - gate_main_first = -0.1 pts [-3.7, +3.4]` over 340 shared matches: no significant difference
 
 Weakest matchups of gate_main_first_stationary: geometry 37.5%, transition_matrix 50.0%, nash 60.0%, rotation_outcome 95.0%, biased 95.0%, markov2_joint 100.0%.
 

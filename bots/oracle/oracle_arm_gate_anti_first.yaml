@@ -1,0 +1,23 @@
+description: |
+  Research-only: gate_anti_first (the ANTI_FIRST gatekeeper) with its anti expert as a per-level Oracle arm.
+
+  smartbot_sims's arms plus, as the gated last arm, an Oracle that wins like
+  anti_smartbot_sims vs each opponent level (0.3367 / 0.4059 / 0.415 / 0.3681,
+  `janken lab calibrate anti_smartbot_sims`, 2026-10-11), so the gatekeeper sees
+  the anti expert's evidence without its 256-draw replay. A research candidate,
+  never drawn into a pool; it cheats: never in a tournament or an export.
+defaults:
+  EDGE: 0.05
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v1}
+      experts:
+        - bot: oracle_expert
+          space: {WIN_L1: 0.3367, WIN_L2: 0.4059, WIN_L3: 0.415, WIN_L4: 0.3681}
+      rule: ANTI_FIRST
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

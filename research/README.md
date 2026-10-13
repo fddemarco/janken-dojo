@@ -6,9 +6,9 @@ This folder is the lab notebook. Results live in `experiments/` (gitignored, loc
 ## The loop
 
 ```
-ideas.md ──► new bot (bots/x.yaml) ──► evaluate / tune ──► verdict
-   ▲                                                          │
-   └──── insights.md ◄── experiments/NNNN-*.md (keep / drop / iterate)
+ideas.md ---> new bot (bots/l1/x.yaml) ---> evaluate / tune ---> verdict ---> species (keep)
+   ^                                                                         |
+   +---- insights.md <--- experiments/NNNN-*.md (keep / drop / iterate) <------+
 ```
 
 Each step is one command (docs/cli.md), and each command keeps this notebook's books:
@@ -18,13 +18,16 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 1. **Pick or add an idea:** `janken idea add / start` (`/ideate`). Sources are the
    weakest matchups in recent reports, open items, and follow-ups in `insights.md`.
 1. **Write the bot:** `janken bot new` then `janken bot check` (`/build`).
-1. **Evaluate it:** `janken evaluate … --hypothesis …` (`/evaluate`). It writes the note
+1. **Evaluate it:** `janken evaluate ... --hypothesis ...` (`/evaluate`). It writes the note
    with its hypothesis **before** the run, plays it, and writes the results in. Tune it
    if it has knobs: `janken tune` (`/tune`).
-1. **Decide:** `janken verdict NNNN keep|drop|iterate --summary …`. This closes the note
+1. **Decide:** `janken verdict NNNN keep|drop|iterate --summary ...`. This closes the note
    and sets its idea's status.
-1. **Record insights** that hold up: `janken insight add --note NNNN …` (`/learn`). It
-   refuses evidence below the bar.
+1. **Classify a kept bot:** `janken species classify NNNN` (`/classify`). It becomes a
+   new species (`<name>_v1`), the next version of its level's closest species (the old
+   version retires), or a variant (it retires): one bot per species in the field.
+1. **Record insights**: `janken insight add --note NNNN [--note MMMM ...] ...` (`/learn`).
+   It cites the notes' stored results, marked tentative when no 95% CI excludes 0.
 
 `/lab-loop` runs this loop on its own, one commit per step.
 
@@ -36,14 +39,17 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 | `sources/<slug>.md` | one card per external resource: summary, claims vs evidence, relevance, ideas spawned |
 | `ideas.md` | the backlog: ideas with status, priority, and the evidence that motivated them |
 | `insights.md` | findings that held up, each linked to the experiment(s) behind it |
+| `theory/` | the theory the insights add up to: one file per RPS paradigm (L1 heuristics, aggregation, ...), its claims with their status (conjecture, supported, refuted), the diversify/specialise cycle, and a journal |
+| `l1_atlas.md` | the L1 species against each other: who beats whom, the gaps |
+| `species.md` | the field's species: each one's level, current version and lineage, and the variants that didn't beat it |
 | `experiments/NNNN-<slug>.md` | one note per experiment: hypothesis, command, run id, results, verdict |
 | `experiments/TEMPLATE.md` | the note template |
 
 ## Bot rules
 
 - **One anatomy.** Every bot is a blueprint of `janken/kit` stages, run by one
-  pipeline: guards → valid-only view → track → signals → rotations → scorer + selector →
-  overlays (`janken/kit/blueprint.py`). The bot file is YAML: a `description`, its
+  pipeline: guards --> valid-only view --> track --> signals --> rotations --> scorer + selector -->
+  overlays (`janken/kit/blueprint/`). The bot file is YAML: a `description`, its
   `defaults` and its `blueprint` (grammar in `janken/kit/declare.py`); `janken bot new`
   starts one from an existing bot.
 - **No logic in bots.** A new idea that the catalogue can't express becomes a new stage
@@ -53,7 +59,7 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
   `janken bot new` / `janken tune`)
   makes them tunable; it is not part of the bot.
 - **Randomness**: only `random.random()`, `random.randrange(n)` and
-  `random.gammavariate(a, 1.0)` inside compiled stages. The engine seeds them per match.
+  `random.gammavariate(a, 1.0)` inside compiled stages. The engine seeds them per match, one stream per side.
 - **A stem's logic never changes** under its filename once it has results; a new idea gets
   a new file. The same goes for a stage kind: add a kind or an option, never change one.
 
@@ -62,27 +68,88 @@ Each step is one command (docs/cli.md), and each command keeps this notebook's b
 All 33 bots were re-expressed as blueprints of a shared stage library, a one-time,
 deliberate exception to the rule above. Their ideas are the same, but their code and
 some details changed. Examples: staller's strategies no longer add word2janken's noise;
-rps4_lite always uses orders 0–3 (its MAX_ORDER knob is gone); ties are broken by the
+rps4_lite always uses orders 0-3 (its MAX_ORDER knob is gone); ties are broken by the
 stages' shared rules. Runs from before it are **not comparable** with runs after it.
 Manifests now record the kit/engine hash (`library`); older runs show as `pre-blueprint`
 in `analyze --history`. The insights below still describe the old code until idea #21
 re-baselines them.
 
+### 2026-10-12: one random stream per side
+
+Both bots of a match used to draw from one generator, seeded once per match, so a bot's
+draws depended on how many its opponent had made, and a bot could in principle replay its
+opponent's randomness. Now the kernel reseeds before each side moves, from (match seed,
+side, round), so each side has its own stream. Same seed, different moves: seeded runs from
+before this don't replay, and a run started before it can't be resumed (start a new one).
+Spot checks show no measurable change in strength (anti_smartbot_sims_v2 still wins ~42%
+of rounds vs smartbot_sims_v2 at 250 rounds), so past results stand as evidence.
+
+### 2026-10-12: levels by aggregation, arms named as bots
+
+The levels were redefined: L1 is a heuristic (no Bandit, no Gate), L2 a Bandit or Gate
+over L1s, L3 over L2s (and L1s), and so on, one level per aggregator. Every aggregator now
+names its arms as bots (`{bot: ngram, arms: 4, space: {...}}`); smartbot's 18 models and
+the other shared arms became the L1 blocks of `bots/blocks/`, and the kit presets were
+removed. Every rewritten bot plays the same moves as before and kept its level, so past
+results stand. Their source hashes changed, though: an interrupted run started before
+this can't be resumed (start a new one), and a tuning study started before warns that
+its bot changed.
+
 ### 2026-10-11: the field renamed and reorganised
 
-The bots were renamed for clarity (for example `advanced_bot` → `smartbot_sims`,
-`anti_advanced_bots` → `anti_smartbot_sims`, `replay_gate` → `gate_edge`), the legacy
-bots moved to `bots/legacy/` and the fleet to `bots/fleets/`, and duplicates were
-removed. The logic of every remaining bot is unchanged. The notes, ideas and insights
-keep the names that were current when they were written, and so does the runs database
+The bots were renamed for clarity (for example `advanced_bot` --> `smartbot_sims`,
+`anti_advanced_bots` --> `anti_smartbot_sims`, `replay_gate` --> `gate_edge`), the legacy
+bots moved to `bots/inactive/legacy/` and the fleet to `bots/inactive/fleets/`, duplicates were
+removed, and the field was split into one folder per level (`bots/l1/` ... `bots/oracle/`). The logic of every remaining bot is unchanged. The notes, insights and closed
+ideas keep the names that were current when they were written (open ideas name
+today's bots, with "(then `old_name`)" where a motivation cites a note), and so does the runs database
 (`lab history` and `lab leaderboard` list the old and the new names separately). The
 map from old names to new: [bots/README.md](../bots/README.md#renames) and
-[bots/legacy/README.md](../bots/legacy/README.md).
+[bots/inactive/legacy/README.md](../bots/inactive/legacy/README.md).
+
+### 2026-10-11: species and versions
+
+Every bot of the field became version 1 of its own species, `<stem>_v1` (logic
+unchanged; the Oracles and `bots/inactive/` keep their names). From now on a kept bot is
+classified (`janken species classify`, `/classify`): a new species, the next version of
+one (the old version retires), or a variant (it retires). The lineage is
+[species.md](species.md). Notes and runs keep the names that were current when they
+were written.
+
+## Research direction: bottom up, by level (2026-10-13)
+
+Work one level at a time, starting at L1, and move up only once the level is
+understood. Every level is built from the one below, and the evidence so far says a
+level gains most against the level just below it (insights of 2026-10-13), while
+expert-by-expert patches to the top bots move the pool score by about 2 pts, which
+pools can't resolve. For each level L:
+
+1. **Atlas.** What each species does, who it beats and who beats it, and why: an
+   L-and-below round robin (`janken tournament` or `janken lab experiment` on a pool
+   of those levels), read matchup by matchup (`janken lab report`).
+1. **Best responses.** For each species, the simplest bot that beats it, and whether
+   the level already holds one. A species nobody at its level beats is a gap to fill.
+1. **Diversity.** The strategy families the level covers (frequency, transitions,
+   patterns, periods, reactions to outcomes, the score, geometry, cycles, noise) and
+   the ones it lacks; every kit signal without a species of its own is a candidate.
+   New species fill gaps; near-copies are variants (`/classify`). A candidate with a
+   new mechanism is evaluated against its closest species, but naming a species'
+   current version as the baseline makes `janken species classify` take the
+   candidate as that species' next version (`species.promote_on_evaluation`): for a
+   new mechanism, classify it with that switch off for the run
+   (`janken config set --local species.promote_on_evaluation false`, then `unset`),
+   so it is judged by core agreement (note 0060).
+1. **Limits and strengths.** What the level can't do (an L1 has no memory of how
+   its predictions fared; an L2 can't model an opponent that models it), written as
+   insights, which say what the next level must add.
+
+Only then build L+1 from that understanding, evaluated against pools of levels L and
+below first, where its gain lives, then against the whole field.
 
 ## Experiment protocol
 
 - **Pool:** each round robin draws **20 random bots** from `bots/`, excluding the
-  candidates' own files, and plays a full round robin of pool ∪ candidates. Each round
+  candidates' own files, and plays a full round robin of pool + candidates. Each round
   robin draws a fresh pool.
 - **Knobs:** `--rounds` sets rounds per match (`match.rounds`, 200, the tournament
   standard). `--effort` sets how many pools to play: `standard` is 10 round robins, which
@@ -94,16 +161,16 @@ map from old names to new: [bots/README.md](../bots/README.md#renames) and
   Compare a new bot against its predecessor or a baseline inside the same run.
 - **Seeds:** `--seed` makes a run fully reproducible. The default, `-1`, draws a fresh
   seed and records it in the run's manifest.
-- **Metric:** the **match score** vs the pool, (W + ½D)/N, with a 95% Wilson CI. The
+- **Metric:** the **match score** vs the pool, (W + D/2)/N, with a 95% Wilson CI. The
   tournament rates only match results, so the round margin is secondary. Glicko-2
-  ratings are reported per round robin (mean ± SD).
+  ratings are reported per round robin (mean +/- SD).
 
 ### Reading results
 
 - Two candidates differ only when the **paired comparison CI excludes 0**. Overlapping
   score CIs between separate runs mean "no evidence".
-- 200 matches give a score CI of about ±6 points; for ±3 points, use 40 round robins.
-- The zoo has many trivially exploitable bots, so headline scores saturate near 85–95%. The
+- 200 matches give a score CI of about +/-6 points; for +/-3 points, use 40 round robins.
+- The zoo has many trivially exploitable bots, so headline scores saturate near 85-95%. The
   decisive information is in the **weakest matchups** table, against the strong bots
   (metabots, staller family, geometry, iocaine, rps4). Look there first.
 - Matchups have only one match per round robin, so a per-opponent score needs many round
@@ -111,7 +178,7 @@ map from old names to new: [bots/README.md](../bots/README.md#renames) and
 
 ## Tuning
 
-`janken tune bots/x.yaml --hypothesis …` runs **Optuna** over the bot's space file
+`janken tune bots/l1/x.yaml --hypothesis ...` runs **Optuna** over the bot's space file
 (`spaces/x.yaml`, scaffolded if missing; edit its ranges first), then validates and records
 the best trials in the note. `janken lab study run` does the same without a note:
 
@@ -132,8 +199,8 @@ the best trials in the note. `janken lab study run` does the same without a note
   tuned, all on the same seed). Tuning overfits its fixed pools, so only the
   validation run is evidence. Record that one.
 
-Why Optuna/TPE: the objective is noisy and cheap (about 0.1–1s per trial on numba), and
-the spaces mix ints, floats and categoricals with 1–8 dimensions. TPE handles mixed
+Why Optuna/TPE: the objective is noisy and cheap (about 0.1-1s per trial on numba), and
+the spaces mix ints, floats and categoricals with 1-8 dimensions. TPE handles mixed
 spaces and noise well, and parallelises through shared storage. Pruning plus common
 random numbers cut the noise and the cost. CMA-ES would need the `cmaes` package, which
 is not a dependency.

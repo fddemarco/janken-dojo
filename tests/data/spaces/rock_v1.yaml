@@ -1,0 +1,4 @@
+bot: tests/data/bots/l1/rock_v1.yaml
+weight: 1.0
+params:
+  NOISE: {type: float, low: 0.0, high: 0.5, grid: [0.0, 0.1, 0.25]}

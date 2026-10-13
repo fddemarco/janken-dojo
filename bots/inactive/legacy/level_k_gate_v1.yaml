@@ -1,0 +1,25 @@
+description: |
+  smartbot_sims, with replays of itself from both seats at every rotation, gated.
+
+  The main bandit is smartbot_sims_v2's. The gated experts replay smartbot_sims_v2
+  from the opponent's seat (its likeliest move Y, 256 Thompson draws) and from
+  ours (X), each played all three ways: BEAT Y beats smartbot_sims, BEAT_BEAT X
+  beats anti_smartbot_sims and gate_edge's anti expert, COPY Y beats
+  double_bluff_gate's counter, and the rest cover the levels above. A LEADER
+  gatekeeper hands play to whichever arm leads the current one by more than EDGE
+  (from round WARMUP on): no fixed level of reasoning for a specialist to exploit.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, draws: 256, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, draws: 256, rotations: [COPY, BEAT, BEAT_BEAT]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

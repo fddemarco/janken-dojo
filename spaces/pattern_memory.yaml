@@ -1,5 +1,0 @@
-bot: bots/pattern_memory.yaml
-weight: 1.0
-params:
-  MAX_LEN: {type: int, low: 1, high: 20, grid: [3, 6, 10, 15]}
-  NOISE: {type: float, low: 0.0, high: 0.5, grid: [0.0, 0.05, 0.2]}

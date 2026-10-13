@@ -21,16 +21,16 @@ uv run janken lab experiment bots/sims3_second.yaml bots/smartbot_sims3.yaml --r
 
 ## Results
 
-40 of 40 round robin(s) · pool 20 · 200 rounds/match · seed 3685861615 · mode full
+40 of 40 round robin(s), pool 20, 200 rounds/match, seed 3685861615, mode full
 
-| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating ± sd |
+| bot | n | W-D-L | score vs pool [95% CI] | rounds +/- | forfeits | rating +/- sd |
 |---|---|---|---|---|---|---|
-| smartbot_sims3 | 800 | 611-16-173 | 77.4% [74.3%, 80.1%] | +67.8 | 0 | 1746 ± 81 |
-| sims3_second | 800 | 594-17-189 | 75.3% [72.2%, 78.2%] | +67.3 | 0 | 1725 ± 65 |
+| smartbot_sims3 | 800 | 611-16-173 | 77.4% [74.3%, 80.1%] | +67.8 | 0 | 1746 +/- 81 |
+| sims3_second | 800 | 594-17-189 | 75.3% [72.2%, 78.2%] | +67.3 | 0 | 1725 +/- 65 |
 
 Paired comparisons:
 
-- `sims3_second − smartbot_sims3 = -2.1 pts [-5.4, +1.4]` over 800 shared matches: no significant difference
+- `sims3_second - smartbot_sims3 = -2.1 pts [-5.4, +1.4]` over 800 shared matches: no significant difference
 
 Weakest matchups of sims3_second: agamemnon 36.4%, hector 36.5%, achilles 37.5%, smartbot_bandit 40.7%, smart_staller 43.1%, tpi_lite 50.0%.
 

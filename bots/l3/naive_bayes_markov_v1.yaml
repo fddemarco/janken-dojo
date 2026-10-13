@@ -1,0 +1,27 @@
+description: |
+  Markov models of orders 1-3 on three histories, plus their naive-Bayes posterior.
+
+  Nine n-gram predictors (orders 1-3 over the opponent's, the joint and our
+  history) each make three arms; a NaiveBayes arm learns how each predictor's
+  symbol relates to the opponent's real move and multiplies that evidence into
+  one posterior. Decayed net scores, greedy.
+defaults:
+  DECAY: 0.9
+  TABLE_DECAY: 0.95
+  BAYES_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: ngram
+          arms: 9
+          space:
+            ORDER: [1, 2, 3, 1, 2, 3, 1, 2, 3]
+            CTX: [OPP, OPP, OPP, JOINT, JOINT, JOINT, MY, MY, MY]
+            DECAY: $TABLE_DECAY
+          rotations: [COPY, BEAT, BEAT_BEAT]
+        - {NaiveBayes: {decay: $BAYES_DECAY}}
+      rotations: ALL_ROTATIONS
+      scorer: {DecayedNet: {decay: $DECAY}}
+      random_arm: RA_PINNED
+      selector: {Greedy: {ties: TIES_RANDOM}}

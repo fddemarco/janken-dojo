@@ -9,7 +9,7 @@ uv run janken tournament [options]
 ```
 
 Besides the [common flags](cli.md#the-common-flags) (`--bots-dir`, `--rounds`, `--seed`,
-`--workers`, …), it takes:
+`--workers`, ...), it takes:
 
 | option | default (`janken.toml`) | what it does |
 | --- | --- | --- |
@@ -46,7 +46,7 @@ uv run janken tournament --bots-dir my_bots/ --verbose
 Nothing persists between runs. Every bot enters at **1500**, and the whole run is **one
 Glicko-2 rating period**: every match is scored against the ratings the bots brought in,
 so the order matches finish in can't change the result. Matches are scored on **who won
-the match** (1 / ½ / 0); a forfeit is a loss. The standings rank by rating, and the run's
+the match** (1 / 0.5 / 0); a forfeit is a loss. The standings rank by rating, and the run's
 points (3 a win, 1 a draw) break ties.
 
 A title is read off the rating; each one is the bot's "league":

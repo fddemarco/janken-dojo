@@ -3,63 +3,56 @@ change results."""
 
 import contextlib
 import io
-import os
-import unittest
-from unittest import mock
+
+import pytest
 
 from janken import progress, settings
 from janken.engine import play_in_batches, play_pairs
 from janken.spec import make_spec
-
-ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+from tests import data
 
 
 def bot(stem: str) -> str:
-    return os.path.join(ROOT, "bots", stem + ".yaml")
+    return data.bot(stem)
 
 
-class ProgressTest(unittest.TestCase):
-    def test_bars_are_off_off_a_terminal(self) -> None:
+class TestProgress:
+    def test_bars_are_off_off_a_terminal(self, monkeypatch: pytest.MonkeyPatch) -> None:
         err = io.StringIO()
-        with (
-            contextlib.redirect_stderr(err),
-            mock.patch.dict(os.environ, {}, clear=False),
-        ):
-            os.environ.pop(settings.PROGRESS_ENV, None)
-            self.assertFalse(progress.enabled())
+        monkeypatch.delenv(settings.PROGRESS_ENV, raising=False)
+        with contextlib.redirect_stderr(err):
+            assert not progress.enabled()
             with progress.bar(3, "x", "step") as bar:
                 bar.update(3)
-        self.assertEqual(err.getvalue(), "")
+        assert err.getvalue() == ""
 
-    def test_bars_show_when_turned_on(self) -> None:
+    def test_bars_show_when_turned_on(self, monkeypatch: pytest.MonkeyPatch) -> None:
         err = io.StringIO()
-        with (
-            contextlib.redirect_stderr(err),
-            mock.patch.dict(os.environ, {settings.PROGRESS_ENV: "on"}),
-        ):
+        monkeypatch.setenv(settings.PROGRESS_ENV, "on")
+        with contextlib.redirect_stderr(err):
             with progress.bar(2, "steps", "step") as bar:
                 bar.update(2)
             progress.log("a line")
-        self.assertIn("steps", err.getvalue())
-        self.assertIn("a line", err.getvalue())
+        assert "steps" in err.getvalue()
+        assert "a line" in err.getvalue()
 
 
-class InterruptedTest(unittest.TestCase):
+class TestInterrupted:
     def test_ctrl_c_is_told_apart_from_errors(self) -> None:
-        self.assertTrue(progress.interrupted(KeyboardInterrupt()))
+        assert progress.interrupted(KeyboardInterrupt())
         try:
             try:
                 raise KeyboardInterrupt
             except KeyboardInterrupt as cause:
                 raise SystemError("returned a result with an exception set") from cause
         except SystemError as wrapped:
-            self.assertTrue(progress.interrupted(wrapped))
-        self.assertFalse(progress.interrupted(SystemError("a real one")))
+            assert progress.interrupted(wrapped)
+        assert not progress.interrupted(SystemError("a real one"))
 
 
-class BatchesTest(unittest.TestCase):
+class TestBatches:
     def test_batches_cover_every_match_and_change_nothing(self) -> None:
-        pairs = [(make_spec(bot("cycler")), make_spec(bot("wsls")))] * 5
+        pairs = [(make_spec(bot("cycler_v1")), make_spec(bot("wsls_v1")))] * 5
         seeds = [1, 2, 3, 4, 5]
         whole = play_pairs(pairs, 8, seeds)
         spans = []
@@ -67,9 +60,5 @@ class BatchesTest(unittest.TestCase):
         for span, results in play_in_batches(pairs, 8, seeds, 2):
             spans.append(span)
             batched += results
-        self.assertEqual(spans, [range(2), range(2, 4), range(4, 5)])
-        self.assertEqual([m.moves for m in batched], [m.moves for m in whole])
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert spans == [range(2), range(2, 4), range(4, 5)]
+        assert [m.moves for m in batched] == [m.moves for m in whole]

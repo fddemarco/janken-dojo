@@ -34,13 +34,15 @@ import tempfile
 import types
 from collections.abc import Callable, Iterable
 
-from .. import _numba_cache, botfile, mocks, settings
+import numpy as np
+
+from .. import _numba_cache, botfile, library, mocks, settings
 from ..kit import codes as c
-from ..kit import declare, levels
+from ..kit import levels
 from ..kit.blueprint import Blueprint, Compiled
 from ..match import bot_name
 from . import kernel
-from .registry import discover, module_name, param_names
+from .registry import discover, field_root, module_name, param_names
 
 DISPATCH_MARKER = "# --- dispatch"
 
@@ -59,7 +61,7 @@ class BlueprintBot:
 
     @property
     def key(self) -> str:
-        return f"{bot_name(self.path)}:{botfile.source_hash(self.path)}"
+        return f"{bot_name(self.path)}:{library.source_hash(self.path)}"
 
     def new_state_source(self) -> list[str]:
         """The body of its `new_state(code, rounds)` branch: Compiled.new_state."""
@@ -119,7 +121,8 @@ EngineBot = BlueprintBot | KernelModule
 @dataclasses.dataclass(frozen=True)
 class CompiledBots:
     codes: dict[str, int]  # bot path -> its code in the dispatcher
-    play_batch: Callable[..., tuple]  # kernel.play_batch, compiled against these bots
+    play_batch: Callable[..., None]  # kernel.play_batch, compiled against these bots
+    costs: dict[str, float]  # bot path -> its relative cost per round (`cost`)
 
 
 _engines: dict[str, types.ModuleType] = {}  # generated module name -> module
@@ -139,13 +142,38 @@ def compile_bots(paths: Iterable[str]) -> CompiledBots:
     return CompiledBots(
         codes={p: k for k, p in enumerate(every)},
         play_batch=_engines[name].play_batch,
+        costs={p: cost(b) for p, b in zip(every, bots, strict=True)},
     )
 
 
+def cost(bot: EngineBot) -> float:
+    """A bot's relative cost per round, to spread the heavy matches over the cores:
+    its arms, plus every replay's arms, times three gamma draws per arm for every
+    Thompson draw a replay takes (what dominates an L3+ replay bot's time)."""
+    if not isinstance(bot, BlueprintBot):
+        return 1.0
+    spec = bot.compiled.spec
+    return _ensemble_cost(spec, int(spec[c.H_CORE]))
+
+
+def _ensemble_cost(spec: np.ndarray, e: int) -> float:
+    arms = int(spec[e + c.E_NARMS]) + 1
+    total = float(arms)
+    for s in range(int(spec[e + c.E_NSIG])):
+        r = int(spec[e + c.E_SIG_AT]) + s * c.REC
+        if spec[r + c.R_KIND] == c.S_REPLAY:
+            sub = int(spec[r + c.R_SUB])
+            draws = int(spec[r + c.R_A])
+            total += _ensemble_cost(spec, sub)
+            total += 3.0 * draws * (int(spec[sub + c.E_NARMS]) + 1)
+    return total
+
+
 def with_neighbours(paths: Iterable[str]) -> list[str]:
-    """`paths` plus every bot file in their directories, normalised and sorted."""
+    """`paths` plus every bot their directories' discovery finds (the whole field
+    for a bot in a level folder), normalised and sorted."""
     normal = {os.path.normpath(p) for p in paths}
-    folders = {os.path.dirname(p) or "." for p in normal}
+    folders = {field_root(p) for p in normal}
     return sorted(normal | {p for folder in folders for p in discover(folder)})
 
 
@@ -174,7 +202,7 @@ def load_bot(path: str) -> EngineBot:
     """
     if botfile.is_kernel_module(path):
         return _load_kernel_module(path)
-    return _load_blueprint_bot(path, botfile.source_hash(path))
+    return _load_blueprint_bot(path, library.source_hash(path))
 
 
 @functools.cache
@@ -183,7 +211,7 @@ def _load_blueprint_bot(path: str, sha256: str) -> BlueprintBot:
     try:
         param_names(path)
         bot = botfile.read(path)
-        blueprint = declare.blueprint_from_data(bot.blueprint)
+        blueprint = library.read_blueprint(path)
         compiled = blueprint.compile(bot.defaults)
     except (ValueError, TypeError) as exc:
         raise BotContractError(f"{path}: {exc}") from exc

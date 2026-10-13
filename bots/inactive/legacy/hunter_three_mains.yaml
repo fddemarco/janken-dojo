@@ -1,0 +1,32 @@
+description: |
+  replay_hunter_wide_v2 plus two more mains played as experts (l2_council_v1 and multiscale_council_v1 from our seat, COPY only), so the gate can leave a main that the opponent counters.
+  Hypothesis (note 0087): each single main has a counter in the field; with three mains to play, the gate follows whichever wins.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: smartbot_sims_v2, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: backoff_family_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: mirror_bandit_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_matcher_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_wide_v1, side: OPP, estimate: NORMAL, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: l2_council_v1, side: MY, estimate: NORMAL, rotations: [COPY]}
+        - {bot: multiscale_council_v1, side: MY, estimate: NORMAL, rotations: [COPY]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

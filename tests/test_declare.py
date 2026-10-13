@@ -8,7 +8,7 @@ import pytest
 import yaml
 
 from janken.kit import bot
-from janken.kit.blueprint import Blueprint, BlueprintError, refs
+from janken.kit.blueprint import Blueprint, BlueprintError, Gatekeeper, refs
 from janken.kit.declare import blueprint_from_data, symbol
 
 # The bots the declarations below name, by stem: L1 heuristics, an L2 bandit, a
@@ -242,6 +242,46 @@ class TestReference:
         assert isinstance(core, bot.Bandit)
         assert len(core.predictors) == 2
 
+    def test_a_gate_bot_is_an_arm_replayed_with_its_gatekeeper(self) -> None:
+        (arm,) = arms("[{bot: gated, side: OPP}]")
+        assert isinstance(arm, bot.Rotated)
+        replay = arm.signal
+        assert isinstance(replay, bot.Replay)
+        assert isinstance(replay.bandit.selector, Gatekeeper)
+        assert len(replay.bandit.predictors) == 2  # the main arm, the gated expert
+
+    def test_inner_draws_cap_the_replays_a_replayed_bot_holds(self) -> None:
+        shelf = Shelf(
+            {
+                **SHELF,
+                "deep": """
+                    blueprint:
+                      core:
+                        Bandit:
+                          predictors: [{bot: board, side: OPP, draws: 256}]
+                          scorer: {Dirichlet: {decay: 0.9}}
+                          selector: Thompson
+                """,
+            }
+        )
+
+        def inner(text: str) -> int:
+            core = blueprint_from_data(yaml.safe_load(text), shelf).core
+            assert isinstance(core, bot.Bandit)
+            (arm,) = core.predictors
+            assert isinstance(arm, bot.Rotated)
+            replay = arm.signal
+            assert isinstance(replay, bot.Replay)
+            (held,) = replay.bandit.predictors
+            assert isinstance(held, bot.Rotated)
+            assert isinstance(held.signal, bot.Replay)
+            return held.signal.draws
+
+        bandit_of = "core: {{Bandit: {{predictors: [{{bot: deep, draws: 8{}}}]}}}}"
+        assert inner(bandit_of.format("")) == 256
+        assert inner(bandit_of.format(", inner_draws: 32")) == 32
+        assert inner(bandit_of.format(", inner_draws: 1000")) == 256
+
     def test_choose_selector(self) -> None:
         assert bandit("""
                 core:
@@ -302,7 +342,6 @@ class TestError:
         )
 
     def test_what_cannot_be_an_arm(self) -> None:
-        assert_refused("core: {Bandit: {predictors: [{bot: gated}]}}", "a Gate")
         assert_refused("core: {Bandit: {predictors: [{bot: nash}]}}", "at random")
         assert_refused("core: {Bandit: {predictors: [{bot: nobody}]}}", "nobody")
         assert_refused("core: {Bandit: {predictors: [{bot: loop_a}]}}", "cycle")

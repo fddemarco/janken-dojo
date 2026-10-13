@@ -248,6 +248,39 @@ def _leader(
 
 
 @kernel
+def gated_arms(spec: np.ndarray, sel: int) -> int:
+    """How many gated arms Gatekeeper record `sel` keeps (the bandit's last ones)."""
+    if spec[sel + c.R_A] == c.LEADER or spec[sel + c.R_A] == c.LEADER_PRIORITY:
+        return spec[sel + c.R_B]
+    return 1
+
+
+@kernel
+def played_gated(
+    spec: np.ndarray, sel: int, f: np.ndarray, i: np.ndarray, kn: np.ndarray, rn: int
+) -> bool:
+    """Whether Gatekeeper record `sel`, having just picked raw round rn's move,
+    played a gated expert's move rather than the main bandit's (a replayed Gate
+    names the main bandit's likely move instead of one Thompson sample of it)."""
+    rule = spec[sel + c.R_A]
+    at = spec[sel + c.R_I]
+    if rule == c.LEADER or rule == c.LEADER_PRIORITY:
+        current = i[at + 2]
+        return current != 0 and i[at + 3 + current] >= 0
+    if i[at] < 0:
+        return False
+    if rule == c.EDGE:
+        kk = spec[sel + c.R_K]
+        warm = rn >= kn[kk + 2]
+        return warm and value(c.SC_DIRICHLET, f, spec[sel + c.R_F]) > kn[kk]
+    if rule == c.MAIN_FIRST:
+        return i[at + 4] == 1
+    if rule == c.ANTI_FIRST or rule == c.ANTI_FIRST_HOLD:
+        return i[at + 4] == 0
+    return False  # BANDIT: a draw between the two records, not kept
+
+
+@kernel
 def _vote(
     spec: np.ndarray, sel: int, e: int, f: np.ndarray, i: np.ndarray, kn: np.ndarray
 ) -> int:

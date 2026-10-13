@@ -1,0 +1,27 @@
+description: |
+  sampled_markov_v1 without the sampling: a model of it, to be replayed.
+
+  sampled_markov_v1's bandit (six n-gram tables of orders 1-2 over the opponent's,
+  the joint and its own history, Thompson over their three rotations), each table
+  naming its likeliest move instead of a sample of it. Replayed from the
+  opponent's seat it names sampled_markov's likeliest move, which a bot can beat;
+  the sampler's real move is a draw around it. Never in a pool (inactive).
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  SHARP: 0.5
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - bot: ngram
+          arms: 6
+          space:
+            ORDER: [1, 2, 1, 2, 1, 2]
+            CTX: [OPP, OPP, JOINT, JOINT, MY, MY]
+            DECAY: $TABLE_DECAY
+            SAMPLE: 0
+          rotations: [COPY, BEAT, BEAT_BEAT]
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

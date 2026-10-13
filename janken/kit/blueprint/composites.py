@@ -24,7 +24,7 @@ from .. import codes as c
 from .base import Value, check
 from .predictor import Composite, Decorator, Predictor
 from .scorers import Dirichlet, NoScore, Scorer
-from .selectors import ChooseSelector, First, Selector
+from .selectors import ChooseSelector, First, Gatekeeper, Selector
 from .signals import Rotated, Signal, Sim
 
 
@@ -35,8 +35,11 @@ class Replay(Decorator, Signal):
     bot. The symbol is its most likely move, read from its arms' records (its own
     selector isn't run): the arm with the best score, or, with `draws` > 0, the move
     Thompson sampling picks most often in that many draws of every arm's Dirichlet
-    (a scored random arm counts for each move). Bot files name it as an arm
-    (refs.py), never directly."""
+    (a scored random arm counts for each move). A replayed Gate (a bandit lowered
+    with its Gatekeeper, lowering.py) is the exception: its gatekeeper runs, with
+    its own records, and the symbol is the gated expert's move while the gate
+    plays one, else the main bandit's likely move (its arms only). Bot files name
+    it as an arm (refs.py), never directly."""
 
     kind: ClassVar[int] = c.S_REPLAY
     declarable: ClassVar[bool] = False
@@ -56,6 +59,11 @@ class Replay(Decorator, Signal):
         check(
             self.draws == 0 or isinstance(self.bandit.scorer, Dirichlet),
             "Replay draws sample a Dirichlet: use the Dirichlet scorer",
+        )
+        check(
+            not isinstance(self.bandit.selector, Gatekeeper)
+            or isinstance(self.bandit.scorer, Dirichlet),
+            "a replayed Gate's gatekeeper samples a Dirichlet: use the Dirichlet scorer",
         )
 
 

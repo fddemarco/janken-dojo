@@ -57,6 +57,7 @@ status --> idea --> bot new / check --> evaluate --> verdict --> species classif
 | `janken tune BOT... [--support BOT...] --hypothesis ...` | a new note, the study, its validation written into the note |
 | `janken species classify NOTE [--name NAME]` | a kept bot: a new species (`<name>_v1`), the next version of its level's closest species (the old one retires), or a variant (it retires) |
 | `janken species compare BOT / census / list` | how alike a bot's core is to each species; the field's alike pairs and species per level; the lineage (`research/species.md`) |
+| `janken species variants LIST OUT` | which parameter variants of field bots (a list of specs) agree with no species of their level: new bots by the species rule |
 | `janken verdict NOTE keep\|drop\|iterate --summary ...` | close the note; its idea becomes done, dropped or stays open |
 | `janken insight add --note NOTE ...` | record an insight, **only** if the note's evidence meets the bar |
 | `janken insight list / supersede` | read, or strike a contradicted insight |
@@ -134,6 +135,9 @@ Where flags apply differently:
 | `lab predict BOT...` / `lab predict-tune SPACE... --study NAME` | bots as next-move predictors |
 | `lab profile run -- COMMAND...` / `lab profile bench -- COMMAND...` | a command's hotspots and whether fixing them pays; its wall time, vs a `--baseline` |
 | `lab profile list` / `lab profile show ID` / `lab profile spans` | stored profiles; the timing spans every command logs, slow ones flagged |
+| `lab gauntlet variations OUT` | the field's bots and up to `gauntlet.per_bot` parameter variants of each (drawn from its space file, kept only if they change its play), one spec per line |
+| `lab gauntlet nash LIST OUT --name LOG` | which bots of a list are Nash "with extra steps": no probe L1 (`gauntlet.nash_probes`) skews their results either way |
+| `lab gauntlet run LIST --cand BOT... --name LOG` | candidates vs every opponent of a list, `gauntlet.seeds` seeds each; the opponents under `gauntlet.threshold` of rounds won (logged per match in the workspace, so it resumes) |
 
 ```bash
 uv run janken lab query "SELECT bot_a, bot_b, wins_a, wins_b FROM matches

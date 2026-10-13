@@ -29,7 +29,7 @@ ALL_ROTATIONS = (c.BEAT, c.BEAT_BEAT, c.COPY)  # Iocaine's P0, P1, P2
 MAX_NGRAM_ORDER = 4
 
 
-MAX_REPLAY_DEPTH = 2  # a replay may contain replays, which may not
+MAX_REPLAY_DEPTH = 3  # replays nest three deep (an L5 replaying an L4)
 
 
 class BlueprintError(ValueError):

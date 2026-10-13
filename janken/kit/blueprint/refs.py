@@ -18,6 +18,9 @@ the parameters of every arm it makes of it (declare.py reads the mapping):
                 would play it (a model of us), so BEAT beats its move
     draws       a replayed bot of level 2+: its move by that many Thompson draws
     random_arm  a replayed bot of level 2+: its random arm replaced (RA_NONE, ...)
+    inner_draws a replayed bot of level 3+: the draws of the replays it holds
+                capped (theirs kept when fewer, a best arm's left as is); Thompson
+                draws are what a replay costs, so a model of an L4 is cheaper
 
 An instance is the referenced bot's core, its knobs bound (binding.py), its guards
 and overlays left out (they are about playing the game, not about predicting):
@@ -38,17 +41,29 @@ import typing
 from collections.abc import Mapping
 
 from .. import codes as c
+from . import lowering
 from .anatomy import Blueprint
 from .base import ROTATIONS, BlueprintError, Value, check, check_side
 from .binding import bind, structural_names
-from .composites import Bandit, Gate, Replay
+from .composites import Bandit, Gate, NaiveBayes, Replay
 from .heuristic import Heuristic, Silent
 from .predictor import Predictor
 from .signals import Rotated, Signal, Sim
 
-KEEP = -1  # random_arm: the referenced bot's own
+KEEP = -1  # random_arm, inner_draws: the referenced bot's own
 
-KEYS = ("bot", "arms", "space", "rotations", "side", "draws", "random_arm")
+P = typing.TypeVar("P", bound=Predictor)
+
+KEYS = (
+    "bot",
+    "arms",
+    "space",
+    "rotations",
+    "side",
+    "draws",
+    "random_arm",
+    "inner_draws",
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -62,6 +77,7 @@ class Reference:
     side: int = c.MY
     draws: int = 0
     random_arm: int = KEEP
+    inner_draws: int = KEEP
 
 
 @dataclasses.dataclass(frozen=True)
@@ -105,7 +121,10 @@ def core(ref: Reference, library: Library) -> Predictor:
     target = library.bot(ref.bot)
     check(ref.arms == 1, f"{ref.bot}: a core is one instance")
     check(
-        not ref.rotations and ref.side == c.MY and ref.draws == 0,
+        not ref.rotations
+        and ref.side == c.MY
+        and ref.draws == 0
+        and ref.inner_draws == KEEP,
         f"{ref.bot}: a core plays as it is: no rotations, side or draws",
     )
     (bound,) = _instances(ref, target)
@@ -171,12 +190,18 @@ def _check_literal(stem: str, core: Predictor, values: Mapping[str, Value]) -> N
 def _arm(ref: Reference, core: Predictor) -> Rotated:
     if isinstance(core, Heuristic):
         return _heuristic_arm(ref, core)
+    if isinstance(core, Gate):  # replayed as it plays: its gatekeeper runs
+        core = lowering.lower(core)
     if isinstance(core, Bandit):
         replayed = _with_random_arm(core, ref.random_arm)
+        if ref.inner_draws != KEEP:
+            check(ref.inner_draws >= 0, f"{ref.bot}: inner_draws must be >= 0")
+            replayed = _capped(replayed, ref.inner_draws)
         rotations = _rotations(ref, 0)
         return Rotated(Replay(replayed, ref.draws, ref.side), rotations)
-    kind = "a Gate" if isinstance(core, Gate) else type(core).__name__
-    raise BlueprintError(f"{ref.bot}: its core is {kind}, which can't be an arm")
+    raise BlueprintError(
+        f"{ref.bot}: its core is {type(core).__name__}, which can't be an arm"
+    )
 
 
 def _heuristic_arm(ref: Reference, core: Heuristic) -> Rotated:
@@ -199,6 +224,24 @@ def _heuristic_arm(ref: Reference, core: Heuristic) -> Rotated:
     # A Sim's symbol beats its prediction of us (rotation BEAT): their move is it,
     # turned by what their rotation adds to BEAT.
     return Rotated(Sim(signal), _rotations(ref, rotation - c.BEAT))
+
+
+def _capped(node: P, cap: int) -> P:
+    """`node` with the draws of every replay below it capped at `cap`."""
+    if isinstance(node, Replay):
+        draws = min(node.draws, cap) if node.draws > 0 else 0
+        return dataclasses.replace(node, bandit=_capped(node.bandit, cap), draws=draws)
+    if isinstance(node, Bandit):
+        return dataclasses.replace(
+            node, predictors=tuple(_capped(p, cap) for p in node.predictors)
+        )
+    if isinstance(node, Rotated | Sim):
+        return dataclasses.replace(node, signal=_capped(node.signal, cap))
+    if isinstance(node, NaiveBayes):
+        return dataclasses.replace(
+            node, inputs=tuple(_capped(p, cap) for p in node.inputs)
+        )
+    return node
 
 
 def _rotations(ref: Reference, base: int) -> tuple[int, ...]:

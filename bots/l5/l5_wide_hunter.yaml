@@ -1,0 +1,49 @@
+description: |
+  Every learner and L4 gatekeeper of the field replayed, one level up, LEADER.
+
+  smartbot_sims_v2's main bandit; gated experts: smartbot_sims_v2 from both seats,
+  thirteen L2/L3 learners from their seat (rps4_lite from ours), the four L4
+  gatekeepers from theirs, every replay played all three ways, and the shared
+  experts below. LEADER hands play to whichever expert leads by more than EDGE.
+
+  Shared experts: a frequency specialist (the opponent's most frequent move
+  beaten, undecayed and decayed 0.97: a biased coin), and counters to the samplers
+  (transition_matrix's model at four decays, geometry's at three alphas,
+  sampled_markov's likeliest move by its unsampled twin sampled_markov_mode).
+  L4s are replayed as their gatekeeper plays (inner replays at 32 draws).
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: frequency_v1, arms: 2, space: {DECAY: [1.0, 0.97]}}
+        - {bot: ngram, arms: 4, side: OPP, space: {ORDER: 1, CTX: OPP, DECAY: [0.6, 0.8, 0.95, 1.0]}, rotations: [BEAT, BEAT_BEAT]}
+        - {bot: geometry, arms: 3, side: OPP, space: {ALPHA: [0.02, 0.05, 0.15], MAX_LEN: 20, SAMPLE: 0}, rotations: [BEAT, BEAT_BEAT]}
+        - {bot: sampled_markov_mode, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT]}
+        - {bot: smartbot_sims_v2, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_sims_v2, side: MY, draws: 64, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: backoff_family_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_fast_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: period_bandit_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: l2_council_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: counter_council_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: vote_council_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: mirror_bandit_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: dropswitch_matcher_v1, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: smartbot_wide_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rps4_lite_v1, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: multiscale_council_v1, side: OPP, draws: 64, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_wide_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: replay_hunter_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: level_k_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: double_bluff_gate_v1, side: OPP, draws: 64, inner_draws: 32, rotations: [BEAT, BEAT_BEAT, COPY]}
+      rule: LEADER
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

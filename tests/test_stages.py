@@ -314,6 +314,53 @@ class TestReplaySide:
         assert nested(bot.OPP, bot.MY) == P
         assert nested(bot.OPP, bot.OPP) == R  # swapped twice: our side again
 
+    def test_a_replay_three_deep_swaps_its_side_at_every_level(self) -> None:
+        def nested(sides: tuple[int, int, int]) -> int:
+            ensemble = rock_or_paper()
+            for side in sides[:0:-1]:
+                ensemble = bot.Bandit(
+                    (bot.Replay(ensemble, side=side),),
+                    rotations=(bot.COPY,),
+                    scorer=bot.DecayedNet(1.0),
+                )
+            runner = replaying(bot.Replay(ensemble, side=sides[0]))
+            return runner.last(self.MY_MOVES, self.OPP_MOVES)
+
+        assert nested((bot.MY, bot.MY, bot.MY)) == R
+        assert nested((bot.OPP, bot.MY, bot.MY)) == P
+        assert nested((bot.OPP, bot.OPP, bot.MY)) == R
+        assert nested((bot.OPP, bot.OPP, bot.OPP)) == P  # swapped three times
+
+
+class TestReplayedGate:
+    """A Gate replayed runs its gatekeeper: the gated expert's move while the gate
+    plays it, else the main bandit's likely move, never the gated expert's. Its
+    opponent plays scissors: the main arm (paper) loses, the expert (rock) wins."""
+
+    MY_MOVES, OPP_MOVES = [P] * 6, [S] * 6
+
+    def symbol(self, warmup: int) -> int:
+        gate = bot.Gate(
+            main=bot.Bandit(
+                (bot.Constant(P),),
+                rotations=(bot.COPY,),
+                scorer=bot.Dirichlet(1.0),
+                selector=bot.Thompson(),
+            ),
+            experts=(bot.Constant(R),),
+            rule=bot.LEADER,
+            edge=0.0,
+            warmup=warmup,
+        )
+        runner = replaying(bot.Replay(blueprint.lowering.lower(gate), side=bot.MY))
+        return runner.last(self.MY_MOVES, self.OPP_MOVES)
+
+    def test_it_names_the_gated_expert_once_the_gate_plays_it(self) -> None:
+        assert self.symbol(warmup=0) == R
+
+    def test_it_names_the_main_bandit_before_the_gate_opens(self) -> None:
+        assert self.symbol(warmup=100) == P
+
 
 def longest_match_by_scan(stream: Sequence[int], max_len: int, n: int) -> int:
     """The matcher's definition, by brute force (the algorithm the index replaced):

@@ -99,10 +99,11 @@ class TestValidation:
         assert_refused(thompson(bot.Dirichlet(0.9), bot.RA_PINNED))
         thompson(bot.Dirichlet(0.9), bot.RA_SCORED).compile({})
 
-    def test_replays_nest_two_deep_and_need_a_scorer(self) -> None:
+    def test_replays_nest_three_deep_and_need_a_scorer(self) -> None:
         inner = bot.Bandit((bot.LastMove(),), scorer=bot.DecayedNet(0.9))
         nested = bot.Bandit((bot.Replay(inner),), scorer=bot.DecayedNet(0.9))
-        too_deep = bot.Bandit((bot.Replay(nested),), scorer=bot.DecayedNet(0.9))
+        deepest = bot.Bandit((bot.Replay(nested),), scorer=bot.DecayedNet(0.9))
+        too_deep = bot.Bandit((bot.Replay(deepest),), scorer=bot.DecayedNet(0.9))
         unscored = bot.Bandit((bot.LastMove(),))
 
         def replaying(ensemble: bot.Bandit) -> bot.Blueprint:
@@ -127,6 +128,7 @@ class TestValidation:
         assert_refused(replaying(unscored))
         replaying(inner).compile({})
         replaying(nested).compile({})
+        replaying(deepest).compile({})
 
     def test_emitting_invalid_moves_must_not_trip_our_own_guard(self) -> None:
         assert_refused(

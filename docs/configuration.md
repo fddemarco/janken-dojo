@@ -26,6 +26,7 @@ checks its type, its allowed values and its minimum.
 | `export` | `bot export`: `dir`, `max_rounds`, and the screening rules `allowed_modules`, `banned_names` |
 | `telemetry` | timing spans: `spans` on or off, their `file` and rotation size `max_mb`, and `slow_factor` |
 | `profile` | `lab profile`: where profiles go, the profiler's `interval_s`, `top`, `jit`, `warmup`, and the optimization budget (`min_share`, `expected_cut`, `window_days`, `horizon_days`, `session_minutes`, `max_attempts`, `min_gain`, `repeats`, `cooldown_days`) |
+| `gauntlet` | `lab gauntlet`: where logs go, `seeds` and `threshold` per opponent, `batch`; the variants (`per_bot`, `draws`, `seed`, `probe_rounds`, `variation_probes`, `levels`, `exclude`); the Nash check (`nash_probes`, `nash_seeds`, `nash_skew`) |
 
 ## The `config` commands
 

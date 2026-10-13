@@ -19,7 +19,7 @@ import hashlib
 import inspect
 import os
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 import numpy as np
 
@@ -47,9 +47,12 @@ def histories_digest(seqs: Sequences) -> str:
     return h.hexdigest()
 
 
-def key(path: str, seqs: Sequences) -> str:
-    """The name of the bot's core on `seqs`."""
+def key(path: str, seqs: Sequences, overrides: str = "") -> str:
+    """The name of the bot's core on `seqs` (a variant's: with its `overrides`,
+    `NAME=value,...` sorted; none for the bot itself)."""
     parts = (library.source_hash(path), code_digest(), histories_digest(seqs))
+    if overrides:
+        parts += (overrides,)
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()[:32]
 
 
@@ -66,10 +69,25 @@ class CoreCache:
 
     def core(self, path: str, seqs: Sequences) -> np.ndarray:
         """The bot's core on `seqs`: read back, or computed and kept."""
-        target = self.file(path, seqs)
+        return self._kept(self.file(path, seqs), lambda: self._compute(path, seqs))
+
+    def variant(
+        self,
+        path: str,
+        overrides: Mapping[str, object],
+        seqs: Sequences,
+        compute: Callable[[], np.ndarray],
+    ) -> np.ndarray:
+        """A variant's core on `seqs` (the bot with `overrides`): read back, or
+        computed by `compute` and kept."""
+        text = ",".join(f"{k}={v}" for k, v in sorted(overrides.items()))
+        target = os.path.join(self.directory, key(path, seqs, text) + ".npy")
+        return self._kept(target, compute)
+
+    def _kept(self, target: str, compute: Callable[[], np.ndarray]) -> np.ndarray:
         if os.path.isfile(target):
             return np.load(target)
-        found = self._compute(path, seqs)
+        found = compute()
         os.makedirs(self.directory, exist_ok=True)
         with tempfile.NamedTemporaryFile(
             dir=self.directory, suffix=".npy", delete=False

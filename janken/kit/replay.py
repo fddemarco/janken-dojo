@@ -10,16 +10,17 @@ is an arm of a higher-level bot: its symbol is its own move.
 The replayed ensemble lives in its own blocks of f / i; its symbol is its
 best-scored arm's move (janken/kit/ensemble.py `best_arm`). A replayed ensemble
 may hold replays of its own (a replay of a bot that replays others), each from
-its own side relative to the one holding it; those may not (numba compiles no
-recursion, so each depth has its own functions: `fold` / `predict` and
-`_fold_inner` / `_predict_inner`).
+its own side relative to the one holding it, and so on three deep, so an L5 can
+replay an L4 that replays an L3 holding replays (numba compiles no recursion, so
+each depth has its own functions: `fold` / `predict`, `_fold_inner` /
+`_predict_inner` and `_fold_deepest` / `_predict_deepest`).
 """
 
 import random
 
 import numpy as np
 
-from . import bayes, ensemble
+from . import bayes, ensemble, selectors
 from . import codes as c
 from .jit import kernel
 
@@ -31,9 +32,16 @@ def likely_move(
     """The move ensemble e's Thompson sampling (sharpness 1) picks most often over
     `draws` draws, first maximum; a draw won by the random arm counts a third for
     each move. NO_MOVE when no arm has a move."""
+    return likely_move_among(spec, e, f, i, draws, spec[e + c.E_NARMS])
+
+
+@kernel
+def likely_move_among(
+    spec: np.ndarray, e: int, f: np.ndarray, i: np.ndarray, draws: int, n_arms: int
+) -> int:
+    """likely_move over the ensemble's first `n_arms` arms (and its random arm)."""
     pend = spec[e + c.E_PEND_I]
     score_f = spec[e + c.E_SCORE_F]
-    n_arms = spec[e + c.E_NARMS]
     has_random = spec[e + c.E_RANDOM] == c.RA_SCORED
     votes = np.zeros(3)
     for _ in range(draws):
@@ -44,7 +52,7 @@ def likely_move(
                 break
             if a < n_arms and i[pend + 1 + a] < 0:
                 continue
-            at = score_f + 3 * a
+            at = score_f + 3 * (spec[e + c.E_NARMS] if a == n_arms else a)
             gw = random.gammavariate(1.0 + f[at], 1.0)
             gt = random.gammavariate(1.0 + f[at + 1], 1.0)
             gl = random.gammavariate(1.0 + f[at + 2], 1.0)
@@ -67,16 +75,46 @@ def likely_move(
 
 
 @kernel
-def _guess(spec: np.ndarray, r: int, sub: int, f: np.ndarray, i: np.ndarray) -> int:
-    """Replay record r's symbol: its likely move by draws, or its best arm's."""
+def _likely(
+    spec: np.ndarray, r: int, sub: int, f: np.ndarray, i: np.ndarray, n_arms: int
+) -> int:
+    """The likely move of the replayed ensemble's first n_arms arms: by draws, or
+    its best arm's."""
     draws = spec[r + c.R_A]
     if draws > 0:
-        return likely_move(spec, sub, f, i, draws)
-    return ensemble.best_arm(spec, sub, f, i)
+        return likely_move_among(spec, sub, f, i, draws, n_arms)
+    return ensemble.best_arm_among(spec, sub, f, i, n_arms)
 
 
 @kernel
-def _fold_inner(
+def _guess(
+    spec: np.ndarray,
+    r: int,
+    sub: int,
+    f: np.ndarray,
+    i: np.ndarray,
+    kn: np.ndarray,
+    n: int,
+    rn: int,
+    opp: np.ndarray,
+) -> int:
+    """Replay record r's symbol: its likely move by draws, or its best arm's. A
+    replayed Gate (R_B: its Gatekeeper's record) runs its gatekeeper, records
+    kept every round as the real one keeps them (`opp`: the history of the
+    replayed bot's opponent), and names the gated expert's move when the gate
+    plays one, else the main bandit's likely move."""
+    sel = spec[r + c.R_B]
+    n_arms = spec[sub + c.E_NARMS]
+    if sel <= 0:
+        return _likely(spec, r, sub, f, i, n_arms)
+    move = selectors.choose(spec, sel, sub, f, i, kn, n, rn, opp)
+    if selectors.played_gated(spec, sel, f, i, kn, rn):
+        return move
+    return _likely(spec, r, sub, f, i, n_arms - selectors.gated_arms(spec, sel))
+
+
+@kernel
+def _fold_deepest(
     spec: np.ndarray,
     r: int,
     f: np.ndarray,
@@ -91,6 +129,27 @@ def _fold_inner(
         ensemble.fold(spec, spec[r + c.R_SUB], f, i, kn, k, rk, opp, my)
     else:
         ensemble.fold(spec, spec[r + c.R_SUB], f, i, kn, k, rk, my, opp)
+
+
+@kernel
+def _fold_inner(
+    spec: np.ndarray,
+    r: int,
+    f: np.ndarray,
+    i: np.ndarray,
+    kn: np.ndarray,
+    k: int,
+    rk: int,
+    my: np.ndarray,
+    opp: np.ndarray,
+) -> None:
+    sub = spec[r + c.R_SUB]
+    a, b = (opp, my) if spec[r + c.R_SWAP] else (my, opp)
+    ensemble.fold(spec, sub, f, i, kn, k, rk, a, b)
+    for s in range(spec[sub + c.E_NSIG]):
+        r2 = spec[sub + c.E_SIG_AT] + s * c.REC
+        if spec[r2 + c.R_KIND] == c.S_REPLAY:
+            _fold_deepest(spec, r2, f, i, kn, k, rk, a, b)
 
 
 @kernel
@@ -118,7 +177,7 @@ def fold(
 
 
 @kernel
-def _predict_inner(
+def _predict_deepest(
     spec: np.ndarray,
     r: int,
     f: np.ndarray,
@@ -134,7 +193,31 @@ def _predict_inner(
     symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, a, b)
     bayes.combine(spec, sub, f, symbols)
     ensemble.set_arms(spec, sub, i, symbols, rn)
-    return _guess(spec, r, sub, f, i)
+    return _guess(spec, r, sub, f, i, kn, n, rn, b)
+
+
+@kernel
+def _predict_inner(
+    spec: np.ndarray,
+    r: int,
+    f: np.ndarray,
+    i: np.ndarray,
+    kn: np.ndarray,
+    n: int,
+    rn: int,
+    my: np.ndarray,
+    opp: np.ndarray,
+) -> int:
+    sub = spec[r + c.R_SUB]
+    a, b = (opp, my) if spec[r + c.R_SWAP] else (my, opp)
+    symbols = ensemble.predictions(spec, sub, f, i, kn, n, rn, a, b)
+    for s in range(spec[sub + c.E_NSIG]):
+        r2 = spec[sub + c.E_SIG_AT] + s * c.REC
+        if spec[r2 + c.R_KIND] == c.S_REPLAY:
+            symbols[s] = _predict_deepest(spec, r2, f, i, kn, n, rn, a, b)
+    bayes.combine(spec, sub, f, symbols)
+    ensemble.set_arms(spec, sub, i, symbols, rn)
+    return _guess(spec, r, sub, f, i, kn, n, rn, b)
 
 
 @kernel
@@ -160,4 +243,4 @@ def predict(
             symbols[s] = _predict_inner(spec, r2, f, i, kn, n, rn, a, b)
     bayes.combine(spec, sub, f, symbols)
     ensemble.set_arms(spec, sub, i, symbols, rn)
-    return _guess(spec, r, sub, f, i)
+    return _guess(spec, r, sub, f, i, kn, n, rn, b)

@@ -208,6 +208,11 @@ class Encoder:
             sub_records, sub_header, inner = self.bandit(replay.bandit, depth, inside)
             at, sub_sig_at = self.place(sub_records, sub_header)
             self.spec[sig_at + k * c.REC + c.R_SUB] = at
+            keeper = replay.bandit.selector
+            if isinstance(keeper, Gatekeeper):  # a replayed Gate runs its gatekeeper
+                self.spec[sig_at + k * c.REC + c.R_B] = self.append(
+                    [self.record(keeper)]
+                )
             self.place_replays(sub_sig_at, inner, depth + 1, inside)
 
     def bandit(

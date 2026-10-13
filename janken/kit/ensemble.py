@@ -152,12 +152,20 @@ def fold(
 def best_arm(spec: np.ndarray, e: int, f: np.ndarray, i: np.ndarray) -> int:
     """The move of the best-scored pending arm (first maximum, no draw), or NO_MOVE.
     With a pinned random arm, a best score <= 0 means random play: NO_MOVE."""
+    return best_arm_among(spec, e, f, i, spec[e + c.E_NARMS])
+
+
+@kernel
+def best_arm_among(
+    spec: np.ndarray, e: int, f: np.ndarray, i: np.ndarray, n_arms: int
+) -> int:
+    """best_arm over the ensemble's first `n_arms` arms only."""
     pend = spec[e + c.E_PEND_I]
     scorer = spec[e + c.E_SCORER]
     score_f = spec[e + c.E_SCORE_F]
     pick = c.NO_MOVE
     best = 0.0
-    for a in range(spec[e + c.E_NARMS]):
+    for a in range(n_arms):
         move = i[pend + 1 + a]
         if move < 0:
             continue

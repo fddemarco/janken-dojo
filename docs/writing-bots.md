@@ -219,8 +219,8 @@ handshake of `fleet.handshake_length` moves) and exports it.
   a new file (see `research/README.md`). That holds for the bots it names too, so
   references name exact stems, and a bot's identity (its source hash) covers the bots it
   names.
-- Replays nest at most two deep: an L4 over an L3 over an L2 compiles, one more layer of
-  replays doesn't.
+- Replays nest at most three deep: an L5 over an L4 over an L3 over an L2 compiles, one
+  more layer of replays doesn't.
 - Bots run in-process with no sandbox, so only run bots you trust.
 
 Inside the research loop, the `/build` skill writes a bot for you.

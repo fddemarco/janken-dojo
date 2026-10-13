@@ -245,3 +245,31 @@ min_gain = 0.05
 repeats = 3
 # A command is profiled again only after cooldown_days, unless its spans flag it slow.
 cooldown_days = 7
+
+[gauntlet]
+# `janken lab gauntlet`: a candidate vs every opponent of a list, each on its own
+# (variations of the field's bots included). Logs go to this folder of the workspace.
+dir = "gauntlet"
+# Matches per opponent, and the share of rounds won a candidate must reach vs each.
+seeds = 10
+threshold = 0.36
+batch = 256
+# `variations`: per_bot variants of each field bot, drawn from its space file (at
+# most `draws` Latin hypercubes), kept only if their moves differ from the
+# default's vs the probes in seeded matches of probe_rounds rounds.
+per_bot = 10
+draws = 4
+seed = 0
+probe_rounds = 100
+variation_probes = ["bots/l2/smartbot_v1.yaml", "bots/l1/frequency_v1.yaml"]
+levels = ["l1", "l2", "l3", "l4"]
+# Field bots that get no variants: Nash-like by `lab gauntlet nash` (vs simple
+# probes; research/gauntlet/nash_check.md) and with no parameters to vary.
+exclude = ["nash_v1"]
+# `nash`: a bot is Nash-like ("Nash with extra steps") when, vs every probe, its
+# rounds won minus lost stay under nash_skew: no simple bot exploits it or is
+# exploited by it. The probes: a fixed move, a cycle, a reaction to our last move,
+# a frequency counter, a pattern matcher.
+nash_probes = ["bots/l1/rock_v1.yaml", "bots/l1/cycler_v1.yaml", "bots/l1/reactionary_v1.yaml", "bots/l1/frequency_v1.yaml", "bots/l1/pattern_memory_v1.yaml"]
+nash_seeds = 3
+nash_skew = 0.10

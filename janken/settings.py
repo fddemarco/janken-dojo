@@ -420,6 +420,38 @@ class ProfileConfig:
 
 
 @dataclasses.dataclass(frozen=True)
+class GauntletConfig:
+    """`lab gauntlet`: candidates vs every opponent of a list, variations included.
+
+    `variations` draws `per_bot` variants of each field bot from its space file
+    (`draws` Latin hypercubes at most), keeping those whose moves differ from the
+    default's vs `variation_probes`; `exclude` names the bots it skips. `nash`
+    calls a bot Nash-like when vs every one of `nash_probes` its rounds won minus
+    lost stay under `nash_skew`. `run` plays `seeds` matches per opponent and
+    reports those under `threshold`.
+    """
+
+    dir: str = setting("where gauntlet logs go, in the workspace")
+    seeds: int = setting("matches per opponent (seeds 1..n)", minimum=1)
+    threshold: float = setting("the share of rounds won a candidate must reach")
+    batch: int = setting("matches per batch (one log write)", minimum=1)
+    per_bot: int = setting("variants drawn per field bot", minimum=1)
+    draws: int = setting("Latin hypercubes drawn per bot at most", minimum=1)
+    seed: int = setting("the variants' sampler seed")
+    probe_rounds: int = setting("rounds of a match that checks a variant", minimum=1)
+    variation_probes: tuple[str, ...] = setting(
+        "bots a variant is checked against: its moves must differ from the default's"
+    )
+    levels: tuple[str, ...] = setting("the level folders whose bots get variants")
+    exclude: tuple[str, ...] = setting("field bots that get no variants (Nash-like)")
+    nash_probes: tuple[str, ...] = setting("the simple bots a Nash check plays")
+    nash_seeds: int = setting("matches per probe in a Nash check", minimum=1)
+    nash_skew: float = setting(
+        "rounds won minus lost a probe must reach for a bot not to be Nash-like"
+    )
+
+
+@dataclasses.dataclass(frozen=True)
 class Config:
     """The whole of `janken.toml`."""
 
@@ -444,6 +476,7 @@ class Config:
     species: SpeciesConfig = setting("species and versions")
     telemetry: TelemetryConfig = setting("timing spans")
     profile: ProfileConfig = setting("profiling and the optimization budget")
+    gauntlet: GauntletConfig = setting("gauntlets: every opponent on its own")
 
     def path(self, relative: str) -> str:
         """A configured path, resolved against the project root."""

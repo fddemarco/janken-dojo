@@ -2,6 +2,7 @@
 
 classify   a kept note's candidate: a new species, the next version, or a variant
 compare    a bot against the field's species, by core agreement (read-only)
+variants   which parameter variants of field bots behave like no species (read-only)
 census     the field's most alike species pairs, and species per level (read-only)
 list       research/species.md: every species, its current version and lineage
 """
@@ -114,6 +115,59 @@ def compare(
         f"{bot} ({level}); alike at >= {CFG.species.agreement:.0%} core agreement,"
         " and only a species of its own level can take it as a version\n\n"
         + workflows.render_kin(kin),
+    )
+
+
+@app.command()
+@lab_command("species variants")
+def variants(
+    lab: Lab,
+    bots: Annotated[
+        str,
+        typer.Argument(
+            help="a file of bot specs, one per line (bots/l1/x.yaml:NAME=value,...);"
+            " plain bot files are skipped"
+        ),
+    ],
+    out: Annotated[str, typer.Argument(help="the markdown table to write")],
+    split: Annotated[Split, typer.Option(help=SPLIT_HELP)] = SPECIES_SPLIT,
+) -> None:
+    """Which parameter variants behave like no species of their level: new bots."""
+    from ..lab import workflows
+
+    with open(bots) as lines:
+        texts = [t.split("#")[0].strip() for t in lines]
+    texts = [t for t in texts if ":" in t]
+    seqs = _histories(lab, str(split))
+    cache = workflows.core_cache(lab.workspace, CFG.species)
+    field = workflows.read_field(workflows.species_paths(lab.bots_dir), seqs, cache)
+    bar = CFG.species.agreement
+    rows = [
+        (
+            f"A variant agreeing with no species of its level on >= {bar:.0%} of the"
+            " moves (core agreement) is a new bot by the species rule."
+        ),
+        "",
+        "| variant | level | closest species | core agreement | new bot |",
+        "|---|---|---|---|---|",
+    ]
+    new_bots = []
+    for text in texts:
+        kin = workflows.variant_kin(text, field, seqs, cache)
+        top = kin[0]
+        is_new = top.agreement < bar
+        if is_new:
+            new_bots.append(text)
+        rows.append(
+            f"| `{text}` | {top.level} | `{top.stem}` | {top.agreement:.1%}"
+            f" | {'yes' if is_new else 'no'} |"
+        )
+        lab.say(rows[-1])
+    with open(out, "w") as sink:
+        sink.write("\n".join(rows) + "\n")
+    lab.emit(
+        {"new": new_bots, "checked": len(texts)},
+        f"{len(new_bots)} of {len(texts)} variants are new bots (table: {out})",
     )
 
 

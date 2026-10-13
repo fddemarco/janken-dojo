@@ -330,7 +330,7 @@ class Lab:
     def say(self, text: str) -> None:
         """Print a human-readable line (not with --quiet or --format json)."""
         if not self.quiet and self.format != "json":
-            print(text)
+            print(text, flush=True)  # progress shows when piped to a file
 
     def emit(self, data: object, text: str) -> None:
         """Print a result: `data` as JSON with --format json, else `text`."""

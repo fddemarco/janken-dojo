@@ -440,6 +440,30 @@ def read_field(
     )
 
 
+def variant_kin(
+    text: str, field: Field, seqs: Sequences, cache: "cores.CoreCache"
+) -> list[classify.Kin]:
+    """The field's species of a bot variant's level (a spec with overrides:
+    bots/l1/x.yaml:NAME=value), closest first: its core replayed on `seqs` (kept
+    in the cache under its overrides). Overrides only its
+    guards or overlays read (NOISE) leave the core its default's."""
+    from ..spec import make_spec
+    from .predict import predictions
+    from .predictor import make_predictor, predictor_params
+
+    (spec,) = specs([text])
+    read = predictor_params(spec.path)  # guard-only overrides leave the core as is
+    overrides = {k: v for k, v in spec.params.items() if k in read}
+    core_spec = make_spec(spec.path, overrides)
+    core_ = cache.variant(
+        spec.path, overrides, seqs, lambda: predictions(make_predictor(core_spec), seqs)
+    )
+    level = bot_level(spec.path)
+    return [
+        k for k in classify.ranked(core_, field.cores, field.levels) if k.level == level
+    ]
+
+
 def compare(
     path: str, field: Field, seqs: Sequences, cache: "cores.CoreCache"
 ) -> list[classify.Kin]:

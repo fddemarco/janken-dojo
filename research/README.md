@@ -114,6 +114,30 @@ one (the old version retires), or a variant (it retires). The lineage is
 [species.md](species.md). Notes and runs keep the names that were current when they
 were written.
 
+## Research direction: bottom up, by level (2026-10-13)
+
+Work one level at a time, starting at L1, and move up only once the level is
+understood. Every level is built from the one below, and the evidence so far says a
+level gains most against the level just below it (insights of 2026-10-13), while
+expert-by-expert patches to the top bots move the pool score by about 2 pts, which
+pools can't resolve. For each level L:
+
+1. **Atlas.** What each species does, who it beats and who beats it, and why: an
+   L-and-below round robin (`janken tournament` or `janken lab experiment` on a pool
+   of those levels), read matchup by matchup (`janken lab report`).
+1. **Best responses.** For each species, the simplest bot that beats it, and whether
+   the level already holds one. A species nobody at its level beats is a gap to fill.
+1. **Diversity.** The strategy families the level covers (frequency, transitions,
+   patterns, periods, reactions to outcomes, the score, geometry, cycles, noise) and
+   the ones it lacks; every kit signal without a species of its own is a candidate.
+   New species fill gaps; near-copies are variants (`/classify`).
+1. **Limits and strengths.** What the level can't do (an L1 has no memory of how
+   its predictions fared; an L2 can't model an opponent that models it), written as
+   insights, which say what the next level must add.
+
+Only then build L+1 from that understanding, evaluated against pools of levels L and
+below first, where its gain lives, then against the whole field.
+
 ## Experiment protocol
 
 - **Pool:** each round robin draws **20 random bots** from `bots/`, excluding the

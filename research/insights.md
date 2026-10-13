@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: A pre-trained prior is a cold start, and a longer context sharpens it: a table over the last 4 joint moves beats the 3-move one by about 8 pts against the whole field's variants
+
+- **Evidence:** experiments/0080-pretrained-deep-vs-pretrained-context-v2.md (run 20261013-162753_0080-pretrained-deep-vs-pretrained-context-v2): `pretrained_deep - pretrained_context_v2 = +7.9 pts [+3.4, +12.3]` over 640 shared matches: pretrained_deep better
+- **Mechanism:** at a weight of 1 or below a single observed count outweighs the prior (weights 0.25-1 play identically), so the prior only guesses contexts the match hasn't shown yet; a longer context names the opponent's habit more precisely in those rounds: context lengths 1, 2, 3 win 19%, 22.5%, 44.5% of matches vs whole-field variants, and 4 beats 3 by +7.9 pts [+3.4, +12.3] over 640 matches on fresh seeds
+- **Implication:** give the strong online learners a pre-trained cold start (idea #80) and try a 5-move table (idea #81); the export cost is small (290 KB, 1.7 ms per round for 4 moves)
+
 ## 2026-10-13: A pre-trained prior should be light: worth about one observation per context, it generalises from the levels it was trained on to the whole field
 
 - **Evidence:** experiments/0078-pretrained-light-vs-pretrained-context-v1.md (run 20261013-161451_0078-pretrained-light-vs-pretrained-context-v1): `pretrained_light - pretrained_context_v1 = +7.3 pts [+3.3, +11.4]` over 640 shared matches: pretrained_light better

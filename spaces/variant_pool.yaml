@@ -1,4 +1,0 @@
-bot: bots/l3/variant_pool.yaml
-weight: 1.0
-params:
-  ARM_DECAY: {type: float, low: 0.475, high: 1.0, grid: [0.475, 0.65, 0.825, 0.95, 1.0]}

@@ -1,6 +1,0 @@
-bot: bots/l5/l5_variant_hunter.yaml
-weight: 1.0
-params:
-  EDGE: {type: float, low: 0.0, high: 1.0, grid: [0.0, 0.3333, 0.6667, 1.0]}
-  GATE_DECAY: {type: float, low: 0.5, high: 1.0, grid: [0.5, 0.6667, 0.8333, 1.0]}
-  WARMUP: {type: int, low: 5, high: 20, grid: [5, 10, 15, 20]}

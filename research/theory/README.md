@@ -45,7 +45,8 @@ A claim with no possible refutation isn't a claim.
 | file | paradigm | phase |
 |---|---|---|
 | [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | specialise: each strong L1 has an exact L1 counter; next, an L2 holding them |
-| [02-meta-strategies.md](02-meta-strategies.md) | aggregation: bandits, gates, replays (L2 and up) | specialised; to revisit bottom up |
+| [02-meta-strategies.md](02-meta-strategies.md) | aggregation: bandits, gates, replays (L2 and up) | bottom up from L2: atlas done; a strong set of counters didn't transfer |
+| [algorithms/](algorithms/README.md) | the learning, ML and statistical algorithms, in use and candidates, with their exploits and size budget | reference |
 
 ## Journal
 
@@ -70,3 +71,10 @@ A claim with no possible refutation isn't a claim.
   `repeat_mirror_v1`, an L2 built from L1's strong set, beats `iocaine_lite_v1` by
   +7.3 pts [+3.0, +11.6] on fresh seeds (notes 0063, 0064). Next: an L2 atlas, to
   find L2's strong set and its counters, as at L1.
+- **2026-10-13, L2.** The L2 atlas (research/l2_atlas.md) shows L1's three-part
+  shape one level up: adaptive bandits share one natural counter (`anti_smartbot`),
+  near-deterministic L2s fall to their exact replay counter, and a small strong set
+  has no strong counter. But building an L3 from that strong set fails (note 0065):
+  half of it are counters, strong only where their prey is common. Algorithm cards
+  added (`algorithms/`), for the RL, ML and statistical methods in use and the
+  candidates, with their exploits and the 200 MB export budget.

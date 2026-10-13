@@ -14,8 +14,15 @@ since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror
    rotation) beats `iocaine_lite_v1` by +7.3 pts [+3.0, +11.6] vs pools of L1s and
    L2s, confirmed on fresh seeds (notes 0063, 0064). The first result of the bottom-up
    direction: the L1 atlas named the strong set, and the L2 holding it wins.
-   _Prediction:_ the same holds one level up: an L3 built from the L2 strong set
-   (once an L2 atlas names it) beats the field's L3s vs pools of L1-L3.
+   _Prediction:_ the same holds one level up. ~~An L3 built from the L2 strong set
+   beats the field's L3s vs pools of L1-L3.~~ _Refuted_ (note 0065): a council of
+   L2's strong set is -3.5 pts [-11.5, +4.8] vs `l2_council_v1`, see the next claim.
+1. **A strong set made of counters doesn't transfer.** _supported._ Half of L2's
+   strong set (L2 atlas) are counters (`anti_smartbot`, `anti_rps4`), strong in the
+   L2 round robin because their prey fills it; as arms in a mixed L1-L3 pool they lose
+   (note 0065). L1's strong set is made of learners, which do transfer (note 0064).
+   _Prediction:_ an L3 built from L2's learners only (`geometry_ensemble`,
+   `period_bandit`, `repeat_mirror`) beats `l2_council_v1` vs pools of L1-L3.
 1. **Replaying a named bot beats that bot, and only that bot.** _supported._ An exact
    replay or impostor wins its target outright (in note 0014, 96.8% of rounds vs
    agamemnon) but moves the pool score by about 1 pt, as the target is one pool slot.

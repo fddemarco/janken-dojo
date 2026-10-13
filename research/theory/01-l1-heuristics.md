@@ -82,7 +82,9 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    outcome is known, our last move and theirs determine each other, so `Relative`
    with `ref: MY` agrees 100% with `rotation_outcome` (`ref: OPP`). A reply model on
    our moves alone (`response_markov`, an order-2 n-gram of our moves predicting
-   theirs) is distinct but weak: -12.4 pts vs `markov2_joint` (note 0070).
+   theirs) is distinct but weak: -12.4 pts vs `markov2_joint` (note 0070). So is a
+   model of their own sequence alone, even a deep CTW (-11.0 pts vs joint CTW, note
+   0081): **the information is in the joint history**, how they answer us.
 1. **Nash is the floor, not a strategy.** _supported._ `nash_v1` wins 50% of its
    matches at +0 rounds: unexploitable, never exploiting.
 

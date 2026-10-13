@@ -76,7 +76,11 @@ since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror
    0090-0095). There every field L4 scores about what its main does, and
    `smartbot_sims_v2` alone ties the best L4. Refines the claim above on parameters:
    the user's starting worry holds one level up. _Prediction:_ the same gap vs a second
-   outsider family built from other components (idea #88).
+   outsider family built from other components (idea #88). _Confirmed_ (note 0096):
+   55% of matches there, tied with its main; `level_k_gate_v2`, which beats it in the
+   field, wins 27%. In a census vs both families (note 0098) `sicilian_meta_v1` leads
+   (66%, not significant over `smartbot_sims_v2`; it replays `iocaine_lite`, a
+   component of the second family, so it may be reading a relative).
 
 1. **Adding experts to the best L4's gate costs rounds, relevant or not.** _supported._
    Generalist learners played or only read, vs field variants or vs outsiders built

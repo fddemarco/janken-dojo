@@ -1,0 +1,16 @@
+description: |
+  Research opponent (not in the field), second outsider family (idea #88): a sharp Thompson council of L2s no field L4 replays (iocaine_lite, geometry_ensemble, outcome_reader, second_guess) played from our seat, three rotations each.
+defaults:
+  ARM_DECAY: 0.95
+  SHARP: 3.0
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: iocaine_lite_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: geometry_ensemble_v1, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: outcome_reader_v1, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: second_guess_v1, estimate: NORMAL, rotations: [COPY, BEAT, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: $SHARP}}

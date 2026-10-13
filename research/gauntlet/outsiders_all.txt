@@ -1,0 +1,7 @@
+# Both outsider families (notes 0090-0096): the unknown-opponent benchmark.
+bots/inactive/outsiders/outsider2_council.yaml
+bots/inactive/outsiders/outsider2_gate.yaml
+bots/inactive/outsiders/outsider2_greedy.yaml
+bots/inactive/outsiders/outsider_council.yaml
+bots/inactive/outsiders/outsider_gate.yaml
+bots/inactive/outsiders/outsider_greedy.yaml

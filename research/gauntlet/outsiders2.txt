@@ -1,0 +1,5 @@
+# Second outsider family (idea #88): L3-L4s built from L2s no field L4 replays
+# (iocaine_lite, geometry_ensemble, outcome_reader, second_guess, fast_greedy_markov, zoo_hunter).
+bots/inactive/outsiders/outsider2_council.yaml
+bots/inactive/outsiders/outsider2_gate.yaml
+bots/inactive/outsiders/outsider2_greedy.yaml

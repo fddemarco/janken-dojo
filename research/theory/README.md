@@ -123,3 +123,9 @@ A claim with no possible refutation isn't a claim.
   alone (notes 0086-0095): overfitted to architectures, not parameters. Nine changes
   (new experts, mains, gate edge and decay, learner councils) all tied or lost. Next:
   a second outsider family, and logging which experts lead vs outsiders.
+- **2026-10-13, close of the unknown-L3-L4 hour.** The overfitting holds vs a second
+  outsider family (note 0096), and a census of the 27 field L3-L4s vs both families
+  (note 0098) ranks self-contained councils first (`sicilian_meta_v1` 66%,
+  `smartbot_sims_v2` 61%) and the replay-built bots last. Next: confirm
+  `sicilian_meta_v1` on fresh seeds (idea #90), then build the next gate on the
+  winner as its main, judged on outsiders and the field together.

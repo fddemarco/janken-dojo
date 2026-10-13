@@ -75,6 +75,7 @@ bots/
 | L1 | `transition_matrix_v1` | order-1 opponent transitions, sampled |
 | L1 | `markov2_joint_v1` | order-2 Markov model on the joint history |
 | L1 | `pattern_memory_v1` | longest earlier repeat of the joint history |
+| L1 | `second_repeat_v1` | second-longest earlier repeat of the joint history (an opponent that dodges the longest) |
 | L1 | `rotation_outcome_v1` | learned win-stay/lose-shift (rotation by outcome) |
 | L1 | `geometry_v1` | Superant's RPS Geometry |
 | L1 | `balancer_hunter_v1` | beats the opponent's least frequent move (Rarest) |

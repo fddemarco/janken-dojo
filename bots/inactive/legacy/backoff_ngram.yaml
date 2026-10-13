@@ -1,0 +1,10 @@
+description: |
+  Beats the opponent's next move as a back-off n-gram predicts it (idea #63: L1 diversity).
+  Orders MAX_ORDER down to 0 over the joint history, the longest context seen before deciding: a variable-order Markov model, which no L1 species has (markov2_joint is a fixed order 2).
+defaults:
+  MAX_ORDER: 3
+  CTX: JOINT
+  OF: OPP
+blueprint:
+  core:
+    Heuristic: {signal: {Backoff: {max_order: $MAX_ORDER, ctx: $CTX, of: $OF}}, rotation: BEAT}

@@ -26,6 +26,12 @@ Format:
 
 ______________________________________________________________________
 
+## 2026-10-13: Against an opponent that switches levels mid-match, a decayed Thompson bandit over level-k replays keeps up where a LEADER gate trails it
+
+- **Evidence:** experiments/0032-level-k-vs-double-bluff-gate.md (run 20261012-164842_0032-level-k-vs-double-bluff-gate): `level_k_gate - double_bluff_gate_v1 = +9.0 pts [+2.8, +15.2]` over 305 shared matches: level_k_gate better; `level_k_bandit - double_bluff_gate_v1 = +7.5 pts [+1.6, +13.6]` over 305 shared matches: level_k_bandit better; experiments/0055-level-k-bandit-normal-vs-level-k-gate-v2.md (run 20261013-134613_0055-level-k-bandit-normal-vs-level-k-gate-v2): tentative, no 95% CI excludes 0: `level_k_bandit_normal - level_k_gate_v2 = -0.5 pts [-7.0, +6.0]` over 200 shared matches: no significant difference
+- **Mechanism:** the bandit's decayed Dirichlet (0.85) and sharpened Thompson re-pick the arm within a few rounds of a switch, while a gate's undecayed record needs many rounds to hand over: vs double_bluff_gate the bandit wins 37.4% of rounds over 100 seeds (0055) where level_k_gate stays under 36%; over the whole field the two tie, since the gate's main bandit covers the learners the bandit doesn't replay
+- **Implication:** use a decayed bandit, not a LEADER gate, for experts that model a flip-flopping counter; try level_k_bandit_normal as a gated expert inside replay_hunter_wide (-0.4 rounds per match vs double_bluff_gate_v2)
+
 ## 2026-10-13: A level's edge over the best bot below it shrinks against simpler opponents: the L4 gate beats the best L3 vs L2s but only matches the best L2 vs L1s
 
 - **Evidence:** experiments/0026-l4-vs-l2-gate-anti-first-vs-anti-advanced-bots-l.md (run 20261010-214527_0026-l4-vs-l2-gate-anti-first-vs-anti-advanced-bots-l): `gate_anti_first - anti_advanced_bots = +3.7 pts [+0.9, +6.6]` over 600 shared matches: gate_anti_first better; experiments/0027-l4-vs-l1-gate-main-first-vs-iocaine-lite-l1-only.md (run 20261010-222411_0027-l4-vs-l1-gate-main-first-vs-iocaine-lite-l1-only): tentative, no 95% CI excludes 0: `gate_main_first - iocaine_lite = +0.1 pts [-2.2, +2.5]` over 680 shared matches: no significant difference

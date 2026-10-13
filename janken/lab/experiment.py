@@ -38,7 +38,7 @@ from ..match import MatchResult, bot_name
 from ..spec import BotSpec, make_spec, to_dict
 from . import store
 from .match_cache import MatchCache
-from .pool import sample_pool
+from .pool import sample_pool, vary
 from .runs_db import COMPLETE, INTERRUPTED, RUNNING, RunStore
 
 MODES = ("full", "candidates")
@@ -53,8 +53,14 @@ def build_schedule(
     mode: str = "full",
     allow_small: bool = False,
     use_mocks: bool = False,
+    variants: float = 0.0,
+    spaces_dir: str = "",
 ):
-    """[{rr, pool: [BotSpec], pairs: [(BotSpec, BotSpec)], seeds: [int]}, ...]"""
+    """[{rr, pool: [BotSpec], pairs: [(BotSpec, BotSpec)], seeds: [int]}, ...]
+
+    With `variants`, that share of each pool's members play a variant drawn
+    from their space file (pool.vary), from a stream of their own: the pool's
+    bots and the match seeds stay those of the same run without variants."""
     if mode not in MODES:
         raise ValueError(f"unknown mode {mode!r}")
     labels = [c.label for c in candidates]
@@ -74,6 +80,9 @@ def build_schedule(
             allow_small=allow_small,
             use_mocks=use_mocks,
         )
+        if variants > 0:
+            key = "{}:{}:{:d}:variants".format(seed, ",".join(stems), rr)
+            pool = vary(pool, spaces_dir, variants, random.Random(key))
         opp_seed = {p.label: rng.getrandbits(32) for p in pool}
         pairs = list(itertools.combinations(candidates, 2))
         pairs += [(c, p) for c in candidates for p in pool]
@@ -228,6 +237,8 @@ def run_experiment(
     workers: int | None = None,
     allow_small: bool = False,
     use_mocks: bool = False,
+    variants: float = 0.0,
+    spaces_dir: str = "",
     root: str | None = None,
     extra: dict | None = None,
     on_batch: Callable[[int], None] = _no_hook,
@@ -252,6 +263,8 @@ def run_experiment(
         mode,
         allow_small,
         use_mocks,
+        variants,
+        spaces_dir,
     )
     n = sum(len(rr["pairs"]) for rr in schedule)
     manifest = {
@@ -270,6 +283,8 @@ def run_experiment(
             "mode": mode,
             "allow_small": allow_small,
             "mocks": use_mocks,
+            "variants": variants,
+            "spaces_dir": spaces_dir,
         },
         "candidates": [to_dict(c) for c in candidates],
         "pools": [[p.label for p in rr["pool"]] for rr in schedule],
@@ -346,6 +361,8 @@ def resume_experiment(
         config["mode"],
         config.get("allow_small", False),
         config.get("mocks", False),
+        config.get("variants", 0.0),
+        config.get("spaces_dir", ""),
     )
     pools = [[p.label for p in rr["pool"]] for rr in schedule]
     if pools[: len(manifest["pools"])] != manifest["pools"]:

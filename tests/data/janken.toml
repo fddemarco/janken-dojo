@@ -54,6 +54,10 @@ allow_small = false
 # instead of the bots they mock. Set it locally while experimenting:
 # `janken config set --local pool.mocks true`. Oracles never enter a tournament.
 mocks = false
+# The share of each pool's members that play a parameter variant, drawn uniformly
+# from their space file, instead of their defaults: a bot that only beats the
+# field's exact defaults shows it (janken/lab/pool.py).
+variants = 0.0
 
 [calibration]
 # Matches a bot plays vs each opponent when it is calibrated for its Oracle.

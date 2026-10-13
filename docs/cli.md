@@ -100,7 +100,7 @@ Every lab command, high and low level, takes the same flags. They are defined on
 | group | flags |
 | --- | --- |
 | Workspace | `--workspace` (runs, studies, dataset), `--notebook` (`research/`), `--bots-dir`, `--spaces-dir` |
-| Evidence | `--effort quick\|standard\|thorough`, `--rounds`, `--round-robins`, `--pool-size`, `--seed`, `--allow-small-pool` |
+| Evidence | `--effort quick\|standard\|thorough`, `--rounds`, `--round-robins`, `--pool-size`, `--seed`, `--allow-small-pool`, `--mocks`, `--variants SHARE` (pool members played at parameter variants) |
 | Execution | `--workers`, `--cache auto\|on\|off`, `--progress auto\|on\|off` |
 | Output | `--format text\|json`, `--quiet` |
 

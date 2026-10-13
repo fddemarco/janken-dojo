@@ -129,6 +129,11 @@ class PoolConfig:
     mocks: bool = setting(
         "draw the mocks (research-only stand-ins) instead of the bots they mock"
     )
+    variants: float = setting(
+        "the share of pool members that play a parameter variant drawn from their"
+        " space file (0: every member at its defaults)",
+        minimum=0,
+    )
 
 
 @dataclasses.dataclass(frozen=True)

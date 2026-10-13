@@ -404,3 +404,51 @@ class TestTune(LightBots):
         assert len(set(rows["run_id"])) == rows.height  # one run each
         text = analyze.render_validations("rec", self.dir)
         assert "vs defaults" in text
+
+
+class TestVariantPools:
+    """pool.variants: a share of each pool's members play a parameter variant."""
+
+    def schedule(self, variants: float) -> list[dict]:
+        return build_schedule(
+            [make_spec(data.bot("wsls_v1"))],
+            data.BOTS_DIR,
+            6,
+            3,
+            seed=11,
+            allow_small=True,
+            variants=variants,
+            spaces_dir=data.SPACES_DIR,
+        )
+
+    def test_no_share_leaves_every_member_at_its_defaults(self) -> None:
+        for rr in self.schedule(0.0):
+            assert all(not p.params for p in rr["pool"])
+
+    def test_variants_keep_the_pools_bots_and_the_match_seeds(self) -> None:
+        plain, varied = self.schedule(0.0), self.schedule(1.0)
+        for a, b in zip(plain, varied, strict=True):
+            assert [p.path for p in a["pool"]] == [p.path for p in b["pool"]]
+            assert a["seeds"] == b["seeds"]
+
+    def test_a_member_with_a_space_plays_a_variant_inside_it(self) -> None:
+        spaced = {
+            space.load(os.path.join(data.SPACES_DIR, f)).stem: space.load(
+                os.path.join(data.SPACES_DIR, f)
+            )
+            for f in os.listdir(data.SPACES_DIR)
+        }
+        varied = [p for rr in self.schedule(1.0) for p in rr["pool"]]
+        for member in varied:
+            found = spaced.get(member.stem)
+            if found is None:
+                assert not member.params
+                continue
+            assert set(member.params) == set(found.params)
+            for name, value in member.params.items():
+                assert found.params[name].contains(value)
+        assert any(p.params for p in varied)
+
+    def test_the_draws_are_reproducible(self) -> None:
+        labels = [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]
+        assert labels == [[p.label for p in rr["pool"]] for rr in self.schedule(0.5)]

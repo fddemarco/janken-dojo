@@ -67,6 +67,8 @@ class Plan:
     seed: int
     allow_small: bool
     use_mocks: bool
+    variants: float  # the share of pool members played at a variant
+    spaces_dir: str
     workers: int
     mode: str
     flush_s: float  # seconds between commits of the matches finished so far
@@ -172,6 +174,8 @@ def evaluate(
             workers=how.workers or None,
             allow_small=how.allow_small,
             use_mocks=how.use_mocks,
+            variants=how.variants,
+            spaces_dir=how.spaces_dir,
             root=how.workspace,
             on_start=remember,
             flush_s=how.flush_s,
@@ -240,10 +244,11 @@ def _command(note: notes.Note, run_id: str, runs: RunStore) -> str:
     )
     small = "--allow-small-pool" if cfg.get("allow_small") else "--no-allow-small-pool"
     mocks = "--mocks" if cfg.get("mocks") else "--no-mocks"
+    varied = f" --variants {cfg['variants']}" if cfg.get("variants") else ""
     return (
         f"uv run janken lab experiment {cands} --rounds {cfg['rounds']}"
         f" --round-robins {cfg['round_robins']} --pool-size {cfg['pool_size']}"
-        f" --mode {cfg.get('mode', 'full')} {small} {mocks}"
+        f" --mode {cfg.get('mode', 'full')} {small} {mocks}{varied}"
         f" --seed {cfg['seed']} --name {note.number:04d}-{note.slug}"
     )
 
@@ -598,6 +603,8 @@ def _species_run(
         workers=how.workers or None,
         allow_small=how.allow_small,
         use_mocks=how.use_mocks,
+        variants=how.variants,
+        spaces_dir=how.spaces_dir,
         root=how.workspace,
         on_start=remember,
         flush_s=how.flush_s,

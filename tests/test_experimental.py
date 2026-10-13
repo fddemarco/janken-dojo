@@ -16,7 +16,7 @@ import pytest
 import janken
 from janken import botfile, export, library
 from janken.engine import play_pairs
-from janken.experimental import arena, features, identify, pretrained, vw
+from janken.experimental import arena, features, identify, pretrained, probe, vw
 from janken.kit.moves import INVALID, PAPER, ROCK, SCISSORS
 from janken.spec import make_spec
 
@@ -425,3 +425,24 @@ class TestPretrainedTable:
     @pytest.fixture(autouse=True)
     def _tmp(self, tmp_path: pathlib.Path) -> None:
         self.tmp = str(tmp_path)
+
+
+class TestProbe:
+    """janken/experimental/probe.py: families, replies and the classifier."""
+
+    def test_family_reads_the_level_and_the_species(self) -> None:
+        assert probe.family("bots/l1/rock_v1.yaml") == "fixed"
+        assert probe.family("bots/l1/wsls_v1.yaml") == "reactive"
+        assert probe.family("bots/l1/geometry_v1.yaml") == "l1_learner"
+        assert probe.family("bots/l2/anti_rps4_v1.yaml") == "replay_counter"
+        assert probe.family("bots/l4/gate_edge_v3.yaml") == "gate"
+        assert probe.species("gate_edge_v3") == "gate_edge"
+
+    def test_a_constant_bot_replies_constantly(self, tmp_path: pathlib.Path) -> None:
+        rocky = make_spec(write(tmp_path, "rocky", ROCKY))
+        assert probe.replies(rocky, probe.PROBE[:6], 1) == [R] * 6
+
+    def test_naive_bayes_names_the_class_whose_replies_fit(self) -> None:
+        model = probe.NaiveBayes(3).fit([([R, R, R], "rock"), ([P, S, R], "cycle")])
+        assert model.predict([R, R, R]) == "rock"
+        assert model.predict([P, S, R]) == "cycle"

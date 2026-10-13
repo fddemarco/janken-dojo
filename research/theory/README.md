@@ -92,3 +92,8 @@ A claim with no possible refutation isn't a claim.
   (`pretrained_context_v1`, +9.8 pts [+5.6, +14.4] over CTW on parameter variants,
   confirmed: notes 0071-0073). Pre-training generalises across parameters; online
   combining (VW over the strong L1s) is level with the best L2 (ideas #72-75).
+- **2026-10-13, opening probes** (the user's idea; research/probe_study.md). A
+  scripted 24-round opening names an opponent's coarse class (simple rule, L1
+  learner, adaptive L2+) 80% of the time vs held-out variants, 21 pts above a random
+  opening; families and species stay unreliable (52%, 43% at 48 rounds). It costs
+  about 2.8 rounds per match; whether knowing the class pays is next (ideas #77, #78).

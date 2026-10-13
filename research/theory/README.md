@@ -78,3 +78,7 @@ A claim with no possible refutation isn't a claim.
   half of it are counters, strong only where their prey is common. Algorithm cards
   added (`algorithms/`), for the RL, ML and statistical methods in use and the
   candidates, with their exploits and the 200 MB export budget.
+- **2026-10-13, step back.** Three L3 councils built from L2's strong set tie the
+  field's L3 council (notes 0065-0067): above L2, random pools saturate, and the lab's
+  evaluation can't see what separates strong bots. Next: hard-opponent pools
+  (idea #60) before more L3 designs.

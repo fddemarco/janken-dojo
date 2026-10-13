@@ -23,6 +23,14 @@ since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror
    (note 0065). L1's strong set is made of learners, which do transfer (note 0064).
    _Prediction:_ an L3 built from L2's learners only (`geometry_ensemble`,
    `period_bandit`, `repeat_mirror`) beats `l2_council_v1` vs pools of L1-L3.
+   _Refuted_ twice (notes 0066, 0067): from our seat it loses to its own arms; from
+   both seats it ties (-2.8 pts), its holes moved elsewhere.
+1. **Above L2, random pools saturate.** _supported._ Three L3 councils of different
+   design (notes 0065-0067) tie `l2_council_v1` at 73-76% of matches; the best L4's
+   gate and expert fixes tie their baseline in pools but resolve +5 to +8.5 pts on a
+   list of hard opponents (ideas #60, #64). The differences between strong bots live
+   in a few hard matchups that random pools dilute. _Prediction:_ evaluated on pools of
+   hard opponents (idea #60), the same comparisons separate.
 1. **Replaying a named bot beats that bot, and only that bot.** _supported._ An exact
    replay or impostor wins its target outright (in note 0014, 96.8% of rounds vs
    agamemnon) but moves the pool score by about 1 pt, as the target is one pool slot.

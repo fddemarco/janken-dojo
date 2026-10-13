@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 
 from janken import rating
 from janken.cli import app
-from janken.engine import play_pairs, registry
+from janken.engine import dealt, play_pairs, registry
 from janken.engine.build import BotContractError, load_bot, with_neighbours
 from janken.kit import levels
 from janken.match import INVALID_MOVE_LIMIT, MatchResult
@@ -375,3 +375,31 @@ class TestLevelFolders:
         result = CliRunner().invoke(app, ["bot", "check", "--bots-dir", d, "rock"])
         assert result.exit_code == 2
         assert f"{os.sep}l1: move it there" in result.output
+
+
+class TestStreaming(FixtureBots):
+    def pairs(self, n: int) -> list:
+        return [(make_spec(self.bot("randy")), make_spec(self.bot("counter")))] * n
+
+    def test_every_match_is_reported_once_in_order_of_its_index(self) -> None:
+        reported: list[tuple[int, MatchResult]] = []
+        got = play_pairs(self.pairs(5), 8, [1, 2, 3, 4, 5], None, reported.extend)
+        assert sorted(k for k, _ in reported) == [0, 1, 2, 3, 4]
+        assert [m for _, m in sorted(reported, key=lambda km: km[0])] == got
+
+    def test_reporting_as_they_end_changes_no_result(self) -> None:
+        seeds = [7, 8, 9, 10]
+        quiet = play_pairs(self.pairs(4), 8, seeds)
+        streamed = play_pairs(self.pairs(4), 8, seeds, 2, lambda done: None, 0.01)
+        assert streamed == quiet
+
+
+class TestDealt:
+    def test_the_heavy_matches_land_in_different_chunks(self) -> None:
+        order = dealt([1, 9, 1, 1, 9, 1], threads=2)
+        assert sorted(order) == list(range(6))
+        first, second = order[:3], order[3:]
+        assert {1, 4} & set(first) and {1, 4} & set(second)
+
+    def test_one_thread_plays_the_heaviest_first(self) -> None:
+        assert dealt([1.0, 3.0, 2.0], threads=1) == [1, 2, 0]

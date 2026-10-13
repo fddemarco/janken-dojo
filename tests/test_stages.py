@@ -8,8 +8,18 @@ import numpy as np
 import pytest
 
 from janken.engine.registry import P_MAX
-from janken.kit import blueprint, bot, ensemble, matching, overlays, pipeline, selectors
+from janken.kit import (
+    blueprint,
+    bot,
+    ensemble,
+    matching,
+    overlays,
+    pipeline,
+    replay,
+    selectors,
+)
 from janken.kit import codes as c
+from janken.kit.blueprint import lowering
 from janken.kit.moves import CRASH, INVALID, PAPER, ROCK, SCISSORS
 
 R, P, S, X = ROCK, PAPER, SCISSORS, INVALID
@@ -352,7 +362,7 @@ class TestReplayedGate:
             edge=0.0,
             warmup=warmup,
         )
-        runner = replaying(bot.Replay(blueprint.lowering.lower(gate), side=bot.MY))
+        runner = replaying(bot.Replay(lowering.lower(gate), side=bot.MY))
         return runner.last(self.MY_MOVES, self.OPP_MOVES)
 
     def test_it_names_the_gated_expert_once_the_gate_plays_it(self) -> None:
@@ -890,6 +900,62 @@ class TestReplay:
         runner = signal_bot(bot.Replay(replayed, draws=64))
         my = [R, P] * 6
         assert runner.last(my, [R] * len(my)) == P
+
+    def test_draws_stop_once_the_vote_is_decided_naming_the_same_move(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Each round is seeded as the referee seeds it, so the only difference
+        # between stopping early and drawing all 64 is the random numbers left over.
+        replayed = bot.Bandit(
+            (bot.LastMove(bot.OPP), bot.Frequency(bot.OPP, 0.9), bot.Constant(R)),
+            (bot.COPY, bot.BEAT),
+            bot.Dirichlet(0.95),
+            random_arm=bot.RA_SCORED,
+        )
+        rng = random.Random(5)
+        my = [rng.randrange(3) for _ in range(40)]
+        opp = [rng.randrange(3) for _ in range(40)]
+
+        def play() -> list[int]:
+            runner = signal_bot(bot.Replay(replayed, draws=64))
+            a, b = np.array(my, np.int64), np.array(opp, np.int64)
+            out = []
+            for n in range(len(my) + 1):
+                random.seed(n)
+                out.append(
+                    int(
+                        pipeline.play(
+                            runner.f,
+                            runner.i,
+                            runner.prm,
+                            a,
+                            b,
+                            n,
+                            runner.spec,
+                            runner.knobs,
+                        )
+                    )
+                )
+            return out
+
+        early = play()
+        monkeypatch.setattr(replay, "_decided", lambda votes, left: False)
+        assert early == play()
+
+    @pytest.mark.parametrize(
+        ("votes", "left", "decided"),
+        [
+            ((0.0, 0.0, 0.0), 10, False),  # nothing drawn yet
+            ((5.0, 2.0, 1.0), 3, False),  # P could still tie
+            ((5.0, 2.0, 1.0), 2, True),
+            ((4.0, 4.0, 0.0), 0, False),  # a tie: the first maximum wins it
+            ((1.0 / 3, 1.0 / 3, 7.0 / 3), 1, True),  # the random arm's thirds
+        ],
+    )
+    def test_a_vote_is_decided_when_no_other_move_can_catch_up(
+        self, votes: tuple[float, float, float], left: int, decided: bool
+    ) -> None:
+        assert replay._decided(np.array(votes), left) == decided
 
     def test_a_nested_replay_sees_the_history_swapped_back(self) -> None:
         # The opponent replays "beat their last move" from our side (so it beats the

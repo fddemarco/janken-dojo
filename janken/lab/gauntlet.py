@@ -96,8 +96,8 @@ def append(path: str, rounds: int, played: Mapping[Job, Played]) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a") as sink:
         for job, p in played.items():
-            row = {"a": job.a, "b": job.b, "seed": job.seed, "rounds": rounds}
-            row |= {"won": p.won, "lost": p.lost}
+            row: dict[str, object] = {"a": job.a, "b": job.b, "seed": job.seed}
+            row |= {"rounds": rounds, "won": p.won, "lost": p.lost}
             sink.write(json.dumps(row) + "\n")
 
 
@@ -115,25 +115,37 @@ def play(
     batch: int,
     log: str,
     workers: int,
-    on_batch: Callable[[int, int], None],
+    flush_s: float,
+    on_flush: Callable[[int, int], None],
 ) -> None:
-    """Play the jobs in batches over every core, logging each batch as it ends."""
+    """Play the jobs in batches over every core, logging each match as it ends:
+    every `flush_s` seconds the matches finished since are appended to the log,
+    and `on_flush` gets (matches done, of all)."""
     from ..engine import play_pairs
+    from ..match import MatchResult
     from .workflows import specs
 
+    done = 0
     for k in range(0, len(jobs), batch):
         chunk = jobs[k : k + batch]
+
+        def store(finished: list[tuple[int, MatchResult]], chunk=chunk) -> None:
+            nonlocal done
+            append(
+                log,
+                rounds,
+                {
+                    chunk[j]: Played(r.wins_a / rounds, r.wins_b / rounds)
+                    for j, r in finished
+                },
+            )
+            done += len(finished)
+            on_flush(done, len(jobs))
+
         pairs = [tuple(specs([j.a, j.b])) for j in chunk]
-        out = play_pairs(pairs, rounds, [j.seed for j in chunk], workers or None)
-        append(
-            log,
-            rounds,
-            {
-                j: Played(r.wins_a / rounds, r.wins_b / rounds)
-                for j, r in zip(chunk, out, strict=True)
-            },
+        play_pairs(
+            pairs, rounds, [j.seed for j in chunk], workers or None, store, flush_s
         )
-        on_batch(k + len(chunk), len(jobs))
 
 
 # --- reading it -------------------------------------------------------------------

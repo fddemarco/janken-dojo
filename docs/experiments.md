@@ -116,12 +116,16 @@ under `runs` in `janken.toml`):
 | `reports` | run: its latest analysis (summary JSON and markdown report) |
 | `tune_validations`, `predict_validations` | validated configuration ([Tuning](tuning.md#validation)) |
 
-- **Saved as it plays.** A run is stored (`running`) before it plays, and each round
-  robin is committed as soon as it's played.
+- **Saved as it plays.** A run is stored (`running`) before it plays, and its matches
+  are committed as they end: every `execution.flush_s` seconds, the ones finished since.
+  A slow match (an L4 vs an L5) shows up soon after it's played; fast ones go in
+  together.
   - You can analyze a run while it plays.
-  - A run stopped by Ctrl-C or a crash keeps its finished round robins and becomes
+  - A run stopped by Ctrl-C or a crash keeps its finished matches and becomes
     `interrupted`.
-- **Resume.** `lab resume` (or `evaluate --note`) plays only the missing round robins.
+  - The engine plays the whole schedule in one batch, the heaviest matches dealt over
+    the cores first, so one slow bot doesn't leave the other cores idle.
+- **Resume.** `lab resume` (or `evaluate --note`) plays only the missing matches.
   The rebuilt schedule makes the result identical to an uninterrupted run. It refuses if
   a bot file or the kit/engine changed meanwhile.
 - **Shared file.** Several processes can share the file: each write is a short

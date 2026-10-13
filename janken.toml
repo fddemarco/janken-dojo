@@ -32,6 +32,9 @@ spaces_dir = "spaces"
 [execution]
 # Threads playing matches; 0 uses every core.
 workers = 0
+# While a batch plays, the matches finished so far are logged and stored every flush_s
+# seconds: a slow match (an L4 vs an L5) shows up soon after it ends, fast ones together.
+flush_s = 10.0
 
 [match]
 # Rounds per match: 200 is the tournament standard.

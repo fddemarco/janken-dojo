@@ -104,6 +104,11 @@ class ExecutionConfig:
     """How matches are played."""
 
     workers: int = setting("threads playing matches (0: every core)", minimum=0)
+    flush_s: float = setting(
+        "seconds between flushes of the matches finished while a batch plays"
+        " (logged and stored as they end; 0: once, at the batch's end)",
+        minimum=0,
+    )
 
 
 @dataclasses.dataclass(frozen=True)

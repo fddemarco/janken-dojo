@@ -212,7 +212,7 @@ class TestExperiment(LightBots):
         assert mystery.height == POOL
 
     @pytest.mark.heavy
-    def test_an_interrupted_run_keeps_its_round_robins_and_resumes(self) -> None:
+    def test_an_interrupted_run_keeps_its_matches_and_resumes(self) -> None:
         cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]
 
         def stop_after_the_first(rr: int) -> None:
@@ -225,16 +225,35 @@ class TestExperiment(LightBots):
             )
         cut = self.runs.resolve("cut")
         assert self.runs.status(cut) == INTERRUPTED
-        assert self.runs.played_round_robins(cut) == {0}
+        assert 0 in self.runs.played_round_robins(cut)
+        with self.runs._transaction() as con:  # cut mid round robin, as a crash would
+            con.execute("DELETE FROM matches WHERE run_id = ? AND k % 2 = 1", [cut])
         partial = analyze.analyze_run(cut, self.root)
-        assert partial["round_robins_played"] == 1
-        assert "Partial: 1 of 3" in analyze.render(partial)
+        assert "Partial" in analyze.render(partial)
 
         quietly(resume_experiment, cut, self.root)
         assert self.runs.status(cut) == COMPLETE
         whole = self.run_exp(cands, round_robins=3, name="whole")
         resumed = self.runs.matches(cut).drop("run_id")
         assert resumed.equals(self.runs.matches(whole).drop("run_id"))
+
+    def test_a_round_robin_is_stored_before_its_hook_runs(self) -> None:
+        started: list[str] = []
+        stored: dict[int, int] = {}
+
+        def count(rr: int) -> None:
+            matches = self.runs.matches(started[0])
+            stored[rr] = matches.filter(matches["rr"] == rr).height
+
+        run = self.run_exp(
+            [make_spec(self.light("cycler_v1"))],
+            rounds=6,
+            on_start=started.append,
+            on_batch=count,
+        )
+        per_rr = POOL * (POOL + 1) // 2
+        assert stored == {0: per_rr, 1: per_rr}
+        assert len(self.runs.played_matches(run)) == 2 * per_rr
 
     def test_a_run_grows_into_the_run_planned_at_its_new_size(self) -> None:
         cands = [make_spec(self.light("cycler_v1")), make_spec(self.light("wsls_v1"))]

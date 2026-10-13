@@ -11,7 +11,7 @@ checks its type, its allowed values and its minimum.
 | `engine` | `jit`, and which commands keep numba's compiled code on disk (`cache_commands`) |
 | `output` | `progress` bars, `format` (text or json), `quiet` |
 | `workspace` | where the workspace (`dir`), the notebook, the bots and the spaces live |
-| `execution` | `workers` |
+| `execution` | `workers`; `flush_s`, how often the matches finished so far are logged and stored while a batch plays |
 | `match` | `rounds` per match |
 | `pool` | pool `size`, `allow_small` |
 | `effort` | the `default` effort, and the budgets `effort.quick` / `.standard` / `.thorough`: round robins, tuning round robins, trials, validation top K and round robins, predictor trials |

@@ -56,6 +56,7 @@ class Plan:
     use_mocks: bool
     workers: int
     mode: str
+    flush_s: float  # seconds between commits of the matches finished so far
 
 
 @dataclasses.dataclass(frozen=True)
@@ -122,7 +123,11 @@ def evaluate(
     known = [r for r in note.run_ids if r in runs.run_ids()]
     if known and (runs.status(known[-1]) != COMPLETE or grow_to):
         run_id = resume_experiment(
-            known[-1], how.workspace, how.workers or None, round_robins=grow_to
+            known[-1],
+            how.workspace,
+            how.workers or None,
+            round_robins=grow_to,
+            flush_s=how.flush_s,
         )
     elif known:
         run_id = known[-1]
@@ -152,6 +157,7 @@ def evaluate(
             use_mocks=how.use_mocks,
             root=how.workspace,
             on_start=remember,
+            flush_s=how.flush_s,
         )
         note = started[0]
     summary = analyze.analyze_run(run_id, how.workspace)
@@ -489,7 +495,9 @@ def _species_run(
     if stored.height:
         run_id = str(stored["run_id"][-1])
         if runs.status(run_id) != COMPLETE:
-            run_id = resume_experiment(run_id, how.workspace, how.workers or None)
+            run_id = resume_experiment(
+                run_id, how.workspace, how.workers or None, flush_s=how.flush_s
+            )
         return run_id, note
     started: list[notes.Note] = [note]
 
@@ -512,6 +520,7 @@ def _species_run(
         use_mocks=how.use_mocks,
         root=how.workspace,
         on_start=remember,
+        flush_s=how.flush_s,
     )
     return run_id, started[0]
 

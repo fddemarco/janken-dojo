@@ -1,6 +1,7 @@
 """The referee, compiled: whole matches inside one numba kernel.
 
-`play_batch` spreads a schedule across cores with `prange`. Each bot draws from
+`play_batch` spreads a schedule across cores with `prange`, flagging each match
+done as it ends (janken/engine/__init__.py reads them while it plays). Each bot draws from
 its own stream: before a side moves, the kernel reseeds numba's generator from
 (match seed, side, round), so a match depends only on its seed, never on the
 thread that played it, and neither bot's draws depend on how many the other
@@ -146,12 +147,11 @@ def play_into(code_a, code_b, prm_a, prm_b, rounds, seed, out):
 
 
 @parallel_kernel
-def play_batch(codes_a, codes_b, prm_a, prm_b, rounds, seeds):
-    """Play every (codes_a[k], codes_b[k]) match. Returns the moves as
-    int8[k, rounds, 2] and each match's (rounds played, forfeit a, forfeit b) as
-    int64[k, 3]."""
-    out = np.empty((codes_a.size, rounds, 2), np.int8)
-    status = np.zeros((codes_a.size, 3), np.int64)
+def play_batch(codes_a, codes_b, prm_a, prm_b, rounds, seeds, out, status, done):
+    """Play every (codes_a[k], codes_b[k]) match into the caller's arrays: its
+    moves into out[k] (int8[rounds, 2]), its (rounds played, forfeit a, forfeit b)
+    into status[k], then done[k] = 1. Compiled without the GIL, so the caller can
+    read finished matches while the batch is still playing."""
     for k in prange(codes_a.size):
         played, ff_a, ff_b = play_into(
             codes_a[k], codes_b[k], prm_a[k], prm_b[k], rounds, int(seeds[k]), out[k]
@@ -159,7 +159,7 @@ def play_batch(codes_a, codes_b, prm_a, prm_b, rounds, seeds):
         status[k, 0] = played
         status[k, 1] = ff_a
         status[k, 2] = ff_b
-    return out, status
+        done[k] = 1
 
 
 # --- dispatch (build.py replaces everything below) ---------------------------

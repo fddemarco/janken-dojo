@@ -109,7 +109,15 @@ def nash(
     ladder = list(range(1, seeds + 1))
     log = _log(lab, name)
     jobs = gauntlet.missing(checked, probes, ladder, gauntlet.load(log, lab.rounds))
-    gauntlet.play(jobs, lab.rounds, cfg.batch, log, lab.workers, _progress(lab))
+    gauntlet.play(
+        jobs,
+        lab.rounds,
+        cfg.batch,
+        log,
+        lab.workers,
+        CFG.execution.flush_s,
+        _progress(lab),
+    )
     verdicts = gauntlet.nash_verdicts(
         gauntlet.load(log, lab.rounds), checked, probes, ladder, skew
     )
@@ -163,7 +171,13 @@ def run(
     log = _log(lab, name)
     jobs = gauntlet.missing(cand, opps, ladder, gauntlet.load(log, lab.rounds))
     gauntlet.play(
-        jobs, lab.rounds, CFG.gauntlet.batch, log, lab.workers, _progress(lab)
+        jobs,
+        lab.rounds,
+        CFG.gauntlet.batch,
+        log,
+        lab.workers,
+        CFG.execution.flush_s,
+        _progress(lab),
     )
     done = gauntlet.load(log, lab.rounds)
     data, text = {}, []

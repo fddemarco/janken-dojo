@@ -2057,6 +2057,7 @@ $ uv run janken lab gauntlet variations [OPTIONS] {out}
 **Options**:
 
 * `--per-bot <int>`: variants drawn per field bot (config: gauntlet.per_bot)  [default: 10]
+* `--only <str>`: only these bots: stems, comma-separated (all: empty)
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

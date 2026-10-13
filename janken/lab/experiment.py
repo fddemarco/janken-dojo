@@ -17,19 +17,21 @@ identically get identical matches, and a real
 difference between them isn't drowned in seed noise: common random numbers,
 which is what makes paired comparisons and tuning sharp.
 
-A run is stored in the runs database (runs_db.py) before it plays, and each round
-robin is committed as soon as it's played. An interrupted run keeps them, and
-`resume_experiment` plays the rest of the same schedule. Round robin k's pool and
+A run is stored in the runs database (runs_db.py) before it plays, and its
+matches are committed as they end (every `execution.flush_s` seconds, so a slow
+L4 vs L5 match shows up soon after it's played). An interrupted run keeps them,
+and `resume_experiment` plays the rest of the same schedule. Round robin k's pool and
 seeds depend only on k, never on how many the run plays, so `resume_experiment`
 can also grow a run (1 --> 3 --> 5 ... round robins): the grown run equals one
 planned at its new size.
 """
 
+import collections
 import itertools
 import random
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 
 from .. import _numba_cache, library, progress, settings, telemetry
 from ..engine import play_pairs
@@ -91,6 +93,39 @@ def _no_hook(rr: int) -> None:
     """The default `on_batch`: nothing to do after a round robin is stored."""
 
 
+def match_row(
+    rr: int,
+    k: int,
+    pair: tuple[BotSpec, BotSpec],
+    seed: int,
+    m: MatchResult,
+    rounds: int,
+    run_id: str,
+    candidates: set[str],
+) -> dict[str, object]:
+    """Match k of round robin `rr` as a row (runs_db.MATCH_SCHEMA)."""
+    a, b = pair
+    return {
+        "run_id": run_id,
+        "rounds": rounds,
+        "rr": rr,
+        "k": k,
+        "bot_a": a.label,
+        "bot_b": b.label,
+        "stem_a": a.stem,
+        "stem_b": b.stem,
+        "cand_a": a.label in candidates,
+        "cand_b": b.label in candidates,
+        "seed": seed,
+        "wins_a": m.wins_a,
+        "wins_b": m.wins_b,
+        "draws": m.draws,
+        "forfeit_a": m.forfeit_a,
+        "forfeit_b": m.forfeit_b,
+        "moves": m.moves,
+    }
+
+
 def match_rows(
     rr: int,
     pairs: Sequence[tuple[BotSpec, BotSpec]],
@@ -102,26 +137,8 @@ def match_rows(
 ) -> list[dict[str, object]]:
     """One row per match of round robin `rr` (runs_db.MATCH_SCHEMA)."""
     return [
-        {
-            "run_id": run_id,
-            "rounds": rounds,
-            "rr": rr,
-            "k": k,
-            "bot_a": a.label,
-            "bot_b": b.label,
-            "stem_a": a.stem,
-            "stem_b": b.stem,
-            "cand_a": a.label in candidates,
-            "cand_b": b.label in candidates,
-            "seed": seed,
-            "wins_a": m.wins_a,
-            "wins_b": m.wins_b,
-            "draws": m.draws,
-            "forfeit_a": m.forfeit_a,
-            "forfeit_b": m.forfeit_b,
-            "moves": m.moves,
-        }
-        for k, ((a, b), seed, m) in enumerate(zip(pairs, seeds, results))
+        match_row(rr, k, pair, seed, m, rounds, run_id, candidates)
+        for k, (pair, seed, m) in enumerate(zip(pairs, seeds, results))
     ]
 
 
@@ -133,42 +150,62 @@ def play_into(
     workers: int | None,
     candidates: Sequence[BotSpec],
     on_batch: Callable[[int], None] = _no_hook,
+    flush_s: float = 0.0,
+    played: Collection[tuple[int, int]] = frozenset(),
 ) -> float:
-    """Play `schedule` into run `run_id`, committing each round robin as soon as it
-    is played; returns the seconds spent.
+    """Play `schedule` into run `run_id` but the matches already `played` (as
+    (rr, k)); returns the seconds spent.
+
+    Every round robin plays in one batch, so the cores stay busy, and matches are
+    committed as they end, every `flush_s` seconds (0: once, at the end): an
+    interrupted run keeps every finished match. `on_batch(rr)` runs once a
+    round robin's matches are all stored.
 
     The run ends `complete`; if anything stops it (Ctrl-C included) it ends
-    `interrupted`, keeping every round robin committed so far, and the error goes on.
+    `interrupted`, keeping every match committed so far, and the error goes on.
     """
     labels = {c.label for c in candidates}
     started = time.perf_counter()
-    total = sum(len(rr["pairs"]) for rr in schedule)
-    last = schedule[-1]["rr"] + 1 if schedule else 0
+    todo = [
+        (rr, k)
+        for rr in schedule
+        for k in range(len(rr["pairs"]))
+        if (rr["rr"], k) not in played
+    ]
+    left = collections.Counter(rr["rr"] for rr, _ in todo)
     try:
-        with progress.bar(total, "compiling", "match") as bar:
-            for i, rr in enumerate(schedule):
-                if i:
-                    bar.set_description(f"rr {rr['rr'] + 1}/{last}")
-                with telemetry.span("experiment.round_robin", matches=len(rr["pairs"])):
-                    results = play_pairs(rr["pairs"], rounds, rr["seeds"], workers)
-                    runs.append_matches(
-                        match_rows(
-                            rr["rr"],
-                            rr["pairs"],
-                            rr["seeds"],
-                            results,
-                            rounds,
-                            run_id,
-                            labels,
-                        )
+        with progress.bar(len(todo), "playing", "match") as bar:
+
+            def store(finished: list[tuple[int, MatchResult]]) -> None:
+                rows = []
+                for j, m in finished:
+                    rr, k = todo[j]
+                    pair, seed = rr["pairs"][k], rr["seeds"][k]
+                    rows.append(
+                        match_row(rr["rr"], k, pair, seed, m, rounds, run_id, labels)
                     )
-                bar.update(len(results))
-                on_batch(rr["rr"])
+                runs.append_matches(rows)
+                bar.update(len(finished))
+                for j, _ in finished:
+                    number = todo[j][0]["rr"]
+                    left[number] -= 1
+                    if not left[number]:
+                        on_batch(number)
+
+            with telemetry.span("experiment.play", matches=len(todo)):
+                play_pairs(
+                    [rr["pairs"][k] for rr, k in todo],
+                    rounds,
+                    [rr["seeds"][k] for rr, k in todo],
+                    workers,
+                    store,
+                    flush_s,
+                )
     except BaseException:
         elapsed = time.perf_counter() - started
         runs.finish(run_id, INTERRUPTED, elapsed)
         progress.log(
-            f"run {run_id} interrupted; its finished round robins are stored."
+            f"run {run_id} interrupted; its finished matches are stored."
             f" Resume with: janken lab resume {run_id} (or janken evaluate --note NNNN)"
         )
         raise
@@ -193,8 +230,10 @@ def run_experiment(
     extra: dict | None = None,
     on_batch: Callable[[int], None] = _no_hook,
     on_start: Callable[[str], None] = lambda run_id: None,
+    flush_s: float = 0.0,
 ) -> str:
-    """Play and store one experiment, a round robin at a time; returns its run id.
+    """Play and store one experiment, matches stored as they end (every
+    `flush_s` seconds); returns its run id.
 
     `on_start` gets the run id once the run is stored, before it plays."""
     if not candidates:
@@ -244,7 +283,9 @@ def run_experiment(
         file=sys.stderr,
     )
     on_start(run_id)
-    elapsed = play_into(runs, run_id, schedule, rounds, workers, candidates, on_batch)
+    elapsed = play_into(
+        runs, run_id, schedule, rounds, workers, candidates, on_batch, flush_s
+    )
     print(f"played {n} matches in {elapsed:.1f}s -> run {run_id}", file=sys.stderr)
     return run_id
 
@@ -255,8 +296,9 @@ def resume_experiment(
     workers: int | None = None,
     on_batch: Callable[[int], None] = _no_hook,
     round_robins: int = 0,
+    flush_s: float = 0.0,
 ) -> str:
-    """Play the round robins a stored run is missing; returns its run id.
+    """Play the matches a stored run is missing; returns its run id.
 
     The schedule is rebuilt from the run's manifest (pools and seeds depend only
     on its seed), so the resumed run equals one that was never interrupted.
@@ -301,18 +343,25 @@ def resume_experiment(
         )
     if target > config["round_robins"]:
         _grow(runs, run_id, manifest, schedule, pools)
-    played = runs.played_round_robins(run_id)
-    todo = [rr for rr in schedule if rr["rr"] not in played]
+    played = runs.played_matches(run_id)
+    todo = sum(len(rr["pairs"]) for rr in schedule) - len(played)
     if not todo:
         runs.finish(run_id, COMPLETE, 0.0)
-        print(f"run {run_id} has every round robin already", file=sys.stderr)
+        print(f"run {run_id} has every match already", file=sys.stderr)
         return run_id
-    print(
-        f"resuming {run_id}: {len(todo)} of {len(schedule)} round robin(s) to play",
-        file=sys.stderr,
-    )
+    print(f"resuming {run_id}: {todo} match(es) to play", file=sys.stderr)
     runs.finish(run_id, RUNNING, 0.0)
-    play_into(runs, run_id, todo, config["rounds"], workers, candidates, on_batch)
+    play_into(
+        runs,
+        run_id,
+        schedule,
+        config["rounds"],
+        workers,
+        candidates,
+        on_batch,
+        flush_s,
+        played,
+    )
     return run_id
 
 

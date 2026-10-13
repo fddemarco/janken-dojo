@@ -101,6 +101,7 @@ def experiment(
         allow_small=lab.allow_small,
         use_mocks=lab.use_mocks,
         root=lab.workspace,
+        flush_s=CFG.execution.flush_s,
     )
     summary = analyze.analyze_run(run_id, lab.workspace)
     lab.emit(summary, analyze.render(summary))
@@ -120,7 +121,9 @@ def resume(
     from ..lab.experiment import resume_experiment
 
     try:
-        run_id = resume_experiment(run, lab.workspace, lab.workers or None)
+        run_id = resume_experiment(
+            run, lab.workspace, lab.workers or None, flush_s=CFG.execution.flush_s
+        )
     except ValueError as exc:  # a candidate's bot file is gone
         raise fail(str(exc)) from None
     summary = analyze.analyze_run(run_id, lab.workspace)

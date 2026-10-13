@@ -8,8 +8,8 @@ One DuckDB file, `[tool.janken.runs] file` in the experiments directory:
     tune_validations   one row per configuration a `tune --validate-top` replayed
     predict_validations  one row per configuration `predict-tune --validate-top` scored
 
-A run is created `running` with its whole manifest, and every round robin is
-committed in its own transaction as soon as it's played, so a run is analyzable
+A run is created `running` with its whole manifest, and its matches are
+committed as they end (every `execution.flush_s` seconds), so a run is analyzable
 while it plays and keeps what it played when it's interrupted (status
 `interrupted`; `janken lab resume` plays the rest).
 
@@ -384,6 +384,11 @@ class RunStore:
         """(run id, manifest, matches) of the run `ref` resolves to."""
         run_id = self.resolve(ref)
         return run_id, self.manifest(run_id), self.matches(run_id)
+
+    def played_matches(self, run_id: str) -> set[tuple[int, int]]:
+        """The (rr, k) of every match the run has stored."""
+        frame = self.query("SELECT rr, k FROM matches WHERE run_id = ?", [run_id])
+        return {(int(r), int(k)) for r, k in zip(frame["rr"], frame["k"])}
 
     def played_round_robins(self, run_id: str) -> set[int]:
         frame = self.query("SELECT DISTINCT rr FROM matches WHERE run_id = ?", [run_id])

@@ -1,7 +1,8 @@
 """The decorators every compiled function in janken uses, bots included.
 
     @kernel            numba's njit
-    @parallel_kernel   njit(parallel=True), for the referee's prange loop
+    @parallel_kernel   njit(parallel=True, nogil=True), for the referee's prange
+                       loop (without the GIL, so Python reads its progress)
 
 Whether they compile, and whether numba keeps the compiled code on disk, comes from
 janken/settings.py at decoration time: the JIT can be switched off (the test suite
@@ -26,7 +27,8 @@ def _compile(fn: F, parallel: bool) -> F:
         return fn
     if current.cache:
         _numba_cache.configure()
-    return cast(F, numba.njit(cache=current.cache, parallel=parallel)(fn))
+    compiled = numba.njit(cache=current.cache, parallel=parallel, nogil=parallel)
+    return cast(F, compiled(fn))
 
 
 def kernel(fn: F) -> F:
@@ -35,5 +37,6 @@ def kernel(fn: F) -> F:
 
 
 def parallel_kernel(fn: F) -> F:
-    """Like `kernel`, with numba's parallel loops (`numba.prange`) enabled."""
+    """Like `kernel`, with numba's parallel loops (`numba.prange`) enabled and the
+    GIL released while it runs."""
     return _compile(fn, parallel=True)

@@ -31,8 +31,28 @@ def likely_move(
 ) -> int:
     """The move ensemble e's Thompson sampling (sharpness 1) picks most often over
     `draws` draws, first maximum; a draw won by the random arm counts a third for
-    each move. NO_MOVE when no arm has a move."""
+    each move. NO_MOVE when no arm has a move. It stops drawing once the rest of
+    the draws can't change the leader: the same move as all of them, from fewer
+    random numbers."""
     return likely_move_among(spec, e, f, i, draws, spec[e + c.E_NARMS])
+
+
+@kernel
+def _decided(votes: np.ndarray, left: int) -> bool:
+    """Whether `left` more draws (a vote of at most 1 each) can no longer change
+    which move leads the vote: the leader is ahead of every other move by more."""
+    top = max(votes[0], max(votes[1], votes[2]))
+    lead = 0
+    for m in range(3):
+        if votes[m] == top:
+            lead += 1
+    if lead > 1:
+        return False
+    runner_up = -1.0
+    for m in range(3):
+        if votes[m] < top:
+            runner_up = max(runner_up, votes[m])
+    return top - runner_up > left
 
 
 @kernel
@@ -44,7 +64,9 @@ def likely_move_among(
     score_f = spec[e + c.E_SCORE_F]
     has_random = spec[e + c.E_RANDOM] == c.RA_SCORED
     votes = np.zeros(3)
-    for _ in range(draws):
+    for d in range(draws):
+        if _decided(votes, draws - d):
+            break
         best = -2.0
         pick = -1
         for a in range(n_arms + 1):

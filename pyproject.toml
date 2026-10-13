@@ -44,6 +44,11 @@ build-backend = "uv_build"
 module-name = "janken"
 module-root = ""
 
+[tool.ruff.lint.per-file-ignores]
+# play_pairs plays a batch in a worker thread (so it can log matches as they end) and
+# hands whatever stopped it back to the caller's thread, which raises it.
+"janken/engine/__init__.py" = ["BLE001"]
+
 [tool.ruff.lint.flake8-bugbear]
 # janken/settings.py declares each setting with `setting(...)`, a dataclasses.field.
 # The blueprint's stages are frozen dataclasses, so their defaults can be instances.

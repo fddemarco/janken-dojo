@@ -53,6 +53,7 @@ def plan_for(lab: Lab, mode: str):
         use_mocks=lab.use_mocks,
         workers=lab.workers,
         mode=mode,
+        flush_s=CFG.execution.flush_s,
     )
 
 

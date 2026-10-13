@@ -41,6 +41,10 @@ uv run janken idea add "**Follow-up**: ..." --priority P1 \
   --motivation "insight of YYYY-MM-DD, [NNNN](experiments/NNNN-x.md)"
 ```
 
+Then update `research/theory/`: the claim the insight supports, refutes or opens in
+its paradigm's file (status, evidence, prediction), and a journal line in
+`theory/README.md` when a paradigm changes phase.
+
 When a new result contradicts an old insight, strike it. Never delete it:
 
 ```bash

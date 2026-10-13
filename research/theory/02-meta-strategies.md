@@ -10,8 +10,8 @@ bottom up, after L1.
 ## Claims
 
 1. **Replaying a named bot beats that bot, and only that bot.** _supported._ An exact
-   replay or impostor wins its target outright (96.8% of rounds vs agamemnon, note
-   0014\) but moves the pool score by about 1 pt, since the target is one pool slot.
+   replay or impostor wins its target outright (in note 0014, 96.8% of rounds vs
+   agamemnon) but moves the pool score by about 1 pt, as the target is one pool slot.
    _Evidence:_ insights of 2026-10-13; notes 0014, 0015.
 1. **The top bots don't overfit their opponents' exact parameters much.**
    _supported._ Against pools where every bot plays a parameter variant, the best L4

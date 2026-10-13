@@ -11,6 +11,12 @@ Run every command as `uv run janken ...`.
 
 ## 1. Read the state
 
+Read `research/theory/` first: the phase each paradigm is in (diversify or
+specialise), its open questions and its conjectures waiting for a test. Specialise
+only when the level's strong strategies are few and stay strong across their
+parameter variants (`theory/README.md`); otherwise diversify. Work bottom up by level
+(`research/README.md`, Research direction).
+
 ```bash
 uv run janken status                       # next step, open ideas, leaderboard
 uv run janken insight list                 # what is known

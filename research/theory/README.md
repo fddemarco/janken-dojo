@@ -82,3 +82,8 @@ A claim with no possible refutation isn't a claim.
   field's L3 council (notes 0065-0067): above L2, random pools saturate, and the lab's
   evaluation can't see what separates strong bots. Next: hard-opponent pools
   (idea #60) before more L3 designs.
+- **2026-10-13, close of session.** Hard-opponent pools exist (`pool.lists`, idea
+  #60) and work as predicted on rounds: a change random pools tied gains +21.2 rounds
+  per match on them (note 0068). Next session: grow 0068 to resolve match score, then
+  revisit the L3 councils (notes 0065-0067) on hard pools, and the L1 diversity ideas
+  (CTW, families with no signal).

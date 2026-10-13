@@ -132,7 +132,13 @@ pools can't resolve. For each level L:
 1. **Diversity.** The strategy families the level covers (frequency, transitions,
    patterns, periods, reactions to outcomes, the score, geometry, cycles, noise) and
    the ones it lacks; every kit signal without a species of its own is a candidate.
-   New species fill gaps; near-copies are variants (`/classify`).
+   New species fill gaps; near-copies are variants (`/classify`). A candidate with a
+   new mechanism is evaluated against its closest species, but naming a species'
+   current version as the baseline makes `janken species classify` take the
+   candidate as that species' next version (`species.promote_on_evaluation`): for a
+   new mechanism, classify it with that switch off for the run
+   (`janken config set --local species.promote_on_evaluation false`, then `unset`),
+   so it is judged by core agreement (note 0060).
 1. **Limits and strengths.** What the level can't do (an L1 has no memory of how
    its predictions fared; an L2 can't model an opponent that models it), written as
    insights, which say what the next level must add.

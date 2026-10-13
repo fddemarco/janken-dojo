@@ -44,7 +44,7 @@ A claim with no possible refutation isn't a claim.
 
 | file | paradigm | phase |
 |---|---|---|
-| [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | diversify (just started) |
+| [01-l1-heuristics.md](01-l1-heuristics.md) | single heuristics: one signal, one rotation | diversify: atlas and counter map done, one new species |
 | [02-meta-strategies.md](02-meta-strategies.md) | aggregation: bandits, gates, replays (L2 and up) | specialised; to revisit bottom up |
 
 ## Journal
@@ -55,3 +55,10 @@ A claim with no possible refutation isn't a claim.
   set the direction: bottom up by level, diversify and specialise in turn. First step:
   the L1 atlas (research/l1_atlas.md), which finds L1's strong set small (two
   learners at the top, four close behind).
+- **2026-10-13, later.** L1 atlas with 20 species and the counter map: four families
+  (fixed, reactive, frequency, learners), each with a natural counter, and a small
+  strong set (the repeat followers and `geometry`) with no strong counter at L1. New
+  species `second_repeat_v1` (note 0060) tops the L1 round robin; `backoff_ngram`
+  re-derived the longest repeat and was dropped (note 0061). Process lesson: a
+  diversity candidate's evaluation baseline declares a succession at classify time
+  (research/README.md, Research direction, step 3).

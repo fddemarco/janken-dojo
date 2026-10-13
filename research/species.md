@@ -80,4 +80,4 @@ classified, and the note that decided it. The CLI edits this table; keep the row
 | `second_repeat` | L1 | `second_repeat_v1` | `second_repeat` ([0060](experiments/0060-second-repeat-vs-markov2-joint-v1.md)) --> v1 | |
 | `repeat_mirror` | L2 | `repeat_mirror_v1` | `mirror_l1_bandit` ([0064](experiments/0064-mirror-l1-bandit-vs-iocaine-lite-v1.md)) --> v1 | |
 | `context_mixture` | L1 | `context_mixture_v1` | `context_mixture` ([0071](experiments/0071-context-mixture-vs-pattern-memory-v1.md)) --> v1 | |
-| `pretrained_context` | L1 | `pretrained_context_v2` | `pretrained_context` ([0073](experiments/0073-pretrained-context-vs-context-mixture-v1.md)) --> v1; `pretrained_light` ([0078](experiments/0078-pretrained-light-vs-pretrained-context-v1.md)) --> v2 | |
+| `pretrained_context` | L1 | `pretrained_context_v3` | `pretrained_context` ([0073](experiments/0073-pretrained-context-vs-context-mixture-v1.md)) --> v1; `pretrained_light` ([0078](experiments/0078-pretrained-light-vs-pretrained-context-v1.md)) --> v2; `pretrained_deep` ([0080](experiments/0080-pretrained-deep-vs-pretrained-context-v2.md)) --> v3 | |

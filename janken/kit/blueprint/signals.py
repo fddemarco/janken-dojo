@@ -167,7 +167,7 @@ class PriorTable(Signal):
         return _rows(c.JOINT, self.order) * 3, 0
 
     def validate(self) -> None:
-        check(1 <= self.order <= 3, "PriorTable order must be 1..3")
+        check(1 <= self.order <= 4, "PriorTable order must be 1..4")
         check(
             len(self.prior) == _rows(c.JOINT, self.order) * 3,
             "PriorTable prior must hold 3 probabilities per joint context",

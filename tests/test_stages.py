@@ -189,6 +189,11 @@ class TestSignal:
         runner = signal_bot(bot.PriorTable(order=1, weight=1.0, prior=tuple(prior)))
         assert runner.last([R] * 6, [P] * 6) == P  # five counts of paper outweigh it
 
+    def test_a_prior_table_reads_up_to_4_joint_moves(self) -> None:
+        bot.PriorTable(order=4, prior=(1.0 / 3.0,) * (9**4 * 3)).validate()
+        with pytest.raises(blueprint.BlueprintError, match="order must be 1..4"):
+            bot.PriorTable(order=5, prior=(1.0 / 3.0,) * (9**5 * 3)).validate()
+
     def test_a_prior_table_needs_a_row_per_context(self) -> None:
         with pytest.raises(blueprint.BlueprintError, match="3 probabilities"):
             bot.PriorTable(order=1, prior=(0.5, 0.5)).validate()

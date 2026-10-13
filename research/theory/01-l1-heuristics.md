@@ -57,7 +57,10 @@ counters. Still open at L1: the families with no signal, and a counter of `geome
    lever, not the data's breadth. Weights 0.25, 0.5 and 1 play identically (lab
    experiment prior-weight-sweep: 56.5% of matches each, weight 2 52.0%): at or
    below 1 a single count outweighs the prior, so **the prior's value is a cold
-   start**, the guess for contexts the match hasn't shown yet, and its ties.
+   start**, the guess for contexts the match hasn't shown yet, and its ties. And a
+   longer context is a sharper cold start: k = 1, 2, 3 win 19%, 22.5%, 44.5% of
+   matches vs whole-field variants, and k = 4 beats k = 3 by +7.9 pts [+3.4, +12.3]
+   on fresh seeds (note 0080: `pretrained_context_v3`).
 1. **L1 is non-transitive at the margins.** _supported._ A cycle among the middle
    learners (`markov2_joint` > `period_detector` > `transition_matrix` ~
    `markov2_joint`), and `rotation_outcome`, last among the learners, is the only one

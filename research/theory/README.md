@@ -108,3 +108,8 @@ A claim with no possible refutation isn't a claim.
   beat CTW by 12-30 pts there; as an arm beside strong online arms the prior adds
   nothing (note 0077). Opening probes: the family is worth knowing, but records
   identify it better than a script (notes 0074, 0075).
+- **2026-10-13, last.** The pre-trained prior is a cold start, and a longer context
+  sharpens it: `pretrained_context_v3` (4 joint moves, 158 KB) beats v2 (3 moves) by
+  +7.9 pts on whole-field variants (note 0080). Next: the prior inside the strong
+  online learners as their cold start (CTW's KT counts, the repeat followers' empty
+  matches), and k = 5 with a hashed table.

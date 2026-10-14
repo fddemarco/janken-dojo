@@ -1,0 +1,13 @@
+description: |
+  Random architecture (research only, never in the field): an unknown opponent sampled from the kit's grammar.
+defaults: {}
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: relative, space: {REF: MY, BY_OUTCOME: 0, DECAY: 0.95}, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: longest_match, space: {MAX_LEN: 4, CTX: JOINT, OF: MY}, rotations: [BEAT_BEAT, COPY]}
+        - {bot: frequency, space: {OF: MY, DECAY: 1.0}, rotations: [COPY, BEAT_BEAT, BEAT]}
+        - {bot: ngram, space: {ORDER: 3, CTX: JOINT, OF: MY, DECAY: 0.85}, rotations: [BEAT, BEAT_BEAT, COPY]}
+      scorer: {DecayedNet: {decay: 0.9}}
+      selector: {Greedy: {ties: TIES_RANDOM}}

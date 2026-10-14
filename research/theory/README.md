@@ -139,3 +139,8 @@ A claim with no possible refutation isn't a claim.
   half kept, two seeds as train and test (idea #91). They reproduce the tournament's
   verdict (the V3 core over V4) and retire the outsider census's leader (idea #90,
   dropped). Next: tune the V3 core on the train population, confirm on test.
+- **2026-10-14, field twins.** Scripts saturate on strong bots, but our V3 fleet's real
+  records are an adaptive probe: with them, lab twins of 18 strong tournament bots
+  predict V3's real record (rank correlation +0.61). On that bench V3's core is at a
+  local optimum: no new main, parameter or upgrade with the newer learners beats it,
+  and the computed replay estimate ties the 256-draw replay (research/probes.md).

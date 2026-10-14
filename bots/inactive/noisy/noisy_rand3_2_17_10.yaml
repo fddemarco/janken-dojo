@@ -1,0 +1,6 @@
+description: |
+  Research opponent (never in the field): rand3_2_17 with 10% random moves, a twin for the tournament's noisy learners (AtendeDOS-like, research/probes.md).
+defaults: {}
+blueprint:
+  guards: [{Noise: {p: 0.1}}]
+  core: {bot: rand3_2_17}

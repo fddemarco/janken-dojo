@@ -1,0 +1,11 @@
+# Strong field L1-L2s that filter a random population: its bots are kept by margin vs these (idea #91).
+bots/l1/context_mixture_v2.yaml
+bots/l1/pattern_memory_v1.yaml
+bots/l1/second_repeat_v1.yaml
+bots/l1/geometry_v1.yaml
+bots/l2/iocaine_lite_v1.yaml
+bots/l2/repeat_mirror_v1.yaml
+bots/l2/geometry_ensemble_v1.yaml
+bots/l2/smartbot_v1.yaml
+bots/l2/multiscale_v1.yaml
+bots/l2/period_bandit_v1.yaml

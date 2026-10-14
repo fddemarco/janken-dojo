@@ -1,0 +1,38 @@
+# Field twins, train side (research/probes.md): lab bots whose margins over the five probes and
+# vs the V3 core match a strong tournament bot's (its real record vs our V3 fleet), within 0.04.
+bots/inactive/noisy/noisy_rand3_5_2_15.yaml  # twin of AtendeDOS
+bots/inactive/noisy/noisy_replay_hunter_wide_v2_15.yaml  # twin of AtendeDOS
+bots/inactive/noisy/noisy_rand2_5_3_15.yaml  # twin of Atendedor De Botludos
+bots/inactive/noisy/noisy_rand3_7_16_10.yaml  # twin of Atendedor De Botludos
+bots/inactive/random_pop/rand3_2_25.yaml  # twin of Bot Snow
+bots/l4/replay_hunter_wide_v2.yaml  # twin of Bot Snow
+bots/inactive/random_pop/rand3_2_17.yaml  # twin of Botman
+bots/inactive/random_pop/rand2_5_3.yaml  # twin of Botman
+bots/inactive/random_pop/rand3_7_4.yaml  # twin of Ginny
+bots/inactive/random_pop/rand3_5_2.yaml  # twin of Ginny
+bots/inactive/random_pop/rand2_5_3.yaml  # twin of Harry Botter
+bots/inactive/random_pop/rand3_2_17.yaml  # twin of Harry Botter
+bots/l4/double_bluff_gate_v2.yaml  # twin of Jevsusnator
+bots/inactive/random_pop/rand3_2_17.yaml  # twin of Jevsusnator
+bots/inactive/random_pop/rand3_2_24.yaml  # twin of Labo Rata
+bots/inactive/random_pop/rand3_8_13.yaml  # twin of Labo Rata
+bots/inactive/random_pop/rand3_7_5.yaml  # twin of Lord Botemort · 368663e16715
+bots/inactive/random_pop/rand3_4_13.yaml  # twin of Lord Botemort · 368663e16715
+bots/inactive/random_pop/rand3_7_9.yaml  # twin of Metabayisnator
+bots/l4/gate_edge_v3.yaml  # twin of Metabayisnator
+bots/l4/level_k_gate_v2.yaml  # twin of Metajevsusnator
+bots/l3/l2_council_v1.yaml  # twin of Metajevsusnator
+bots/inactive/random_pop/rand3_3_19.yaml  # twin of Otto
+bots/inactive/random_pop/rand3_7_8.yaml  # twin of Otto
+bots/inactive/random_pop/rand3_7_5.yaml  # twin of Raging Kratos · 9e8ed5ca5b7c
+bots/inactive/random_pop/rand3_7_9.yaml  # twin of Raging Kratos · 9e8ed5ca5b7c
+bots/inactive/noisy/noisy_rand3_7_9_10.yaml  # twin of Sir Claude Von Janken
+bots/inactive/noisy/noisy_rand2_5_3_10.yaml  # twin of Sir Claude Von Janken
+bots/inactive/random_pop/rand3_7_8.yaml  # twin of Sparks
+bots/inactive/random_pop/rand3_7_16.yaml  # twin of Sparks
+bots/inactive/noisy/noisy_rand2_5_3_10.yaml  # twin of Viejo Imputable
+bots/inactive/noisy/noisy_rand2_5_3_15.yaml  # twin of Viejo Imputable
+bots/inactive/noisy/noisy_rand3_5_2_10.yaml  # twin of Viejo_Inimputable
+bots/inactive/noisy/noisy_rand3_7_9_10.yaml  # twin of Viejo_Inimputable
+bots/inactive/random_pop/rand3_7_4.yaml  # twin of Yiscroftnator
+bots/inactive/random_pop/rand3_7_9.yaml  # twin of Yiscroftnator

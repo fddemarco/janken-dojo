@@ -135,3 +135,35 @@ round played; nearest lab bots by `janken lab gauntlet fingerprint`.
 So the probes have done their job: the tournament's strong field is one family, our
 own, plus noisier and Nash-like variants of it. More matches won't split that family,
 since species within it differ by less than a match's noise.
+
+## Field twins: a bench that looks like the tournament (2026-10-14)
+
+The five scripts saturate on strong bots: Claudy (we win 99%) and Bot Snow (we win
+36%) fingerprint the same. Adding one adaptive probe separates them, and we already
+have it: our V3 fleet's real record against each bot. In the lab, a bot's margin vs
+`smartbot_v1` predicts its margin vs the V3 core with leave-one-out R^2 0.91 over 81
+strong lab bots (gauntlet log `reactive-probes`), so the V3 core is the right
+adaptive probe.
+
+- **Twins**: lab bots (the field, the outsiders, 240 strong random-architecture bots,
+  and those wrapped in 10-20% noise, `bots/inactive/noisy/`) whose margins over the
+  five scripts and vs the V3 core are within 0.04 of a tournament bot's (its real
+  margin vs our V3 fleet). 18 of the 19 strong tournament bots have twins (not Bitsy);
+  the noisy ones fit 10-15% noise. Lists: `research/gauntlet/twins_train.txt` and
+  `twins_test.txt` (each tournament bot's twins alternate between them).
+- **Validation**: the V3 core vs each bot's twins predicts its real match share with
+  rank correlation +0.61 over 18 tournament bots, mean 56.6% predicted vs 58.7% real
+  (Metajevsusnator the outlier: 23% vs 55%).
+- **Search** (gauntlet logs `bench-train`, `bench-test`; shares of matches won):
+  - the V3 core is the best of 12 candidates on the train bench (66.7%): the field's
+    L3-L4s, and new mains that read the readers or go a level up (-15 to -30 pts);
+  - none of 13 gate and main parameter changes beats its defaults;
+  - the computed replay estimate (`gate_main_first_v3`) ties the 256-draw replay
+    (-5.6 pts train, +1.7 test, CIs about +-10), and the fleet's handshake costs
+    nothing;
+  - V3 upgraded with the strong learners found since (`gate_main_first_plus`) ties or
+    loses: -11.1 pts on train, -0.7 on test, vs `gate_main_first_v3`.
+
+So V3's core sits at a local optimum against twins of the real strong bots. The bench
+resolves about +-10 points per comparison at these sizes; a 3-point gain needs about
+1000 paired matches per comparison.

@@ -1,0 +1,17 @@
+description: |
+  The V3 fleet core's gate (MAIN_FIRST: the main, then its replay from the opponent's seat once that leads) over smartbot_sims_plus, its expert by estimate NORMAL (no draws).
+  V3 upgraded with what the lab learned: the stronger L1-L2 learners in the main, and the computed replay estimate.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_plus}
+      experts:
+        - {bot: smartbot_sims_plus, side: OPP, estimate: NORMAL, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

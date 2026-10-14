@@ -1,0 +1,15 @@
+description: |
+  Random architecture (research only, never in the field): an unknown opponent sampled from the kit's grammar.
+defaults: {}
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: rand2_5_22, side: OPP, draws: 0, rotations: [BEAT, BEAT_BEAT, COPY]}
+        - {bot: rand2_5_27, side: MY, draws: 0, rotations: [COPY, BEAT, BEAT_BEAT]}
+        - {bot: longest_match, space: {MAX_LEN: 19, CTX: OPP, OF: OPP}, rotations: [BEAT_BEAT, BEAT]}
+        - {bot: ctw, space: {DEPTH: 1, CTX: MY, OF: MY, DECAY: 0.85}, rotations: [BEAT_BEAT, BEAT]}
+        - {bot: relative, space: {REF: MY, BY_OUTCOME: 1, DECAY: 0.85}, rotations: [BEAT_BEAT, COPY, BEAT]}
+      scorer: {Dirichlet: {decay: 0.95}}
+      random_arm: RA_SCORED
+      selector: {Thompson: {sharp: 1.0}}

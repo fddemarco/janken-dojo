@@ -1,0 +1,17 @@
+description: |
+  The V3 fleet core (gate_main_first_v1: smartbot_sims_v1 as main, its replay from their seat once it leads) with the main's parameters exposed, to tune them on the field-twin bench (research/gauntlet/twins_*.txt).
+defaults:
+  ARM_DECAY: 0.95
+  TABLE_DECAY: 0.9
+  MAX_MATCH: 12
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v1, space: {ARM_DECAY: $ARM_DECAY, TABLE_DECAY: $TABLE_DECAY, MAX_MATCH: $MAX_MATCH}}
+      experts:
+        - {bot: smartbot_sims_v1, side: OPP, draws: 256, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: 0.0
+      decay: 1.0
+      warmup: $WARMUP

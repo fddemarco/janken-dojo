@@ -1,0 +1,13 @@
+description: |
+  smartbot_sims_v2 played as one arm beside its counter-counter: smartbot_sims replayed from our seat and countered twice (BEAT_BEAT), for opponents that run smartbot-like learners on our moves. Thompson over decayed Dirichlet records.
+  Hypothesis (research/probes.md): the strong tournament bots are smartbot-family readers; judged on the field-twin bench.
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_sims_v2, estimate: NORMAL, rotations: [COPY, BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

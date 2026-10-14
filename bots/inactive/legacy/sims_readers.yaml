@@ -1,0 +1,16 @@
+description: |
+  smartbot_sims_v2 played as one arm beside arms that read the readers: repeat matching and CTW on our own moves, countered twice (BEAT_BEAT), so a long-repeat learner that reads us is read in turn. Thompson over decayed Dirichlet records.
+  Hypothesis (research/probes.md): the strong tournament bots find long repeats in our moves; judged on the field-twin bench (research/gauntlet/twins_*.txt).
+defaults:
+  ARM_DECAY: 0.95
+blueprint:
+  core:
+    Bandit:
+      predictors:
+        - {bot: smartbot_sims_v2, estimate: NORMAL, rotations: [COPY]}
+        - {bot: longest_match, space: {MAX_LEN: 12, CTX: JOINT, OF: MY}, rotations: [BEAT_BEAT]}
+        - {bot: second_match, space: {MAX_LEN: 12, CTX: JOINT, OF: MY}, rotations: [BEAT_BEAT]}
+        - {bot: ctw, space: {DEPTH: 3, CTX: JOINT, OF: MY, DECAY: 0.81}, rotations: [BEAT_BEAT]}
+      scorer: {Dirichlet: {decay: $ARM_DECAY}}
+      random_arm: RA_SCORED
+      selector: Thompson

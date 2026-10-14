@@ -70,3 +70,10 @@ Removed as duplicates (in git history before the clean-up commit):
   | hunter_three_mains | hunter_three_mains | L4 | two more mains as COPY experts: -1.2 pts [-7.8, +5.5] vs L3-L4 variants, [0088](../../../research/experiments/0088-hunter-three-mains-vs-l3-l4-variants.md); +3.1 pts vs outsiders, [0090](../../../research/experiments/0090-hunters-vs-outsiders.md) |
   | hunter_reads_learners | hunter_reads_learners | L4 | experts reading the public learners, never playing them: -7.6 pts [-14.6, -0.7] vs outsiders, [0094](../../../research/experiments/0094-hunter-reads-learners-vs-outsiders.md) |
   | sims_learners_council | sims_learners_council | L4 | Thompson council of smartbot_sims_v2 and the strong learners: -29.0 pts [-35.6, -22.5] vs smartbot_sims_v2 vs outsiders, [0095](../../../research/experiments/0095-sims-learners-council-vs-outsiders.md) |
+  | sims_readers | sims_readers | L4 | smartbot_sims_v2 beside reader arms (repeat matching and CTW on our moves, BEAT_BEAT): -29.5 pts vs the V3 core on the field-twin train bench (research/probes.md, Field twins) |
+  | sims_level_up | sims_level_up | L4 | smartbot_sims_v2 beside its counter-counter: -14.6 pts vs the V3 core on the train bench |
+  | gate_mf_readers | gate_mf_readers | L5 | the V3 gate over sims_readers: -19.4 pts vs the V3 core on the train bench |
+  | gate_mf_level_up | gate_mf_level_up | L5 | the V3 gate over sims_level_up: -14.9 pts vs the V3 core on the train bench |
+  | gate_mf_open | gate_mf_open | L4 | the V3 core with its main's parameters exposed: every change lost on the train bench (-3 to -18 pts) |
+  | smartbot_sims_plus | smartbot_sims_plus | L3 | smartbot_sims_v2 plus the strong L1-L2 learners as opponent models and models of us: the main of gate_main_first_plus |
+  | gate_main_first_plus | gate_main_first_plus | L4 | the V3 core upgraded (smartbot_sims_plus main, NORMAL expert): -11.1 pts on the train bench, -0.7 on test, vs gate_main_first_v3 |

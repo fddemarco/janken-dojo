@@ -84,3 +84,11 @@ Removed as duplicates (in git history before the clean-up commit):
   | gate_mf_noise5 | gate_mf_noise5 | L4 | gate_main_first_v3 with 5% random moves: -7.5 pts +-7.3 on the full bench |
   | smartbot_sims_readers | smartbot_sims_readers | L3 | smartbot_sims_v2 plus the strong L1 learners as opponent models: the main of gate_mf_opp_models |
   | gate_mf_opp_models | gate_mf_opp_models | L4 | gate_main_first_v3 over smartbot_sims_readers: -5.8 pts +-7.0 on the full field-twin bench (312 paired matches) |
+  | smartbot_sims_lean_a | smartbot_sims_lean_a | L2 | smartbot_sims_v2 without its models of us: the main of gate_mf_lean_a |
+  | smartbot_sims_lean_b | smartbot_sims_lean_b | L3 | smartbot_sims_v2 without its frequency and relative models: the main of gate_mf_lean_b |
+  | smartbot_sims_lean_c | smartbot_sims_lean_c | L3 | smartbot_sims_v2 with 3 models of us: the main of gate_mf_lean_c |
+  | gate_mf_lean_a | gate_mf_lean_a | L3 | gate_main_first_v3 over smartbot_sims_lean_a: -6.6 pts +-7.0 on the full field-twin bench |
+  | gate_mf_lean_b | gate_mf_lean_b | L4 | gate_main_first_v3 over smartbot_sims_lean_b: -2.3 pts +-7.4 on the full bench |
+  | gate_mf_lean_c | gate_mf_lean_c | L4 | gate_main_first_v3 over smartbot_sims_lean_c: -5.9 pts +-7.0 on the full bench |
+  | gate_mf_expert_geometry_ensemble | gate_mf_expert_geometry_ensemble | L4 | gate_main_first_v3 with geometry_ensemble_v1 as its expert: -2.7 pts +-7.6 on the full bench |
+  | gate_mf_expert_multiscale_council | gate_mf_expert_multiscale_council | L4 | gate_main_first_v3 with multiscale_council_v1 as its expert: -0.5 pts +-7.3 on the full bench |

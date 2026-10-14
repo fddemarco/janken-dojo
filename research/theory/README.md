@@ -144,3 +144,8 @@ A claim with no possible refutation isn't a claim.
   predict V3's real record (rank correlation +0.61). On that bench V3's core is at a
   local optimum: no new main, parameter or upgrade with the newer learners beats it,
   and the computed replay estimate ties the 256-draw replay (research/probes.md).
+- **2026-10-14, the expert is the lever.** Adding, pruning or retuning V3's main all
+  lose on the field-twin bench; swapping its gate expert for a replay of
+  `l2_council_v1` gains +3.1 pts of matches won over V3's core (936 paired matches,
+  CI +-4.4), and its export is 35x faster. Deployed as the Iliad v5 fleet next to V3
+  for a tournament A/B.

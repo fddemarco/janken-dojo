@@ -176,6 +176,18 @@ adaptive probe.
     lose too: -5.8 pts +-7.0. More arms dilute the main, as more experts dilute a
     gate (theory 02).
 
-So V3's core sits at a local optimum against twins of the real strong bots. The bench
+  - pruning V3's main loses too (-2.3 to -6.6 pts): every arm pulls its weight.
+
+  - **the expert is the lever**: replaying `l2_council_v1` from the opponent's seat
+    instead of `smartbot_sims_v2` (`gate_mf_expert_l2_council`) is the one change
+    that held: +5.2 pts +-5.3 and +1.6 rounds +-1.5 on 624 fresh paired matches;
+    pooled over 936, +3.1 pts +-4.4 (59.6% vs 56.5% of matches) and +0.9 rounds
+    +-1.3 vs V3's deployed core, +4.0 pts +-4.2 vs its estimate version. Exported as
+    the Iliad v5 fleet (`bots/inactive/fleets/iliad_v5/`, menelaus_v1 and
+    patroclus_v1): 1.5 ms a move vs 51 for V3's export and 269 for V4's (which timed
+    out). Next: a tournament A/B next to the V3 fleet.
+
+Apart from the expert, V3's core sits at a local optimum against twins of the real
+strong bots. The bench
 resolves about +-10 points per comparison at these sizes; a 3-point gain needs about
 1000 paired matches per comparison.

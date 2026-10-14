@@ -1,0 +1,16 @@
+description: |
+  gate_main_first_v3 (the V3 core with the computed replay estimate) with its expert replaying geometry_ensemble_v1 from the opponent's seat instead of smartbot_sims_v2: another member of the strong tournament bots' family (research/probes.md), judged on the field-twin bench.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+blueprint:
+  core:
+    Gate:
+      main: {bot: smartbot_sims_v2}
+      experts:
+        - {bot: geometry_ensemble_v1, side: OPP, estimate: NORMAL, rotations: [BEAT]}
+      rule: MAIN_FIRST
+      edge: $EDGE
+      decay: $GATE_DECAY
+      warmup: $WARMUP

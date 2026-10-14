@@ -1,0 +1,17 @@
+description: |
+  Iliad heroes v5 fleet: menelaus_v1, the champion, and one support (patroclus_v1) that throws its matches to it.
+
+  Opens with the v5 fleet's own handshake, then plays gate_mf_expert_l2_council (the V3 core's gate with the computed replay estimate, its expert replaying l2_council_v1 from the opponent's seat) against anyone outside the fleet. On the field-twin bench it beats V3's core by +3.1 pts of matches won +-4.4 (936 paired matches, research/probes.md); played next to the V3 fleet as a tournament A/B test. Vigilant: at a teammate's first non-throw it plays on.
+defaults:
+  EDGE: 0.0
+  GATE_DECAY: 1.0
+  WARMUP: 10
+fleet:
+  size: 2
+  supports: [patroclus_v1]
+  handshake: [SCISSORS, ROCK, ROCK, PAPER, SCISSORS, PAPER, ROCK, SCISSORS]
+  vigilant: true
+blueprint:
+  core:
+    bot: gate_mf_expert_l2_council
+    space: {EDGE: $EDGE, GATE_DECAY: $GATE_DECAY, WARMUP: $WARMUP}

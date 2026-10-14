@@ -106,3 +106,32 @@ every probe by 200 rounds or more, so submitting the probes costs the fleet noth
    `janken lab gauntlet fingerprint logs/<export>.csv --name probes`: every bot that
    met a probe, its margins per round, and the `gauntlet.fingerprint_nearest` closest
    lab bots.
+
+## First reading (tournament export of 2026-10-14, 1700 matches vs the probes)
+
+35 bots met the probes, 30 of them at least 4 times each (most 6-17). Margins are per
+round played; nearest lab bots by `janken lab gauntlet fingerprint`.
+
+- **Calibration holds.** The house bots, whose code we know, land where they should:
+  Rocky on `rock_v1` (0% away), Copycat on `wsls_v1` / `copycat_v1` (the reactive
+  family, -100% vs cycle3), Brainy among the frequency counters (`frequency_v1` 8%
+  away; only blocks50 pays it, +20%), Randy at 0 on every probe.
+- **Most strong bots are our cores' family.** Bot Snow, Botman, Claudy, Jevsusnator,
+  Moriartsusnator, Harry Botter, Metajevsusnator, Yiscroftnator, Ginny, Lord Botemort,
+  Bot Riddle, Raging Kratos, Hannibot Lecter, Darth Botter 442b and Sparks all score
+  +93% to +99% on cycle3 and debruijn2, +86% to +94% on debruijn3 and +76% to +90% on
+  debruijn4: deep learners that find long repeats on our moves, 0-2% from the
+  smartbot-based gates (`gate_main_first_v1`, our V3 core, among them). Matches with
+  them are mirror matches, which is why they are coin flips.
+- **Some add randomness.** AtendeDOS, Atendedor De Botludos, Viejo (Im)putable and Sir
+  Claude Von Janken learn every probe but stop at +76% to +90%: the same learners with
+  about 10-20% random moves (AtendeDOS also scores only 208 vs Rocky). Darth Botter
+  0b0f stops near +45% on every probe: about half its moves random.
+- **Charly is Nash-like:** about 0 on every probe, like Randy. No bot can beat it by
+  more than luck.
+- **The weak ones look 1-2 moves back:** AuraFarmer (debruijn2 +85%, debruijn3 +7%),
+  Bitsy (debruijn2 +29%), Magnus Jankssen (cycle3 and blocks50 only), Megaman.
+
+So the probes have done their job: the tournament's strong field is one family, our
+own, plus noisier and Nash-like variants of it. More matches won't split that family,
+since species within it differ by less than a match's noise.

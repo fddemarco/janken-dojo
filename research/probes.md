@@ -187,8 +187,12 @@ adaptive probe.
     patroclus_v1): 1.5 ms a move vs 51 for V3's export and 269 for V4's (which timed
     out). Grown to 1872 paired matches (48 seeds per twin) vs V3's deployed core:
     +1.1 rounds per match +-0.9 (significant) and +2.6 pts of matches won +-3.1
-    (58.8% vs 56.2%; not yet); seeds 25-48 alone +2.1 pts, +1.4 rounds. Next: a
-    tournament A/B next to the V3 fleet (idea #93).
+    (58.8% vs 56.2%; not yet); seeds 25-48 alone +2.1 pts, +1.4 rounds. At 3744
+    paired matches (96 seeds per twin): matches won +2.94 pts, 95% CI \[+0.74,
+    +5.13\] per match (z 2.62, significant), rounds +1.2 +-0.6; clustered by
+    tournament bot, +2.25 pts [-2.14, +6.64], better vs 8 of 18: the gain is real on
+    the bench but concentrated in some opponents. Next: a tournament A/B next to
+    the V3 fleet (idea #93).
 
 Apart from the expert, V3's core sits at a local optimum against twins of the real
 strong bots. The bench

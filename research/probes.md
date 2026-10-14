@@ -172,6 +172,10 @@ adaptive probe.
     -9.5 +-6.9, sharpness 0.5 -2.6 +-7.1. V3 doesn't lose to these bots by being
     read; its edge is reading them, and its default selection is the best of three.
 
+  - stronger opponent models alone in V3's main (the strong L1 learners, 3 ways each)
+    lose too: -5.8 pts +-7.0. More arms dilute the main, as more experts dilute a
+    gate (theory 02).
+
 So V3's core sits at a local optimum against twins of the real strong bots. The bench
 resolves about +-10 points per comparison at these sizes; a 3-point gain needs about
 1000 paired matches per comparison.

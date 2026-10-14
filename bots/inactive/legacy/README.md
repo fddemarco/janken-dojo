@@ -82,3 +82,5 @@ Removed as duplicates (in git history before the clean-up commit):
   | gate_mf_flat | gate_mf_flat | L4 | gate_main_first_v3 over smartbot_sims_flat: -2.6 pts +-7.1 on the full field-twin bench (312 paired matches) |
   | gate_mf_sharp | gate_mf_sharp | L4 | gate_main_first_v3 over smartbot_sims_sharp: -9.5 pts +-6.9 on the full bench |
   | gate_mf_noise5 | gate_mf_noise5 | L4 | gate_main_first_v3 with 5% random moves: -7.5 pts +-7.3 on the full bench |
+  | smartbot_sims_readers | smartbot_sims_readers | L3 | smartbot_sims_v2 plus the strong L1 learners as opponent models: the main of gate_mf_opp_models |
+  | gate_mf_opp_models | gate_mf_opp_models | L4 | gate_main_first_v3 over smartbot_sims_readers: -5.8 pts +-7.0 on the full field-twin bench (312 paired matches) |

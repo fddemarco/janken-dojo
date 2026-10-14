@@ -1,0 +1,32 @@
+# Random-architecture population (seed 2, idea #91): the stronger half of 30 random L2s and
+# 30 random L3s by margin vs 10 strong field L1-L2s; the test side of a train/test split.
+bots/inactive/random_pop/rand2_2_1.yaml
+bots/inactive/random_pop/rand2_2_10.yaml
+bots/inactive/random_pop/rand2_2_15.yaml
+bots/inactive/random_pop/rand2_2_27.yaml
+bots/inactive/random_pop/rand2_2_28.yaml
+bots/inactive/random_pop/rand2_2_3.yaml
+bots/inactive/random_pop/rand2_2_32.yaml
+bots/inactive/random_pop/rand2_2_33.yaml
+bots/inactive/random_pop/rand2_2_36.yaml
+bots/inactive/random_pop/rand2_2_5.yaml
+bots/inactive/random_pop/rand2_2_7.yaml
+bots/inactive/random_pop/rand2_2_9.yaml
+bots/inactive/random_pop/rand3_2_0.yaml
+bots/inactive/random_pop/rand3_2_1.yaml
+bots/inactive/random_pop/rand3_2_13.yaml
+bots/inactive/random_pop/rand3_2_14.yaml
+bots/inactive/random_pop/rand3_2_17.yaml
+bots/inactive/random_pop/rand3_2_18.yaml
+bots/inactive/random_pop/rand3_2_19.yaml
+bots/inactive/random_pop/rand3_2_20.yaml
+bots/inactive/random_pop/rand3_2_22.yaml
+bots/inactive/random_pop/rand3_2_24.yaml
+bots/inactive/random_pop/rand3_2_25.yaml
+bots/inactive/random_pop/rand3_2_26.yaml
+bots/inactive/random_pop/rand3_2_27.yaml
+bots/inactive/random_pop/rand3_2_28.yaml
+bots/inactive/random_pop/rand3_2_29.yaml
+bots/inactive/random_pop/rand3_2_4.yaml
+bots/inactive/random_pop/rand3_2_5.yaml
+bots/inactive/random_pop/rand3_2_7.yaml

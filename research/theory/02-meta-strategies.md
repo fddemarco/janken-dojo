@@ -93,6 +93,18 @@ since 2026-10-13, starting with an L2 built from L1's strong set (`repeat_mirror
    (note 0092). Even inside a Thompson council the learners are followed and read
    (-29 pts, note 0095).
 
+1. **Generated opponents agree with the real tournament; hand-built outsiders were
+   too few.** _supported._ Sixty strong bots sampled from the kit's grammar
+   (research/tools/random_pop.py, two seeds as train and test lists) rank the fleet's
+   V3 core `gate_main_first_v1` first or second on both (+5.8 and +7.4 rounds per
+   match, 65% and 77% of matches), ahead of the V4-like `replay_hunter_wide_v2` (+5.0,
+   +3.6): the order the real tournament showed (V3 better than V4). The outsider
+   census leader `sicilian_meta_v1` is 8th and last (+2.1, -1.6): its lead was the
+   winner's curse. Against unknown strong bots the margin is flat across a match
+   (about 0 per 50-round block), so a lead lock can't help. _Prediction:_ a change
+   tuned on the train population that holds on the test population also gains in the
+   tournament.
+
 ## Open questions
 
 - Are the strong strategies above L1 few enough to specialise against (the condition

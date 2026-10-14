@@ -90,9 +90,11 @@ def play_pairs(
 
     def flush() -> None:
         # done[j] is written after the match's moves and status, and x86 keeps
-        # stores in order, so a match flagged done is complete.
+        # stores in order, so a match flagged done is complete. Read a snapshot:
+        # numpy's nonzero counts, then fills, and raises if the engine's threads
+        # flag another match in between.
         fresh = []
-        for j in np.flatnonzero(done).tolist():
+        for j in np.flatnonzero(done.copy()).tolist():
             k = order[j]
             if results[k] is None:
                 a, b = pairs[k]

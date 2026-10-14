@@ -134,3 +134,8 @@ A claim with no possible refutation isn't a claim.
   2-4, switching blocks) turn final scores into fingerprints: how far back a bot looks
   and how fast it forgets. In the lab they separate families cleanly, and every fleet
   core beats each by 200+ rounds (research/probes.md, `janken lab gauntlet fingerprint`).
+- **2026-10-13, generated opponents.** Unknown strong bots can't be written by hand in
+  numbers, so they are sampled: random architectures from the kit's grammar, the strong
+  half kept, two seeds as train and test (idea #91). They reproduce the tournament's
+  verdict (the V3 core over V4) and retire the outsider census's leader (idea #90,
+  dropped). Next: tune the V3 core on the train population, confirm on test.

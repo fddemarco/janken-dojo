@@ -77,3 +77,8 @@ Removed as duplicates (in git history before the clean-up commit):
   | gate_mf_open | gate_mf_open | L4 | the V3 core with its main's parameters exposed: every change lost on the train bench (-3 to -18 pts) |
   | smartbot_sims_plus | smartbot_sims_plus | L3 | smartbot_sims_v2 plus the strong L1-L2 learners as opponent models and models of us: the main of gate_main_first_plus |
   | gate_main_first_plus | gate_main_first_plus | L4 | the V3 core upgraded (smartbot_sims_plus main, NORMAL expert): -11.1 pts on the train bench, -0.7 on test, vs gate_main_first_v3 |
+  | smartbot_sims_flat | smartbot_sims_flat | L3 | smartbot_sims_v2 with Thompson sharpness 0.5: the main of gate_mf_flat |
+  | smartbot_sims_sharp | smartbot_sims_sharp | L3 | smartbot_sims_v2 with Thompson sharpness 2: the main of gate_mf_sharp |
+  | gate_mf_flat | gate_mf_flat | L4 | gate_main_first_v3 over smartbot_sims_flat: -2.6 pts +-7.1 on the full field-twin bench (312 paired matches) |
+  | gate_mf_sharp | gate_mf_sharp | L4 | gate_main_first_v3 over smartbot_sims_sharp: -9.5 pts +-6.9 on the full bench |
+  | gate_mf_noise5 | gate_mf_noise5 | L4 | gate_main_first_v3 with 5% random moves: -7.5 pts +-7.3 on the full bench |

@@ -157,12 +157,20 @@ adaptive probe.
 - **Search** (gauntlet logs `bench-train`, `bench-test`; shares of matches won):
   - the V3 core is the best of 12 candidates on the train bench (66.7%): the field's
     L3-L4s, and new mains that read the readers or go a level up (-15 to -30 pts);
+
   - none of 13 gate and main parameter changes beats its defaults;
+
   - the computed replay estimate (`gate_main_first_v3`) ties the 256-draw replay
     (-5.6 pts train, +1.7 test, CIs about +-10), and the fleet's handshake costs
     nothing;
+
   - V3 upgraded with the strong learners found since (`gate_main_first_plus`) ties or
     loses: -11.1 pts on train, -0.7 on test, vs `gate_main_first_v3`.
+
+  - being less predictable hurts (full bench, 312 paired matches each, vs
+    `gate_main_first_v3`): 5% random moves -7.5 pts +-7.3, Thompson sharpness 2
+    -9.5 +-6.9, sharpness 0.5 -2.6 +-7.1. V3 doesn't lose to these bots by being
+    read; its edge is reading them, and its default selection is the best of three.
 
 So V3's core sits at a local optimum against twins of the real strong bots. The bench
 resolves about +-10 points per comparison at these sizes; a 3-point gain needs about

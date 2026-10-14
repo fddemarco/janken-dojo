@@ -6,6 +6,8 @@ leave out, `run` plays the candidates against the rest. Matches are logged in th
 workspace's `gauntlet.dir` as they are played, so every command resumes.
 """
 
+import collections
+import dataclasses
 import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated
@@ -15,6 +17,7 @@ import typer
 from .options import CFG, Lab, about, fail, lab_command
 
 if TYPE_CHECKING:
+    from ..lab.fingerprint import Match
     from ..lab.gauntlet import Job, Log
     from ..lab.match_cache import MatchCache
 
@@ -329,3 +332,80 @@ def fingerprint(
         text.append(f"{bot}: {margins}")
         text += [f"  {d:.0%} from {other}" for other, d in close]
     lab.emit(data, "\n".join(text) or "no bot of the exports met a probe")
+
+
+@app.command("compare")
+@lab_command("lab gauntlet compare")
+def compare(
+    lab: Lab,
+    exports: Annotated[
+        list[str], typer.Argument(help="tournament exports (CSV), one or more")
+    ],
+    a: Annotated[
+        list[str],
+        typer.Option(
+            "--a",
+            help="a bot of group A, by its tournament name (repeatable)",
+            default_factory=list,
+        ),
+    ],
+    b: Annotated[
+        list[str],
+        typer.Option(
+            "--b",
+            help="a bot of group B, by its tournament name (repeatable)",
+            default_factory=list,
+        ),
+    ],
+    exclude: Annotated[
+        list[str],
+        typer.Option(
+            help="a tournament name never counted as an opponent, such as another of"
+            " our fleets (repeatable)",
+            default_factory=list,
+        ),
+    ],
+) -> None:
+    """Compare two groups of our tournament bots on the opponents both met.
+
+    A tournament A/B (research/probes.md): only the window in which both groups
+    played, only opponents both met there, each opponent weighted once; the mean
+    difference in share of matches won and in margin per round, with a 95% CI over
+    opponents. A match found in several exports counts once."""
+    from ..lab import fingerprint as fp
+    from ..lab import tournament
+
+    if not a or not b:
+        raise fail("name at least one bot of each group (--a, --b)")
+    for path in exports:
+        if not os.path.isfile(path):
+            raise fail(f"no export file {path}")
+    matches = _distinct([fp.read_export(path) for path in exports])
+    try:
+        result = tournament.compare(matches, a, b, exclude)
+    except ValueError as exc:
+        raise fail(str(exc)) from exc
+    rows = [
+        f"  {d.opponent}: A {d.a.won:.0%} of {d.a.matches}, B {d.b.won:.0%} of"
+        f" {d.b.matches} ({d.a.won - d.b.won:+.0%})"
+        for d in result.differences
+    ]
+    text = [
+        f"window {result.window[0]} .. {result.window[1]},"
+        f" {len(result.differences)} common opponents",
+        f"A - B: matches won {result.won * 100:+.1f} pts +-"
+        f"{result.won_half_width * 100:.1f}, margin per round"
+        f" {result.margin * 100:+.2f} pts +-{result.margin_half_width * 100:.2f}",
+        *rows,
+    ]
+    lab.emit(dataclasses.asdict(result), "\n".join(text))
+
+
+def _distinct(exports: "list[list[Match]]") -> "list[Match]":
+    """Every match of the exports once: a match in several exports counts as many
+    times as the export holding it most often."""
+    counts: dict[Match, int] = {}
+    for matches in exports:
+        for match, n in collections.Counter(matches).items():
+            counts[match] = max(counts.get(match, 0), n)
+    return [m for m, n in counts.items() for _ in range(n)]

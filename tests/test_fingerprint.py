@@ -31,7 +31,9 @@ def export(tmp_path: pathlib.Path) -> str:
 class TestReadExport:
     def test_reads_names_scores_and_draws(self, export: str) -> None:
         first, second = fp.read_export(export)[:2]
-        assert first == fp.Match("Learner", "Probe_Cycle3", 200, 10, 40)
+        assert first == fp.Match(
+            "Learner", "Probe_Cycle3", 200, 10, 40, "2026-10-13 22:22"
+        )
         assert second.a == "Probe Blocks50"  # the pause sign is dropped
         assert second.rounds == 250
 

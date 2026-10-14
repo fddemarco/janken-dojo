@@ -2278,6 +2278,7 @@ $ uv run janken lab gauntlet [OPTIONS] COMMAND [ARGS]...
 * `nash`: Which bots are Nash-like: no probe bot...
 * `run`: Play candidates vs every opponent; list...
 * `fingerprint`: Fingerprint tournament bots by their...
+* `compare`: Compare two groups of our tournament bots...
 
 #### `uv run janken lab gauntlet variations`
 
@@ -2431,6 +2432,50 @@ $ uv run janken lab gauntlet fingerprint [OPTIONS] {exports}...
 * `--probe <str>`: the scripted probes a fingerprint reads (lab paths; a tournament bot is a probe when its name contains a probe's stem) (config: gauntlet.fingerprint_probes) (repeatable)  [default: (dynamic)]
 * `--alias <str>`: the names the probes are submitted under, NAME=STEM, so other players can't tell them from their names (a name matches whole, ignoring case and punctuation) (config: gauntlet.fingerprint_aliases) (repeatable)  [default: (dynamic)]
 * `--nearest <int>`: lab bots listed per fingerprinted bot, closest first (config: gauntlet.fingerprint_nearest)  [default: 3]
+* `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
+* `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
+* `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]
+* `--spaces-dir <str>`: the space files, one per tunable bot (config: workspace.spaces_dir)  [default: spaces]
+* `--effort <quick|standard|thorough>`: the effort used when none is given; flags below override its budget (config: effort.default)  [default: standard]
+* `--rounds <int>`: rounds per match (config: match.rounds)  [default: 200]
+* `--round-robins <int>`: pools played (tuning: per trial); default: the effort's budget (config: effort.standard.round_robins)  [default: 10]
+* `--pool-size <int>`: bots drawn into each pool (config: pool.size)  [default: 20]
+* `--seed <int>`: pools and match seeds (-1: a fresh, recorded seed); tuning uses tuning.seed (config: evaluation.seed)  [default: -1]
+* `--allow-small-pool / --no-allow-small-pool`: use every eligible bot when fewer than the pool size exist (config: pool.allow_small)  [default: no-allow-small-pool]
+* `--mocks / --no-mocks`: draw the mocks (research-only stand-ins) instead of the bots they mock (config: pool.mocks)  [default: no-mocks]
+* `--variants <float>`: the share of pool members that play a parameter variant drawn from their space file (0: every member at its defaults) (config: pool.variants)  [default: 0.0]
+* `--pool-list <str>`: list files of specs (one per line, gauntlet lists) to draw pools from instead of the bots dir (none: the bots dir) (config: pool.lists) (repeatable)  [default: (dynamic)]
+* `--workers <int>`: threads playing matches (0: every core) (config: execution.workers)  [default: 0]
+* `--cache <auto|on|off>`: keep numba's compiled code on disk: auto (per engine.cache_commands), on or off  [default: auto]
+* `--progress <auto|on|off>`: progress bars: auto (only on a terminal), on or off (config: output.progress)  [default: auto]
+* `--format <text|json>`: how results print: text (markdown tables) or json (config: output.format)  [default: text]
+* `--quiet / --no-quiet`: print only what a command must (its ids and errors) (config: output.quiet)  [default: no-quiet]
+* `--help`: Show this message and exit.
+
+#### `uv run janken lab gauntlet compare`
+
+Compare two groups of our tournament bots on the opponents both met.
+
+A tournament A/B (research/probes.md): only the window in which both groups
+played, only opponents both met there, each opponent weighted once; the mean
+difference in share of matches won and in margin per round, with a 95% CI over
+opponents. A match found in several exports counts once.
+
+**Usage**:
+
+```console
+$ uv run janken lab gauntlet compare [OPTIONS] {exports}...
+```
+
+**Arguments**:
+
+* `exports...`: tournament exports (CSV), one or more  [required]
+
+**Options**:
+
+* `--a <str>`: a bot of group A, by its tournament name (repeatable)  [default: <class 'list'>]
+* `--b <str>`: a bot of group B, by its tournament name (repeatable)  [default: <class 'list'>]
+* `--exclude <str>`: a tournament name never counted as an opponent, such as another of our fleets (repeatable)  [default: <class 'list'>]
 * `--workspace <str>`: the workspace: runs, studies and the move dataset (config: workspace.dir)  [default: experiments]
 * `--notebook <str>`: the research notebook: ideas, notes, insights (config: workspace.notebook)  [default: research]
 * `--bots-dir <str>`: the bots, one YAML file each; pools are drawn from it (config: workspace.bots_dir)  [default: bots]

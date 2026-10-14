@@ -40,8 +40,8 @@ like a person typed it:
   - `query` (read-only SQL), `space`, `study run | show | list`;
   - `dataset add | info`, `predict`, `predict-tune`;
   - `profile run | bench | list | show | spans` (hotspots, benchmarks, timing spans);
-  - `gauntlet variations | nash | run | fingerprint` (tournament bots read from their
-    scores vs scripted probes, research/probes.md), and, research only, `arena` (an experimental
+  - `gauntlet variations | nash | run | fingerprint | compare` (tournament bots read from
+    their scores vs scripted probes, and tournament A/B tests: research/probes.md), and, research only, `arena` (an experimental
     learner vs a gauntlet's list) and `identify` (telling opponents' parameters
     from their moves).
 

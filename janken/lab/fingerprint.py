@@ -35,13 +35,15 @@ Fingerprint = dict[str, float]
 
 @dataclasses.dataclass(frozen=True)
 class Match:
-    """One tournament match: rounds won by each of its two bots, and drawn."""
+    """One tournament match: rounds won by each of its two bots, and drawn, and
+    when it was played (the export's text, which sorts in time order)."""
 
     a: str
     b: str
     wins_a: int
     wins_b: int
     draws: int
+    when: str = ""
 
     @property
     def rounds(self) -> int:
@@ -63,6 +65,7 @@ def _match(row: Mapping[str, str]) -> Match:
         int(wins_a),
         int(wins_b),
         int(row["Draws"]),
+        row.get("When", "").strip(),
     )
 
 

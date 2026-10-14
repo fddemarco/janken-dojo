@@ -185,7 +185,10 @@ adaptive probe.
     +-1.3 vs V3's deployed core, +4.0 pts +-4.2 vs its estimate version. Exported as
     the Iliad v5 fleet (`bots/inactive/fleets/iliad_v5/`, menelaus_v1 and
     patroclus_v1): 1.5 ms a move vs 51 for V3's export and 269 for V4's (which timed
-    out). Next: a tournament A/B next to the V3 fleet.
+    out). Grown to 1872 paired matches (48 seeds per twin) vs V3's deployed core:
+    +1.1 rounds per match +-0.9 (significant) and +2.6 pts of matches won +-3.1
+    (58.8% vs 56.2%; not yet); seeds 25-48 alone +2.1 pts, +1.4 rounds. Next: a
+    tournament A/B next to the V3 fleet (idea #93).
 
 Apart from the expert, V3's core sits at a local optimum against twins of the real
 strong bots. The bench
